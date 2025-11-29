@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>substrate_tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- NUnit framework itself -->
+        <PackageReference Include="NUnit" Version="3.13.3" />
+
+        <!-- Adapter so Visual Studio / Rider / dotnet test can discover NUnit tests -->
+        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+
+        <!-- Required for test projects to run -->
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+
+        <!-- Optional: coverage reporting -->
+        <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Reference your core DLL projects -->
+        <ProjectReference Include="..\substrate-core\substrate-core.csproj" />
+        <ProjectReference Include="..\substrate-shared\substrate-shared.csproj" />
+    </ItemGroup>
+
+</Project>
