@@ -9,9 +9,6 @@
 
     <ItemGroup>
       <Folder Include="Defaults\" />
-      <Folder Include="enums\" />
-      <Folder Include="interfaces\" />
-      <Folder Include="types\" />
     </ItemGroup>
 
 </Project>
