@@ -116,7 +116,8 @@ namespace substrate_shared.Registries
         {
             foreach (var kvp in _tones)
             {
-                if (kvp.Value.Any(nt => nt.Label.Equals(label, StringComparison.OrdinalIgnoreCase)))
+                if (kvp.Value.Any(nt => nt != null &&
+                                        nt.Label.Equals(label, StringComparison.OrdinalIgnoreCase)))
                 {
                     tone = kvp.Key;
                     return true;
@@ -125,7 +126,7 @@ namespace substrate_shared.Registries
             tone = default;
             return false;
         }
-
+        
         // --- Category resolution ---
         public static string ResolveCategory(MoodType moodType)
         {
@@ -136,8 +137,10 @@ namespace substrate_shared.Registries
         }
 
         public static IEnumerable<Tone> GetByCategory(string category) =>
-            _tones.Where(kvp => kvp.Value.Any(nt => nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase)))
-                  .Select(kvp => kvp.Key);
+            _tones.Where(kvp => kvp.Value.Any(nt => nt != null &&
+                                                    nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase)))
+                .Select(kvp => kvp.Key);
+
 
         // --- Weighted selection ---
         public static Tone SelectWeighted(string category)
@@ -187,5 +190,20 @@ namespace substrate_shared.Registries
             var category = ResolveCategory(moodType);
             return SelectWeighted(category);
         }
+
+        public static void AuditTones()
+        {
+            foreach (var kvp in _tones)
+            {
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    if (kvp.Value[i] == null)
+                    {
+                        Console.WriteLine($"Tone {kvp.Key} has a null NarrativeTone at index {i}!");
+                    }
+                }
+            }
+        }
+
     }
 }

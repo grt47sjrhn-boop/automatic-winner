@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using substrate_core.Generators;
 using substrate_core.Managers;
 using substrate_shared.enums;
+using substrate_shared.Registries;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
 using substrate_tools.Config;
@@ -21,6 +22,12 @@ namespace substrate_tools.Demos
                 Console.WriteLine(HelpGenerator.GenerateHelpText());
                 return;
             }
+            
+            // ✅ Run audit before simulation
+            Console.WriteLine("=== ToneRegistry Audit ===");
+            ToneRegistry.AuditTones();
+            Console.WriteLine("=== End Audit ===");
+
 
             var simManager = new SimulationManager();
             var vb = InitializeVectorBias();
