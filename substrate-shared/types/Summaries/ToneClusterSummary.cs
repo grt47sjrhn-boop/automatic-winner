@@ -22,9 +22,11 @@ namespace substrate_shared.types.Summaries
         public IEnumerable<Tone> ComplementaryTones { get; set; } = Enumerable.Empty<Tone>();
         public IEnumerable<Tone> ClusterNeighborhood { get; set; } = Enumerable.Empty<Tone>();
         public IEnumerable<AngularCategoryInfo> AngularCategories { get; set; } = Enumerable.Empty<AngularCategoryInfo>();
+
+        // Category + affinity
+        public string Category { get; set; } = "none";
         public TraitAffinity? ResolvedAffinity { get; set; }
 
-        
         // Registry weights for narratability
         public IReadOnlyDictionary<Tone, float> ClusterWeights { get; set; }
 
@@ -60,9 +62,14 @@ namespace substrate_shared.types.Summaries
                 ? string.Join(" | ", AngularCategories.Select(ac => ac.ToString()))
                 : "none";
 
+            var affinityText = ResolvedAffinity.HasValue
+                ? $"{ResolvedAffinity.Value} → {ResolvedAffinity.Value.Describe()}"
+                : "none";
+
             return $"ToneClusterSummary [Tick {TickId}] " +
                    $"Baseline={Baseline}, Blended={Blended}, Complement={Complement}, " +
                    $"BiasAdjusted={BiasAdjusted}, Final={FinalTone}, " +
+                   $"Category={Category}, Affinity={affinityText}, " +
                    $"Adjacent[{adjacent}], Neighborhood[{neighborhood}], Complementary[{complementary}], " +
                    $"Slices[{slices}], Weights[{weights}], Traces[{traces}]";
         }
