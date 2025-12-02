@@ -45,7 +45,7 @@ namespace substrate_core.Managers
             
             /***** TODO ONCE WE HAVE COMPLETED ALL THE SUMMARIES, WE HAVE TO CREATE A PERSONALTIY PROFILE
              *      VECTOR BIAS WILL HOLD ALL THE SUMMARIES
-             *      WHOEVER CALLS RUN TICK NEEDS TO GENERATE THE NEW VECTORBIAS
+             *      WHOEVER CALLS RUN TICK NEEDS TO PASS VECTOR BIAS INTO PERSONALITY PROFILE
              */
             
             
