@@ -21,6 +21,7 @@ namespace substrate_shared.types.structs
 
         // Human-readable label (Sadness, Joy, etc.)
         public MoodType MoodType { get; private set; }
+        public static Mood Neutral { get; set; }
 
         // Calculate vector distance between this mood and another (axis only)
         public float MagnitudeFrom(Mood other)

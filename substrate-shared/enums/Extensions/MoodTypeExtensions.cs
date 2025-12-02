@@ -13,7 +13,7 @@ namespace substrate_shared.enums.Extensions
             return attr?.Description ?? mood.ToString();
         }
 
-        public static string GetBias(this MoodType mood)
+        public static string GetValence(this MoodType mood)
         {
             var attr = GetAttribute(mood);
             return attr?.Bias ?? "Undefined";

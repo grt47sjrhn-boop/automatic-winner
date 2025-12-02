@@ -1,83 +1,150 @@
+using System;
 using System.Collections.Generic;
-using substrate_core.Utilities;
+using System.Linq;
 using substrate_shared.enums;
+using substrate_shared.enums.Extensions;
 using substrate_shared.interfaces;
+using substrate_shared.Registries;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
 
 namespace substrate_core.Resolvers
 {
     /// <summary>
-    /// Resolves tone clusters based on the incoming mood stimulus axis and trigonometric values.
-    /// Produces updated VectorBias plus a DeltaSummary snapshot for persistence/narration.
+    /// Hybrid ToneClusterResolver:
+    /// - Uses ToneRegistry weighted category selection for variation
+    /// - Preserves pipeline: baseline → adjacents → complement → bias → persistence
+    /// - Produces narratable trace logs for contributors
     /// </summary>
     public class ToneClusterResolver : IResolver
     {
-        public ResolutionResult Resolve(VectorBias vb, Mood mv)
+        public static ToneResolutionResult ResolveTone(
+            (Mood primary, List<(Mood mood, Tone tone)> adjacents, Mood tertiary) moodTuple,
+            Mood complement,
+            VectorBias bias,
+            BiasMode biasMode = BiasMode.Deterministic,
+            Random? rng = null)
         {
-            if (DebugOverlay.SafeFloat(vb.SinTheta) == 0f &&
-                DebugOverlay.SafeFloat(vb.CosTheta) == 0f &&
-                DebugOverlay.SafeFloat(vb.TanTheta) == 0f)
+            rng ??= new Random();
+            var result = new ToneResolutionResult();
+
+            // 1. Baseline from weighted category selection
+            string category = ResolveCategory(moodTuple.primary);
+            var primaryTone = ToneRegistry.SelectWeighted(category);
+            var secondaryTone = ToneRegistry.SelectWeighted(category);
+
+            result.Baseline = Blend(primaryTone, secondaryTone, 0.5f);
+            result.AddTrace($"[1] Baseline from {moodTuple.primary} ({category}): {result.Baseline}");
+
+            // 2. Blend adjacents
+            result.Blended = result.Baseline;
+            if (moodTuple.adjacents != null)
             {
-                return new ResolutionResult(vb, default);
+                foreach (var adj in moodTuple.adjacents)
+                {
+                    result.Blended = Blend(result.Blended, adj.tone);
+                    result.AddTrace($"[2] Blended with {adj.mood}: {result.Blended}");
+                }
             }
 
-            // Use incoming mood axis for tone resolution
-            int axis = (int)mv.MoodAxis;
+            // 3. Complement adjustment
+            string compCategory = ResolveCategory(complement);
+            var compTone = ToneRegistry.SelectWeighted(compCategory);
+            result.ComplementAdjusted = Blend(result.Blended, compTone, 0.25f);
+            result.AddTrace($"[3] Complement {complement} ({compCategory}): {result.ComplementAdjusted}");
 
-            Tone primary       = ResolvePrimary(axis);
-            Tone adj1          = ResolvePrimary(axis - 2);
-            Tone adj2          = ResolvePrimary(axis + 2);
-            Tone complementary = ResolvePrimary(-axis);
+            // 4. Bias gravity
+            var preferredTone = BiasPreferredTone(bias);
+            float strength = Math.Clamp(bias.Persistence / 10f, 0f, 1f);
 
-            // Deduplicate undertones
-            var undertones = new HashSet<Tone>();
-            if (DebugOverlay.SafeFloat(vb.SinTheta) > 0.7f) undertones.Add(Tone.Irony);
-            if (DebugOverlay.SafeFloat(vb.TanTheta) > 1.2f) undertones.Add(Tone.Volatility);
+            result.BiasAdjusted = ApplyBias(
+                result.ComplementAdjusted,
+                preferredTone,
+                strength,
+                biasMode,
+                rng
+            );
 
-            vb.ToneTuple = new ToneTuple
+            result.AddTrace($"[4] Bias applied ({biasMode}, strength {strength}): {result.BiasAdjusted}");
+
+            // 5. Persistence modifiers (legacy overrides removed)
+            result.Final = result.BiasAdjusted;
+
+            // Recover weights for next cycle
+            ToneRegistry.RecoverWeights();
+
+            return result;
+        }
+
+        // --- Helpers ---
+        private static string ResolveCategory(Mood mood)
+        {
+            if (Enum.TryParse<MoodType>(mood.ToString(), out var moodType))
             {
-                Primary       = primary,
-                Adjacent1     = adj1,
-                Adjacent2     = adj2,
-                Complementary = complementary
-            };
+                return ToneRegistry.ResolveCategory(moodType);
+            }
+            return "Neutral";
+        }
 
-            var cluster = new List<Tone>
-            {
-                vb.ToneTuple.Primary,
-                vb.ToneTuple.Adjacent1,
-                vb.ToneTuple.Adjacent2,
-                vb.ToneTuple.Complementary
-            };
-            cluster.AddRange(undertones); // no duplicates
+        private static Tone Blend(Tone baseTone, Tone modifierTone, float weight = 0.5f)
+        {
+            var baseValue = (int)baseTone;
+            var modifierValue = (int)modifierTone;
+            var blendedValue = (int)(baseValue + (modifierValue - baseValue) * weight);
+            return (Tone)blendedValue;
+        }
 
-            vb.ToneCluster = cluster;
+        private static Tone ApplyBias(Tone candidate, Tone preferred, float biasStrength, BiasMode mode, Random rng)
+        {
+            if (mode == BiasMode.Probabilistic)
+                return rng.NextDouble() < biasStrength ? preferred : candidate;
 
-            DebugOverlay.LogResolver(nameof(ToneClusterResolver), vb);
+            var candidateValue = (int)candidate;
+            var preferredValue = (int)preferred;
+            var adjustedValue = (int)(candidateValue + (preferredValue - candidateValue) * biasStrength);
+            return (Tone)adjustedValue;
+        }
 
+        private static Tone BiasPreferredTone(VectorBias bias)
+        {
+            if (bias == null)
+                return Tone.Neutral;
+
+            var moodType = MoodTypeExtensions.Resolve(bias.MoodAxis);
+            var category = ToneRegistry.ResolveCategory(moodType);
+
+            var tones = ToneRegistry.GetByCategory(category).ToList();
+            return tones.Any() ? ToneRegistry.SelectWeighted(category) : Tone.Neutral;
+        }
+
+        // --- IResolver implementation ---
+        public ResolutionResult Resolve(VectorBias vb, Mood mv)
+        {
+            // Adapt interface inputs into ResolveTone pipeline
+            var moodTuple = (mv, new List<(Mood mood, Tone tone)>(), Mood.Neutral);
+            var complement = Mood.Neutral;
+
+            var toneResult = ResolveTone(
+                moodTuple,
+                complement,
+                vb,
+                BiasMode.Deterministic
+            );
+
+            // Build DeltaSummary from bias context
             var summary = new DeltaSummary
             {
-                DeltaAxis   = mv.MoodAxis - vb.MoodAxis,
-                Magnitude   = mv.MagnitudeFrom(vb.CurrentMood),
-                Hypotenuse  = vb.Hypotenuse,
-                Area        = vb.Area,
-                AngleTheta  = vb.AngleTheta,
-                SinTheta    = vb.SinTheta,
-                CosTheta    = vb.CosTheta,
-                TanTheta    = vb.TanTheta
+                DeltaAxis   = vb.MoodAxis,
+                Magnitude   = vb.Persistence,
+                Hypotenuse  = (float)Math.Sqrt(vb.MoodAxis * vb.MoodAxis + vb.Persistence * vb.Persistence),
+                Area        = vb.MoodAxis * vb.Persistence,
+                AngleTheta  = (float)Math.Atan2(vb.Persistence, vb.MoodAxis),
+                SinTheta    = (float)Math.Sin(vb.MoodAxis),
+                CosTheta    = (float)Math.Cos(vb.MoodAxis),
+                TanTheta    = (float)Math.Tan(vb.MoodAxis)
             };
 
             return new ResolutionResult(vb, summary);
         }
-
-        private Tone ResolvePrimary(int axis) => axis switch
-        {
-            <= -9 => Tone.Fracture,
-            <= -5 => Tone.Scar,
-            <= -1 => Tone.Neutral,   // Neutral will later map to LegacyTraitLock.Equilibrium
-            <= 4  => Tone.Resonance,
-            _     => Tone.Harmony
-        };
     }
 }
