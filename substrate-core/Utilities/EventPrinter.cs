@@ -38,7 +38,7 @@ namespace substrate_core.Utilities
             if (allEvents == null || !allEvents.Any())
                 return;
 
-            int startTick = Math.Max(1, currentTick - windowSize + 1);
+            var startTick = Math.Max(1, currentTick - windowSize + 1);
             var windowEvents = allEvents.Where(e => e.TickId >= startTick && e.TickId <= currentTick);
 
             Console.WriteLine($"[Ticks {startTick}-{currentTick}] Rolling Event Summary (last {windowSize} ticks):");

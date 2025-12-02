@@ -12,12 +12,12 @@ namespace substrate_shared.enums.Extensions
             _ => tone.ToString()
         };
 
-        public static string GetNarrativeName(this LegacyTraitLock legacy) => legacy switch
+        public static string GetNarrativeName(this TraitAffinity legacy) => legacy switch
         {
-            LegacyTraitLock.None => "None",
-            LegacyTraitLock.Memory => "Memory",
-            LegacyTraitLock.Inertia => "Inertia",
-            LegacyTraitLock.Absorption => "Absorption",
+            TraitAffinity.None => "None",
+            TraitAffinity.Memory => "Memory",
+            TraitAffinity.Inertia => "Inertia",
+            TraitAffinity.Absorption => "Absorption",
             _ => legacy.ToString()
         };
 

@@ -14,17 +14,6 @@ namespace substrate_core.Managers
 {
     public class SimulationManager
     {
-        private readonly List<IResolver> _resolvers = new()
-        {
-            new DeltaVectorResolver(),
-            new ToneClusterResolver(),
-            new LegacyBiasUpdater(),
-            new PersistenceResolver(),
-            new TriggerResolver(),
-            new VolatilityResolver(),
-            new IntentActionResolver()
-        };
-
         private int _tickCounter = 0;
 
         // Lifetime buffer of all trigger events
@@ -40,14 +29,26 @@ namespace substrate_core.Managers
 
             ResolutionResult lastResult = default;
 
+            var vbr = new VectorBiasResolver();
+
+            lastResult = vbr.Resolve(vb, mv);
+            DebugOverlay.LogResolver(vbr.GetType().Name, vb);
+            
             // Run through resolver pipeline
-            foreach (var resolver in _resolvers)
+            /*foreach (var resolver in _resolvers)
             {
                 lastResult = resolver.Resolve(vb, mv);
                 vb = lastResult.Bias;
                 DebugOverlay.LogResolver(resolver.GetType().Name, vb);
-            }
+            }*/
 
+            
+            /***** TODO ONCE WE HAVE COMPLETED ALL THE SUMMARIES, WE HAVE TO CREATE A PERSONALTIY PROFILE
+             *      VECTOR BIAS WILL HOLD ALL THE SUMMARIES
+             *      WHOEVER CALLS RUN TICK NEEDS TO GENERATE THE NEW VECTORBIAS
+             */
+            
+            
             // Add events to lifetime buffer and global registry
             _allEvents.AddRange(vb.TriggerEvents);
             EventLog.AddEvents(vb.TriggerEvents);
@@ -89,8 +90,8 @@ namespace substrate_core.Managers
 
         private void ValidateTickState(VectorBias vb, int tick)
         {
-            bool persistenceNaN = float.IsNaN(vb.Persistence);
-            bool volatilityNaN  = float.IsNaN(vb.Volatility);
+            var persistenceNaN = float.IsNaN(vb.Persistence);
+            var volatilityNaN  = float.IsNaN(vb.Volatility);
 
             if (persistenceNaN || volatilityNaN)
             {
@@ -105,8 +106,8 @@ namespace substrate_core.Managers
                 Console.WriteLine($"[Tick {tick}] Trigger Events:");
                 foreach (var e in current)
                 {
-                    string scoreText = float.IsNaN(e.Score) ? "NaN" : e.Score.ToString("F2");
-                    string magText   = float.IsNaN(e.Magnitude) ? "NaN" : e.Magnitude.ToString("F2");
+                    var scoreText = float.IsNaN(e.Score) ? "NaN" : e.Score.ToString("F2");
+                    var magText   = float.IsNaN(e.Magnitude) ? "NaN" : e.Magnitude.ToString("F2");
                     Console.WriteLine($"  {e.Type} (score={scoreText}, magnitude={magText}) — {e.Description}");
                 }
 

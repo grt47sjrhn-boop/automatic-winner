@@ -12,7 +12,7 @@ namespace substrate_tools.Utilities
         public static Mood GenerateMood()
         {
             // Pick a random axis between -11 and +11
-            int axis = _rng.Next(-11, 12);
+            var axis = _rng.Next(-11, 12);
 
             var mood = new Mood();
             mood.MoodAxis = axis;      // auto-syncs MoodType
@@ -24,7 +24,7 @@ namespace substrate_tools.Utilities
         public static IEnumerable<Mood> GenerateSequence(int count)
         {
             var moods = new List<Mood>();
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
                 moods.Add(GenerateMood());
             return moods;
         }

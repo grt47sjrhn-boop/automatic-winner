@@ -4,6 +4,7 @@ using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_core.Resolvers
 {
@@ -18,11 +19,11 @@ namespace substrate_core.Resolvers
             vb.TriggerEvents ??= new System.Collections.Generic.List<TriggerEvent>();
             vb.Traits ??= new System.Collections.Generic.List<Trait>();
 
-            int tickId = vb.TickId;
+            var tickId = vb.TickId;
 
-            float hyp = DebugOverlay.SafeFloat(vb.Hypotenuse);
-            float area = DebugOverlay.SafeFloat(vb.Area);
-            float crystallizationScore = hyp * area;
+            var hyp = DebugOverlay.SafeFloat(vb.Hypotenuse);
+            var area = DebugOverlay.SafeFloat(vb.Area);
+            var crystallizationScore = hyp * area;
 
             // Crystallization attempt
             if (crystallizationScore > 50f)
@@ -62,7 +63,7 @@ namespace substrate_core.Resolvers
             // Trait activations
             foreach (var trait in vb.Traits.Where(t => t.State == TraitState.Active))
             {
-                float w = DebugOverlay.SafeFloat(trait.Weight);
+                var w = DebugOverlay.SafeFloat(trait.Weight);
                 vb.TriggerEvents.Add(new TriggerEvent
                 {
                     Type        = TriggerType.TraitActivation,
@@ -79,7 +80,7 @@ namespace substrate_core.Resolvers
             int crystallizedCount = vb.Traits.Count(t => t.IsCrystallized);
             if (crystallizedCount >= 3)
             {
-                float constellationMagnitude = DebugOverlay.SafeFloat(vb.Traits.Sum(t => DebugOverlay.SafeFloat(t.Weight)));
+                var constellationMagnitude = DebugOverlay.SafeFloat(vb.Traits.Sum(t => DebugOverlay.SafeFloat(t.Weight)));
                 vb.TriggerEvents.Add(new TriggerEvent
                 {
                     Type        = TriggerType.ConstellationFormation,

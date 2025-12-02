@@ -46,12 +46,12 @@ namespace substrate_shared.enums.Extensions
 
         public static string DescribeNeighborhoodCluster(float axis, int range = 2)
         {
-            int rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
+            var rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
             var results = new List<MoodType>();
 
-            for (int offset = -range; offset <= range; offset++)
+            for (var offset = -range; offset <= range; offset++)
             {
-                int candidate = rounded + offset;
+                var candidate = rounded + offset;
                 if (Enum.IsDefined(typeof(MoodType), candidate))
                     results.Add((MoodType)candidate);
             }
@@ -63,8 +63,8 @@ namespace substrate_shared.enums.Extensions
 
         public static string DescribeOpposite(float axis)
         {
-            int rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
-            int opposite = -rounded;
+            var rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
+            var opposite = -rounded;
 
             if (!Enum.IsDefined(typeof(MoodType), opposite))
                 return $"No opposite mood found for axis {axis:F1}.";
@@ -76,10 +76,10 @@ namespace substrate_shared.enums.Extensions
         public static string DescribeFullContext(float axis, int range = 2)
         {
             var current = Resolve(axis);
-            string currentDesc = $"{current}: {current.GetDescription()} (Group: {current.GetNarrativeGroup()})";
+            var currentDesc = $"{current}: {current.GetDescription()} (Group: {current.GetNarrativeGroup()})";
 
-            string neighborhood = DescribeNeighborhoodCluster(axis, range);
-            string opposite = DescribeOpposite(axis);
+            var neighborhood = DescribeNeighborhoodCluster(axis, range);
+            var opposite = DescribeOpposite(axis);
 
             return $"Current Mood → {currentDesc}" + Environment.NewLine +
                    neighborhood + Environment.NewLine +
@@ -112,8 +112,8 @@ namespace substrate_shared.enums.Extensions
 
         public static MoodType Resolve(float axis)
         {
-            float clamped = MathF.Max(-11f, MathF.Min(11f, axis));
-            int rounded = (int)MathF.Round(clamped);
+            var clamped = MathF.Max(-11f, MathF.Min(11f, axis));
+            var rounded = (int)MathF.Round(clamped);
 
             if (Enum.IsDefined(typeof(MoodType), rounded))
                 return (MoodType)rounded;

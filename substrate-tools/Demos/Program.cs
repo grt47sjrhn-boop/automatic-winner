@@ -33,7 +33,7 @@ namespace substrate_tools.Demos
             var vb = InitializeVectorBias();
 
             // Choose mood generator based on config
-            IEnumerable<Mood> moods = config.UseHybridMoods
+            var moods = config.UseHybridMoods
                 ? HybridMoodGenerator.GenerateHybridSequence(config.TickCount)
                 : RandomMoodGenerator.GenerateSequence(config.TickCount);
 
@@ -52,7 +52,7 @@ namespace substrate_tools.Demos
         {
             var config = new DemoConfig();
 
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 switch (args[i])
                 {
@@ -62,27 +62,27 @@ namespace substrate_tools.Demos
                         break;
                     case "--ticks":
                     case "-t":
-                        if (TryGetArg(args, i, out string ticksArg) && int.TryParse(ticksArg, out int ticks))
+                        if (TryGetArg(args, i, out var ticksArg) && int.TryParse(ticksArg, out var ticks))
                             config.TickCount = ticks;
                         break;
                     case "--hybrid":
                     case "-h":
-                        if (TryGetArg(args, i, out string hybridArg) && bool.TryParse(hybridArg, out bool hybrid))
+                        if (TryGetArg(args, i, out var hybridArg) && bool.TryParse(hybridArg, out var hybrid))
                             config.UseHybridMoods = hybrid;
                         break;
                     case "--charts":
                     case "-c":
-                        if (TryGetArg(args, i, out string chartsArg) && bool.TryParse(chartsArg, out bool charts))
+                        if (TryGetArg(args, i, out var chartsArg) && bool.TryParse(chartsArg, out var charts))
                             config.GenerateCharts = charts;
                         break;
                     case "--narratives":
                     case "-n":
-                        if (TryGetArg(args, i, out string narrArg) && bool.TryParse(narrArg, out bool narr))
+                        if (TryGetArg(args, i, out var narrArg) && bool.TryParse(narrArg, out var narr))
                             config.PrintNarratives = narr;
                         break;
                     case "--mode":
                     case "-m":
-                        if (TryGetArg(args, i, out string modeArg) && Enum.TryParse(modeArg, true, out NarrativeMode mode))
+                        if (TryGetArg(args, i, out var modeArg) && Enum.TryParse(modeArg, true, out NarrativeMode mode))
                             config.Mode = mode;
                         break;
                 }
@@ -135,7 +135,7 @@ namespace substrate_tools.Demos
                 persistenceValues.Add(result.Bias.Persistence);
                 volatilityValues.Add(result.Bias.ExpVolatility);
 
-                for (int i = 0; i < Math.Min(3, result.Bias.Traits.Count); i++)
+                for (var i = 0; i < Math.Min(3, result.Bias.Traits.Count); i++)
                     traitWeightSeries[i].Add(result.Bias.Traits[i].Weight);
 
                 foreach (var evt in result.TriggerEvents)

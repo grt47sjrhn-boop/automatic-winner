@@ -51,7 +51,7 @@ namespace substrate_tools.Utilities
             var volatilitySeries = plot.Add.Scatter(xs, volatilityValues.ToArray());
             volatilitySeries.LegendText = "Volatility";
 
-            int traitIndex = 1;
+            var traitIndex = 1;
             foreach (var traitWeights in traitWeightSeries)
             {
                 var traitSeries = plot.Add.Scatter(xs, traitWeights.ToArray());
@@ -84,11 +84,11 @@ namespace substrate_tools.Utilities
                 return;
             }
 
-            int tickCount = traitWeightSeries.First().Count;
+            var tickCount = traitWeightSeries.First().Count;
             var xs = Enumerable.Range(1, tickCount).Select(i => (double)i).ToArray();
 
-            double[] cumulative = new double[tickCount];
-            int traitIndex = 1;
+            var cumulative = new double[tickCount];
+            var traitIndex = 1;
 
             foreach (var traitWeights in traitWeightSeries)
             {

@@ -25,12 +25,16 @@ namespace substrate_core.Utilities
         // Resolver debug logging
         public static void LogResolver(string resolverName, VectorBias vb)
         {
-            Console.WriteLine($"[{resolverName}] " +
-                              $"Persistence={vb.Persistence:F2}, Volatility={vb.Volatility:F2}, " +
-                              $"Area={vb.Area:F2}, Hyp={vb.Hypotenuse:F2}, Angle={vb.AngleTheta:F2}");
+            Console.WriteLine($"[{resolverName}]");
+
+            foreach (var summary in vb.Summaries.Values)
+            {
+                Console.WriteLine("  " + summary.Describe());
+            }
         }
 
-        public static void LogTrigger(VectorBias vb, float crystallizationScore)
+
+        /*public static void LogTrigger(VectorBias vb, float crystallizationScore)
         {
             Console.WriteLine($"[TriggerResolver] Hyp={vb.Hypotenuse:F2}, Area={vb.Area:F2}, " +
                               $"Score={crystallizationScore:F2}, Events={vb.TriggerEvents.Count}");
@@ -40,6 +44,6 @@ namespace substrate_core.Utilities
                 string magText = float.IsNaN(evt.Magnitude) ? "NaN" : evt.Magnitude.ToString("F2");
                 Console.WriteLine($"  Event: {evt.Type}, Score={scoreText}, Magnitude={magText}, Desc={evt.Description}");
             }
-        }
+        }*/
     }
 }

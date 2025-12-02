@@ -10,8 +10,8 @@ namespace substrate_core.Resolvers
         /// </summary>
         public static MoodType Resolve(float axis)
         {
-            float clamped = MathF.Max(-11f, MathF.Min(11f, axis));
-            int rounded = (int)MathF.Round(clamped);
+            var clamped = MathF.Max(-11f, MathF.Min(11f, axis));
+            var rounded = (int)MathF.Round(clamped);
 
             if (Enum.IsDefined(typeof(MoodType), rounded))
                 return (MoodType)rounded;
@@ -25,9 +25,9 @@ namespace substrate_core.Resolvers
         public static (MoodType Current, MoodType? Previous, MoodType? Next, MoodType? Opposite) ResolveWithContext(float axis)
         {
             // Current mood
-            MoodType current = Resolve(axis);
+            var current = Resolve(axis);
 
-            int rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
+            var rounded = (int)MathF.Round(MathF.Max(-11f, MathF.Min(11f, axis)));
 
             // Adjacent moods
             MoodType? prev = Enum.IsDefined(typeof(MoodType), rounded - 1)
@@ -39,7 +39,7 @@ namespace substrate_core.Resolvers
                 : null;
 
             // Opposite mood (mirrored across axis)
-            int opposite = -rounded;
+            var opposite = -rounded;
             MoodType? opp = Enum.IsDefined(typeof(MoodType), opposite)
                 ? (MoodType)opposite
                 : null;

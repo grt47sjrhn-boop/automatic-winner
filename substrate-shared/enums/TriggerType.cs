@@ -6,6 +6,10 @@ namespace substrate_shared.enums
         CrystallizationAttempt,
         TraitActivation,
         ConstellationFormation,
-        FragmentationAttempt
+        FragmentationAttempt,
+        RecoverySurge,
+        Reconnection,
+        Reflection,
+        LegacyEcho
     }
 }

@@ -25,7 +25,7 @@ namespace substrate_core.Generators
                 toneTuple = toneTuple with { Primary = Tone.Equilibrium };
 
             // ✅ Choose template based on Intent first, fallback to Tone
-            string template = vb.Intent != IntentType.None
+            var template = vb.Intent != IntentType.None
                 ? NarrativeTemplateLibrary.GetTemplate(vb.Intent, tickId)
                 : NarrativeTemplateLibrary.GetTemplate(toneTuple, tickId);
 
@@ -44,7 +44,7 @@ namespace substrate_core.Generators
                 .Replace("{Complementary}", undertones.ElementAtOrDefault(2) ?? "");
 
             // Legacy tilt
-            if (vb.Legacy != LegacyTraitLock.None && mode != NarrativeMode.TechnicalOnly)
+            if (vb.Legacy != TraitAffinity.None && mode != NarrativeMode.TechnicalOnly)
                 line += $" Legacy tilt binds toward {vb.Legacy.GetNarrativeName()}.";
 
             // Trigger events

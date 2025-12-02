@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_shared.types.models
 {

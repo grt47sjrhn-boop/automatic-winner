@@ -6,6 +6,7 @@ using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_core.Resolvers
 {
@@ -29,7 +30,7 @@ namespace substrate_core.Resolvers
             const float restThreshold = 1.0f;   // hypotenuse considered "rest"
 
             // 1) Accumulate stretch
-            float hyp = DebugOverlay.SafeFloat(vb.Hypotenuse);
+            var hyp = DebugOverlay.SafeFloat(vb.Hypotenuse);
             vb.AccumulatedTension = DebugOverlay.SafeFloat(vb.AccumulatedTension + hyp * stretchGain);
 
             // 2) Slow decay if near rest
@@ -37,11 +38,11 @@ namespace substrate_core.Resolvers
                 vb.AccumulatedTension = DebugOverlay.SafeFloat(vb.AccumulatedTension * (1f - restDecay));
 
             // 3) Bleed tension by persistence (subtract each tick)
-            float bleed = DebugOverlay.SafeFloat(vb.Persistence * bleedFactor);
+            var bleed = DebugOverlay.SafeFloat(vb.Persistence * bleedFactor);
             vb.AccumulatedTension = DebugOverlay.SafeFloat(vb.AccumulatedTension - bleed);
 
             // 4) Event-based release (crystallization/fragmentation)
-            float tickReleaseScore = 0f;
+            var tickReleaseScore = 0f;
             foreach (var e in vb.TriggerEvents)
             {
                 if (e.Type == TriggerType.CrystallizationAttempt)

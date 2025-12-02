@@ -5,6 +5,7 @@ using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_core.Resolvers
 {
@@ -21,11 +22,11 @@ namespace substrate_core.Resolvers
             if (vb.ToneTuple.Equals(default(ToneTuple)))
                 return new ResolutionResult(vb, default);
 
-            bool hasDuality = vb.Traits?.Any(t => t.Tags.Contains(TraitTag.Duality)) ?? false;
+            var hasDuality = vb.Traits?.Any(t => t.Tags.Contains(TraitTag.Duality)) ?? false;
 
-            float persistence = DebugOverlay.SafeFloat(vb.Persistence);
-            float volatility  = DebugOverlay.SafeFloat(vb.ExpVolatility);
-            float area        = DebugOverlay.SafeFloat(vb.Area);
+            var persistence = DebugOverlay.SafeFloat(vb.Persistence);
+            var volatility  = DebugOverlay.SafeFloat(vb.ExpVolatility);
+            var area        = DebugOverlay.SafeFloat(vb.Area);
 
             if (vb.ToneTuple.Primary == Tone.Resonance && persistence > 2.5f)
                 vb.Intent = IntentType.Stabilize;

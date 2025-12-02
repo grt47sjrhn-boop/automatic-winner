@@ -22,10 +22,10 @@ namespace substrate_core.Generators
                 return "No events in the specified window.";
 
             // === Technical metrics ===
-            float avgPersistence = window.Average(e => e.Persistence);
-            float avgVolatility = window.Average(e => e.Volatility);
-            float deltaPersistence = window.Last().Persistence - window.First().Persistence;
-            float deltaVolatility = window.Last().Volatility - window.First().Volatility;
+            var avgPersistence = window.Average(e => e.Persistence);
+            var avgVolatility = window.Average(e => e.Volatility);
+            var deltaPersistence = window.Last().Persistence - window.First().Persistence;
+            var deltaVolatility = window.Last().Volatility - window.First().Volatility;
 
             var sb = new StringBuilder();
             sb.AppendLine("=== Rolling Trend Analysis ===");
