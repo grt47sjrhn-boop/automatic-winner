@@ -11,12 +11,13 @@ namespace substrate_tools.Utilities
         // Generate a single random Mood
         public static Mood GenerateMood()
         {
-            return new Mood
-            {
-                MoodAxis = _rng.Next(-11, 12), // inclusive range -11 … +11
-                Magnitude = (float)(_rng.NextDouble() * 5.0), // 0.0 … 5.0
-                ClusterId = $"Cluster{_rng.Next(1, 100)}"
-            };
+            // Pick a random axis between -11 and +11
+            int axis = _rng.Next(-11, 12);
+
+            var mood = new Mood();
+            mood.MoodAxis = axis;      // auto-syncs MoodType
+
+            return mood;
         }
 
         // Generate a sequence of random Moods
@@ -24,9 +25,7 @@ namespace substrate_tools.Utilities
         {
             var moods = new List<Mood>();
             for (int i = 0; i < count; i++)
-            {
                 moods.Add(GenerateMood());
-            }
             return moods;
         }
     }

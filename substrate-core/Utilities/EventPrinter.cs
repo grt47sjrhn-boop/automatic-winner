@@ -21,13 +21,15 @@ namespace substrate_core.Utilities
                                     Type = g.Key,
                                     Count = g.Count(),
                                     AvgScore = g.Average(e => e.Score),
-                                    MaxScore = g.Max(e => e.Score)
+                                    MaxScore = g.Max(e => e.Score),
+                                    AvgPersistence = g.Average(e => e.Persistence),
+                                    AvgVolatility = g.Average(e => e.Volatility)
                                 });
 
-            Console.WriteLine("  Type                  Count   AvgScore   MaxScore");
-            Console.WriteLine("  -------------------------------------------------");
+            Console.WriteLine("  Type                  Count   AvgScore   MaxScore   AvgPersist   AvgVolatility");
+            Console.WriteLine("  ------------------------------------------------------------------------------");
             foreach (var g in grouped)
-                Console.WriteLine($"  {g.Type,-20} {g.Count,5}   {g.AvgScore,8:F2}   {g.MaxScore,8:F2}");
+                Console.WriteLine($"  {g.Type,-20} {g.Count,5}   {g.AvgScore,8:F2}   {g.MaxScore,8:F2}   {g.AvgPersistence,10:F2}   {g.AvgVolatility,12:F2}");
         }
 
         // Rolling window summary across last N ticks
@@ -47,13 +49,15 @@ namespace substrate_core.Utilities
                                           Type = g.Key,
                                           Count = g.Count(),
                                           AvgScore = g.Average(e => e.Score),
-                                          MaxScore = g.Max(e => e.Score)
+                                          MaxScore = g.Max(e => e.Score),
+                                          AvgPersistence = g.Average(e => e.Persistence),
+                                          AvgVolatility = g.Average(e => e.Volatility)
                                       });
 
-            Console.WriteLine("  Type                  Count   AvgScore   MaxScore");
-            Console.WriteLine("  -------------------------------------------------");
+            Console.WriteLine("  Type                  Count   AvgScore   MaxScore   AvgPersist   AvgVolatility");
+            Console.WriteLine("  ------------------------------------------------------------------------------");
             foreach (var g in grouped)
-                Console.WriteLine($"  {g.Type,-20} {g.Count,5}   {g.AvgScore,8:F2}   {g.MaxScore,8:F2}");
+                Console.WriteLine($"  {g.Type,-20} {g.Count,5}   {g.AvgScore,8:F2}   {g.MaxScore,8:F2}   {g.AvgPersistence,10:F2}   {g.AvgVolatility,12:F2}");
         }
     }
 }

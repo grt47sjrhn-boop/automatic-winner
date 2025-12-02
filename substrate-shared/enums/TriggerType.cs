@@ -5,6 +5,7 @@ namespace substrate_shared.enums
     {
         CrystallizationAttempt,
         TraitActivation,
-        ConstellationFormation
+        ConstellationFormation,
+        FragmentationAttempt
     }
 }

@@ -5,6 +5,7 @@ namespace substrate_shared.interfaces
 {
     public interface IResolver
     {
-        VectorBias Resolve(VectorBias vb, Mood mv);
+        ResolutionResult Resolve(VectorBias vb, Mood mv);
     }
+
 }

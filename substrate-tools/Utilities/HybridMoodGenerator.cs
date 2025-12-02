@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using substrate_shared.enums;
 using substrate_shared.types.structs;
 
 namespace substrate_tools.Utilities
@@ -9,10 +10,18 @@ namespace substrate_tools.Utilities
         {
             var moods = new List<Mood>();
 
-            // Scripted beats
-            moods.Add(new Mood { MoodAxis = -9, Magnitude = 3.5f, ClusterId = "ScarBeat" });
-            moods.Add(new Mood { MoodAxis = 4, Magnitude = 2.0f, ClusterId = "ResonanceBeat" });
-            moods.Add(new Mood { MoodAxis = 8, Magnitude = 4.0f, ClusterId = "HarmonyBeat" });
+            // Scripted beats (axis only, volatility defaults to 1.0f)
+            var scar = new Mood();
+            scar.SetMood(MoodType.Sadness);   // Axis auto-syncs to -9
+            moods.Add(scar);
+
+            var resonance = new Mood();
+            resonance.SetMood(MoodType.Optimism); // Axis auto-syncs to 4
+            moods.Add(resonance);
+
+            var harmony = new Mood();
+            harmony.SetMood(MoodType.Joy);    // Axis auto-syncs to 8
+            moods.Add(harmony);
 
             // Random filler
             moods.AddRange(RandomMoodGenerator.GenerateSequence(randomCount));

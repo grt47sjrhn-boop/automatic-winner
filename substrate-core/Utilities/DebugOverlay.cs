@@ -26,7 +26,7 @@ namespace substrate_core.Utilities
         public static void LogResolver(string resolverName, VectorBias vb)
         {
             Console.WriteLine($"[{resolverName}] " +
-                              $"Persistence={vb.Persistence:F2}, Volatility={vb.ExpVolatility:F2}, " +
+                              $"Persistence={vb.Persistence:F2}, Volatility={vb.Volatility:F2}, " +
                               $"Area={vb.Area:F2}, Hyp={vb.Hypotenuse:F2}, Angle={vb.AngleTheta:F2}");
         }
 

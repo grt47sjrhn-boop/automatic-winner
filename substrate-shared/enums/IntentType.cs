@@ -6,6 +6,9 @@ namespace substrate_shared.enums
         Stabilize,
         Disrupt,
         Reflect,
-        Amplify
+        Amplify,
+        Creation,
+        Destruction,
+        Transformation
     }
 }

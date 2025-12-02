@@ -1,10 +1,11 @@
-// substrate_core/Managers/SimulationManager.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using substrate_core.Generators;
+using substrate_core.Logging;
 using substrate_core.Resolvers;
 using substrate_core.Utilities;
+using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
@@ -16,9 +17,11 @@ namespace substrate_core.Managers
         private readonly List<IResolver> _resolvers = new()
         {
             new DeltaVectorResolver(),
-            new PersistenceResolver(),
             new ToneClusterResolver(),
+            new LegacyBiasUpdater(),
+            new PersistenceResolver(),
             new TriggerResolver(),
+            new VolatilityResolver(),
             new IntentActionResolver()
         };
 
@@ -27,51 +30,73 @@ namespace substrate_core.Managers
         // Lifetime buffer of all trigger events
         private readonly List<TriggerEvent> _allEvents = new();
 
-        public string RunTick(VectorBias vb, Mood mv)
+        public TickResult RunTick(VectorBias vb, Mood mv, NarrativeMode mode = NarrativeMode.Hybrid)
         {
             _tickCounter++;
             vb.TickId = _tickCounter;
 
-            // Per‑tick event buffer (prevents accumulation noise)
             vb.TriggerEvents = new List<TriggerEvent>();
-
             vb.Traits ??= new List<Trait>();
 
-            // Run resolvers step by step to allow debug overlays
+            ResolutionResult lastResult = default;
+
+            // Run through resolver pipeline
             foreach (var resolver in _resolvers)
             {
-                vb = resolver.Resolve(vb, mv);
+                lastResult = resolver.Resolve(vb, mv);
+                vb = lastResult.Bias;
                 DebugOverlay.LogResolver(resolver.GetType().Name, vb);
             }
 
-            // Add current tick’s events to lifetime buffer
+            // Add events to lifetime buffer and global registry
             _allEvents.AddRange(vb.TriggerEvents);
+            EventLog.AddEvents(vb.TriggerEvents);
 
-            // Validate and print
             ValidateTickState(vb, _tickCounter);
-
-            // Rolling summary (last 5 ticks by default)
             EventPrinter.PrintRollingSummary(_allEvents, _tickCounter, 5);
 
-            var narrative = NarrativeGenerator.Generate(vb);
-            return $"[Tick {_tickCounter}] {narrative}";
+            // Generate narrative with mode
+            var narrative = NarrativeGenerator.Generate(vb, vb.TickId, mode);
+
+            // Build tick result and immediately clone it for immutability
+            var tickResult = new TickResult
+            {
+                TickId        = _tickCounter,
+                Bias          = vb.Clone(),   // deep copy of bias
+                Summary       = lastResult.Summary,
+                Narrative     = $"[Tick {_tickCounter}] {narrative}",
+                TriggerEvents = vb.TriggerEvents
+            };
+
+            return tickResult.Clone(); // ensure full deep copy snapshot
         }
 
-        public IEnumerable<string> RunSimulation(VectorBias vb, IEnumerable<Mood> moods)
+        public IEnumerable<TickResult> RunSimulation(VectorBias vb, IEnumerable<Mood> moods, NarrativeMode mode = NarrativeMode.Hybrid)
         {
-            return moods.Select(mood => RunTick(vb, mood)).ToList();
+            var results = new List<TickResult>();
+
+            foreach (var mood in moods)
+            {
+                // Each tick uses the updated RunTick with mode
+                var tickResult = RunTick(vb, mood, mode);
+
+                // Clone ensures immutability of stored results
+                results.Add(tickResult.Clone());
+            }
+
+            return results;
         }
 
         private void ValidateTickState(VectorBias vb, int tick)
         {
             bool persistenceNaN = float.IsNaN(vb.Persistence);
-            bool volatilityNaN = float.IsNaN(vb.ExpVolatility);
+            bool volatilityNaN  = float.IsNaN(vb.Volatility);
 
             if (persistenceNaN || volatilityNaN)
             {
                 Console.WriteLine($"[Tick {tick}] ERROR: Persistence or Volatility is NaN.");
                 Console.WriteLine($"  Persistence: {(persistenceNaN ? "NaN" : vb.Persistence.ToString("F2"))}");
-                Console.WriteLine($"  Volatility: {(volatilityNaN ? "NaN" : vb.ExpVolatility.ToString("F2"))}");
+                Console.WriteLine($"  Volatility: {(volatilityNaN ? "NaN" : vb.Volatility.ToString("F2"))}");
             }
 
             var current = vb.TriggerEvents;
@@ -81,11 +106,10 @@ namespace substrate_core.Managers
                 foreach (var e in current)
                 {
                     string scoreText = float.IsNaN(e.Score) ? "NaN" : e.Score.ToString("F2");
-                    string magText = float.IsNaN(e.Magnitude) ? "NaN" : e.Magnitude.ToString("F2");
+                    string magText   = float.IsNaN(e.Magnitude) ? "NaN" : e.Magnitude.ToString("F2");
                     Console.WriteLine($"  {e.Type} (score={scoreText}, magnitude={magText}) — {e.Description}");
                 }
 
-                // Compact summary table for this tick
                 EventPrinter.PrintEventTable(current, tick);
             }
         }

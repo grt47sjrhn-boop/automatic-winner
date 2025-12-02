@@ -2,6 +2,10 @@ namespace substrate_shared.enums
 {
     public enum LegacyTraitLock
     {
-        None, ResilientHarmony, FracturedLegacy
+        None, ResilientHarmony, FracturedLegacy,
+        Equilibrium,
+        Memory,
+        Inertia,
+        Absorption
     }
 }

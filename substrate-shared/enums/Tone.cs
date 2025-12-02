@@ -10,6 +10,8 @@ namespace substrate_shared.enums
         Irony,        // optional undertone
         Volatility,   // optional undertone
         Duality       // optional undertone
+        ,
+        Equilibrium
     }
 
 }
