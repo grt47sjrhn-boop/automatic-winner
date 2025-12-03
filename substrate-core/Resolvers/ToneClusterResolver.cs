@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
@@ -58,39 +59,66 @@ namespace substrate_core.Resolvers
 
             // --- 3) Baseline tone from angle ---
             var baseline = ToneRegistry.ResolveFromAngle(delta.AngleTheta);
-            traces.Add($"[3] Baseline tone from angle → {baseline}");
+            traces.Add($"[3] Baseline tone from angle → {baseline.Label} ({baseline.Category}, {baseline.BiasValue})");
 
             // --- 4) Final tone from the strongest group ---
             var strongestGroup = map.GetStrongestGroup();
             var finalTone = ToneRegistry.SelectWeighted(strongestGroup);
-            traces.Add($"[4] Strongest group={strongestGroup}, final tone={finalTone}");
-        
-        
+            traces.Add($"[4] Strongest group={strongestGroup}, final tone={finalTone.Label} ({finalTone.Category}, {finalTone.BiasValue})");
+
+            // Neighborhoods based on enum key where needed
+            var resolvedEnumForNeighborhood = MapCategoryToEnum(finalTone.Category);
+            var adjacent = ToneRegistry.GetAdjacentByTone(resolvedEnumForNeighborhood);
+            var neighborhood = ToneRegistry.GetNeighborhoodByTone(resolvedEnumForNeighborhood);
+            var complementary = ToneRegistry.GetComplementNeighborhood(resolvedEnumForNeighborhood);
+
+            // Affinity
+            var affinity = ToneRegistry.ResolveAffinityFromCategory(category);
+
             // --- 5) Build summary ---
             var summary = new ToneClusterSummary
             {
-                Baseline       = baseline,
-                Blended        = baseline, // axis blending optional now
-                BiasAdjusted   = finalTone,
-                FinalTone      = finalTone,
-                ClusterWeights = ToneRegistry.CurrentWeights(),
+                Baseline          = baseline,
+                Blended           = baseline, // axis blending optional now; keep same for now
+                Complement        = null,     // can compute if you want: pick from complementary by weight
+                BiasAdjusted      = finalTone,
+                FinalTone         = finalTone,
+                ClusterWeights    = ToneRegistry.CurrentWeights(),
                 AngularCategories = ToneRegistry.GetAngularCategories(),
-                TraceLogs      = traces,
-                TickId         = vb.TickId,
-                AdjacentTones  = ToneRegistry.GetAdjacentByTone(finalTone),
-                ClusterNeighborhood = ToneRegistry.GetNeighborhoodByTone(finalTone),
-                ComplementaryTones = ToneRegistry.GetComplementNeighborhood(finalTone),
-                ResolvedAffinity = ToneRegistry.ResolveAffinityFromCategory(category)
+                TraceLogs         = traces,
+                TickId            = vb.TickId,
+                AdjacentTones     = adjacent,
+                ClusterNeighborhood = neighborhood,
+                ComplementaryTones = complementary,
+                Category          = category,
+                ResolvedAffinity  = affinity
             };
 
-            summary.TraceLogs.Add($"[5] Adjacent tones → {string.Join(", ", summary.AdjacentTones)}");
-            summary.TraceLogs.Add($"[6] Cluster neighborhood → {string.Join(", ", summary.ClusterNeighborhood)}");
-            summary.TraceLogs.Add($"[7] Complementary tones → {string.Join(", ", summary.ComplementaryTones)}");
-        
-            vb.AddSummary(summary);
+            summary.TraceLogs.Add($"[5] Adjacent tones → {string.Join(", ", summary.AdjacentTones.Select(t => t.Label))}");
+            summary.TraceLogs.Add($"[6] Cluster neighborhood → {string.Join(", ", summary.ClusterNeighborhood.Select(t => t.Label))}");
+            summary.TraceLogs.Add($"[7] Complementary tones → {string.Join(", ", summary.ComplementaryTones.Select(t => t.Label))}");
 
+            vb.AddSummary(summary);
             DebugOverlay.LogResolver(nameof(ToneClusterResolver), vb);
             return new ResolutionResult(vb);
+        }
+
+        // Map category string to a canonical Tone enum for neighborhood lookups
+        private static Tone MapCategoryToEnum(string category)
+        {
+            // Minimal mapping: pick a representative enum in that category
+            // You can expand this map or derive from your registry to find the canonical representative
+            return category?.ToLowerInvariant() switch
+            {
+                "despair"   => Tone.Sad,
+                "hostility" => Tone.Angry,
+                "darkness"  => Tone.Somber,
+                "neutral"   => Tone.Neutral,
+                "anxiety"   => Tone.Tense,
+                "resonance" => Tone.Nostalgic, // neutral-leaning resonance bucket
+                "joy"       => Tone.Joyful,
+                _           => Tone.Neutral
+            };
         }
     }
 }

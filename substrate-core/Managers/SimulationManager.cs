@@ -7,6 +7,7 @@ using substrate_core.Resolvers;
 using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
+using substrate_shared.Registries;
 using substrate_shared.types.models;
 using substrate_shared.types.models.Profiles;
 using substrate_shared.types.models.StateMachines;
@@ -89,6 +90,8 @@ namespace substrate_core.Managers
 
         public IEnumerable<TickResult> RunSimulation(VectorBias vb, IEnumerable<Mood> moods, NarrativeMode mode = NarrativeMode.Hybrid)
         {
+            ToneRegistry.AuditToneRegistry();
+            
             var results = new List<TickResult>();
             foreach (var mood in moods)
             {

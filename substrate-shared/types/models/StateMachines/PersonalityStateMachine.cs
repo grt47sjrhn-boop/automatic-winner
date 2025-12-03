@@ -169,5 +169,26 @@ namespace substrate_shared.types.models.StateMachines
                 _                => MoodType.Neutral
             };
         }
+        
+        private MoodType MapToneToMood(NarrativeTone nt)
+        {
+            if (nt == null) return MoodType.Neutral;
+
+            return nt.Category.ToLowerInvariant() switch
+            {
+                "despair"   => MoodType.Sadness,
+                "hostility" => MoodType.Irritation,
+                "darkness"  => MoodType.Anxiety,
+                "neutral"   => MoodType.Neutral,
+                "anxiety"   => MoodType.Anxiety,
+                "resonance" => MoodType.Happiness,
+                "joy"       => MoodType.Happiness,
+                "confidence"=> MoodType.Contentment,
+                "love"      => MoodType.Contentment,
+                "wonder"    => MoodType.Happiness,
+                _           => MoodType.Neutral
+            };
+        }
+
     }
 }

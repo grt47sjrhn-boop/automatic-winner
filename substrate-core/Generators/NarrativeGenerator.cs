@@ -18,10 +18,10 @@ namespace substrate_core.Generators
         {
             // ToneClusterSummary drives tonal resolution
             var toneSummary = vb.Summaries.Values.OfType<ToneClusterSummary>().FirstOrDefault();
-            if (toneSummary == null )
+            if (toneSummary == null)
                 return $"[Tick {tickId}] No tonal resolution available.";
 
-            // Construct a ToneTuple from ToneClusterSummary fields
+            // Construct a ToneTuple from ToneClusterSummary fields (NarrativeTone-based)
             var toneTuple = new ToneTuple
             {
                 Primary       = toneSummary.FinalTone,
@@ -30,15 +30,21 @@ namespace substrate_core.Generators
                 Complementary = toneSummary.ComplementaryTones.FirstOrDefault()
             };
 
-            // Map Neutral → Equilibrium
-            if (toneTuple.Primary == Tone.Neutral)
-                toneTuple.Primary = Tone.Equilibrium;
+            // Map Neutral → Equilibrium (NarrativeTone.Category check)
+            if (toneTuple.Primary != null &&
+                toneTuple.Primary.Category.Equals("Neutral", System.StringComparison.OrdinalIgnoreCase))
+            {
+                toneTuple.Primary = new NarrativeTone("Equilibrium", "Neutral", "Neutral")
+                {
+                    Category = "Equilibrium"
+                };
+            }
 
             // IntentActionSummary drives intent
             var intentSummary = vb.Summaries.Values.OfType<IntentActionSummary>().FirstOrDefault();
             var intent = intentSummary?.Intent ?? IntentType.None;
 
-            // ✅ Choose template based on Intent first, fallback to Tone
+            // ✅ Choose template based on Intent first, fallback to ToneTuple
             var template = intent != IntentType.None
                 ? NarrativeTemplateLibrary.GetTemplate(intent, tickId)
                 : NarrativeTemplateLibrary.GetTemplate(toneTuple, tickId);
@@ -46,24 +52,24 @@ namespace substrate_core.Generators
             // Deduplicate undertones
             var undertones = new HashSet<string>
             {
-                toneTuple.Adjacent1.GetNarrativeName(),
-                toneTuple.Adjacent2.GetNarrativeName(),
-                toneTuple.Complementary.GetNarrativeName()
+                toneTuple.Adjacent1?.Label,
+                toneTuple.Adjacent2?.Label,
+                toneTuple.Complementary?.Label
             }.Where(s => !string.IsNullOrEmpty(s)).ToList();
 
             var line = template
-                .Replace("{Primary}", toneTuple.Primary.GetNarrativeName())
+                .Replace("{Primary}", toneTuple.Primary?.Label ?? "")
                 .Replace("{Adj1}", undertones.ElementAtOrDefault(0) ?? "")
                 .Replace("{Adj2}", undertones.ElementAtOrDefault(1) ?? "")
                 .Replace("{Complementary}", undertones.ElementAtOrDefault(2) ?? "");
 
             // Legacy tilt / affinity (from ToneClusterSummary)
-            if (toneSummary.ResolvedAffinity.HasValue && toneSummary.ResolvedAffinity.Value != TraitAffinity.None 
-                && mode != NarrativeMode.TechnicalOnly)
+            if (toneSummary.ResolvedAffinity.HasValue &&
+                toneSummary.ResolvedAffinity.Value != TraitAffinity.None &&
+                mode != NarrativeMode.TechnicalOnly)
             {
                 line += $" Legacy tilt binds toward {toneSummary.ResolvedAffinity.Value.GetNarrativeName()}.";
             }
-
 
             // Trigger events (from TriggerSummary)
             var triggerSummary = vb.Summaries.Values.OfType<TriggerSummary>().FirstOrDefault();

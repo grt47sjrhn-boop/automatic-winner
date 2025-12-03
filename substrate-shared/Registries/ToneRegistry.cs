@@ -90,7 +90,7 @@ namespace substrate_shared.Registries
             { Tone.Ecstatic, [new NarrativeTone("Ecstatic", "Wonder", "Positive")] }
         };
 
-        // Angular slice definitions: each slice maps to a category label
+        // --- Angular slice definitions: each slice maps to a category label
         private static readonly List<(float min, float max, string category)> _angularCategories = new()
         {
             (-MathF.PI, -3 * MathF.PI / 4f, "Despair"),
@@ -101,12 +101,18 @@ namespace substrate_shared.Registries
             (MathF.PI / 2f, 3 * MathF.PI / 4f, "Resonance"),
             (3 * MathF.PI / 4f, MathF.PI, "Joy")
         };
+        
+        // Weights keyed by NarrativeTone
+        private static readonly Dictionary<NarrativeTone, float> _weights =
+            _tones.Values.SelectMany(list => list)
+                .Where(nt => nt != null)
+                .ToDictionary(nt => nt, nt => 1f);
 
-        private static readonly Dictionary<Tone, float> _weights = _tones.Keys.ToDictionary(t => t, t => 1f);
         private static readonly Random _rng = new();
 
-        public static BiasMap PopulateBiasMap(float theta, float axis, float persistenceValue, float erosionFactor,
-            float direction)
+
+        // --- Bias mapping ---
+        public static BiasMap PopulateBiasMap(float theta, float axis, float persistenceValue, float erosionFactor, float direction)
         {
             var categories = _angularCategories.Select(ac => ac.category).Distinct();
             var map = new BiasMap(categories);
@@ -131,7 +137,7 @@ namespace substrate_shared.Registries
 
             return map;
         }
-
+        
         public static string ResolveCategoryFromAngle(float theta)
         {
             while (theta > MathF.PI) theta -= 2 * MathF.PI;
@@ -146,7 +152,7 @@ namespace substrate_shared.Registries
             return "Neutral";
         }
 
-        public static Tone ResolveFromAngle(float theta)
+        public static NarrativeTone ResolveFromAngle(float theta)
         {
             while (theta > MathF.PI) theta -= 2 * MathF.PI;
             while (theta < -MathF.PI) theta += 2 * MathF.PI;
@@ -157,15 +163,23 @@ namespace substrate_shared.Registries
                     return SelectWeighted(category);
             }
 
-            return Tone.Neutral;
+            // safe fallback
+            return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
         }
 
-        public static Tone SelectWeighted(string category)
+        // --- Weighted selection ---
+        public static NarrativeTone SelectWeighted(string category)
         {
             var candidates = GetByCategory(category).ToList();
 
             if (!candidates.Any())
-                return Tone.Neutral;
+                return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
+
+            foreach (var tone in candidates)
+            {
+                if (!_weights.ContainsKey(tone))
+                    _weights[tone] = 1f;
+            }
 
             float total = candidates.Sum(t => _weights[t]);
             if (total <= 0)
@@ -189,21 +203,21 @@ namespace substrate_shared.Registries
             return candidates.First(); // fallback
         }
 
-        public static IEnumerable<Tone> GetByCategory(string category)
+        public static IEnumerable<NarrativeTone> GetByCategory(string category)
         {
-            return _tones.Where(kvp =>
-                    kvp.Value.Any(nt =>
-                        nt != null && nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase)))
-                .Select(kvp => kvp.Key);
+            return _tones.Values
+                .SelectMany(list => list.Where(nt =>
+                    nt != null && nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase)));
         }
-
+        
         /// <summary>
         /// Get all tones in the same category as the given tone.
         /// </summary>
-        public static IEnumerable<Tone> GetNeighborhoodByTone(Tone tone)
+        // --- Neighborhoods & adjacency ---
+        public static IEnumerable<NarrativeTone> GetNeighborhoodByTone(Tone tone)
         {
             if (!_tones.ContainsKey(tone) || !_tones[tone].Any())
-                return Enumerable.Empty<Tone>();
+                return Enumerable.Empty<NarrativeTone>();
 
             var category = _tones[tone].First().Category;
             return GetByCategory(category);
@@ -223,19 +237,17 @@ namespace substrate_shared.Registries
             return neighbors;
         }
 
-        /// <summary>
-        /// Get tones from categories adjacent to the given tone’s category.
-        /// </summary>
-        public static IEnumerable<Tone> GetAdjacentByTone(Tone tone)
+        public static IEnumerable<NarrativeTone> GetAdjacentByTone(Tone tone)
         {
             if (!_tones.ContainsKey(tone) || !_tones[tone].Any())
-                return Enumerable.Empty<Tone>();
+                return Enumerable.Empty<NarrativeTone>();
 
             var category = _tones[tone].First().Category;
             var adjCats = GetAdjacentCategories(category);
 
             return adjCats.SelectMany(cat => GetByCategory(cat));
         }
+
         
         /// <summary>
         /// Get the complement category for a given tone, based on angular slices.
@@ -268,7 +280,7 @@ namespace substrate_shared.Registries
         /// <summary>
         /// Get the complement tones for a given tone.
         /// </summary>
-        public static IEnumerable<Tone> GetComplementNeighborhood(Tone tone)
+        public static IEnumerable<NarrativeTone> GetComplementNeighborhood(Tone tone)
         {
             var complementCategory = GetComplementCategory(tone);
             return GetByCategory(complementCategory);
@@ -294,7 +306,7 @@ namespace substrate_shared.Registries
         }
 
         // Expose current weights for summaries/debugging
-        public static IReadOnlyDictionary<Tone, float> CurrentWeights()
+        public static IReadOnlyDictionary<NarrativeTone, float> CurrentWeights()
         {
             return _weights;
         }
@@ -323,6 +335,29 @@ namespace substrate_shared.Registries
         public static TraitAffinity ResolveAffinityFromCategory(string category)
         {
             return _categoryAffinityMap.GetValueOrDefault(category, TraitAffinity.None);
+        }
+
+        public static void AuditToneRegistry()
+        {
+            Console.WriteLine("=== ToneRegistry Audit ===");
+
+            foreach (var kvp in _tones)
+            {
+                if (kvp.Value == null || !kvp.Value.Any())
+                {
+                    Console.WriteLine($"[ToneRegistry] Category {kvp.Key} has no tones.");
+                }
+                else if (kvp.Value.Any(nt => nt == null))
+                {
+                    Console.WriteLine($"[ToneRegistry] Category {kvp.Key} contains null entries.");
+                }
+                else
+                {
+                    Console.WriteLine($"[ToneRegistry] Category {kvp.Key} has {kvp.Value.Count} tones.");
+                }
+            }
+
+            Console.WriteLine("=== End Audit ===");
         }
     }
 }
