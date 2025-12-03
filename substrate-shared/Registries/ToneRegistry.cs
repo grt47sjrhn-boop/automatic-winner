@@ -205,10 +205,16 @@ namespace substrate_shared.Registries
 
         public static IEnumerable<NarrativeTone> GetByCategory(string category)
         {
+            if (string.IsNullOrWhiteSpace(category))
+                return Enumerable.Empty<NarrativeTone>();
+
             return _tones.Values
-                .SelectMany(list => list.Where(nt =>
-                    nt != null && nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase)));
+                .SelectMany(list => list ?? new List<NarrativeTone>())
+                .Where(nt => nt != null && 
+                             !string.IsNullOrEmpty(nt.Category) &&
+                             nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
         }
+
         
         /// <summary>
         /// Get all tones in the same category as the given tone.
