@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using substrate_shared.enums;
+using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.models.Profiles;
 using substrate_shared.types.Summaries;
@@ -38,6 +39,8 @@ namespace substrate_shared.types.structs
 
         // IntentActionResolver
         public IntentType IntentBias { get; set; }
+        public List<string> TraceLog { get; set; }
+        public ISummary Summary { get; set; }
 
         // Constructor for minimal init
         public ResolutionResult(VectorBias bias)

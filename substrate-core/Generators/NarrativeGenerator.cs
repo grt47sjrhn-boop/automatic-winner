@@ -5,8 +5,10 @@ using substrate_core.Libraries;
 using substrate_core.Logging;
 using substrate_shared.enums;
 using substrate_shared.enums.Extensions;
+using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_core.Generators
 {
@@ -14,19 +16,31 @@ namespace substrate_core.Generators
     {
         public static string Generate(VectorBias vb, int tickId, NarrativeMode mode = NarrativeMode.Hybrid)
         {
-            if (vb.ToneTuple.Equals(default(ToneTuple)))
+            // ToneClusterSummary drives tonal resolution
+            var toneSummary = vb.Summaries.Values.OfType<ToneClusterSummary>().FirstOrDefault();
+            if (toneSummary == null )
                 return $"[Tick {tickId}] No tonal resolution available.";
 
-            vb.TriggerEvents ??= new List<TriggerEvent>();
+            // Construct a ToneTuple from ToneClusterSummary fields
+            var toneTuple = new ToneTuple
+            {
+                Primary       = toneSummary.FinalTone,
+                Adjacent1     = toneSummary.AdjacentTones.ElementAtOrDefault(0),
+                Adjacent2     = toneSummary.AdjacentTones.ElementAtOrDefault(1),
+                Complementary = toneSummary.ComplementaryTones.FirstOrDefault()
+            };
 
             // Map Neutral → Equilibrium
-            var toneTuple = vb.ToneTuple;
             if (toneTuple.Primary == Tone.Neutral)
-                toneTuple = toneTuple with { Primary = Tone.Equilibrium };
+                toneTuple.Primary = Tone.Equilibrium;
+
+            // IntentActionSummary drives intent
+            var intentSummary = vb.Summaries.Values.OfType<IntentActionSummary>().FirstOrDefault();
+            var intent = intentSummary?.Intent ?? IntentType.None;
 
             // ✅ Choose template based on Intent first, fallback to Tone
-            var template = vb.Intent != IntentType.None
-                ? NarrativeTemplateLibrary.GetTemplate(vb.Intent, tickId)
+            var template = intent != IntentType.None
+                ? NarrativeTemplateLibrary.GetTemplate(intent, tickId)
                 : NarrativeTemplateLibrary.GetTemplate(toneTuple, tickId);
 
             // Deduplicate undertones
@@ -35,7 +49,7 @@ namespace substrate_core.Generators
                 toneTuple.Adjacent1.GetNarrativeName(),
                 toneTuple.Adjacent2.GetNarrativeName(),
                 toneTuple.Complementary.GetNarrativeName()
-            }.ToList();
+            }.Where(s => !string.IsNullOrEmpty(s)).ToList();
 
             var line = template
                 .Replace("{Primary}", toneTuple.Primary.GetNarrativeName())
@@ -43,23 +57,30 @@ namespace substrate_core.Generators
                 .Replace("{Adj2}", undertones.ElementAtOrDefault(1) ?? "")
                 .Replace("{Complementary}", undertones.ElementAtOrDefault(2) ?? "");
 
-            // Legacy tilt
-            if (vb.Legacy != TraitAffinity.None && mode != NarrativeMode.TechnicalOnly)
-                line += $" Legacy tilt binds toward {vb.Legacy.GetNarrativeName()}.";
-
-            // Trigger events
-            if (vb.TriggerEvents.Any())
+            // Legacy tilt / affinity (from ToneClusterSummary)
+            if (toneSummary.ResolvedAffinity.HasValue && toneSummary.ResolvedAffinity.Value != TraitAffinity.None 
+                && mode != NarrativeMode.TechnicalOnly)
             {
-                EventLog.AddEvents(vb.TriggerEvents);
+                line += $" Legacy tilt binds toward {toneSummary.ResolvedAffinity.Value.GetNarrativeName()}.";
+            }
+
+
+            // Trigger events (from TriggerSummary)
+            var triggerSummary = vb.Summaries.Values.OfType<TriggerSummary>().FirstOrDefault();
+            var triggerEvents = triggerSummary?.Events ?? new List<TriggerEvent>();
+
+            if (triggerEvents.Any())
+            {
+                EventLog.AddEvents(triggerEvents);
 
                 if (mode != NarrativeMode.TechnicalOnly)
                 {
-                    var triggerDescriptions = vb.TriggerEvents.Select(t => t.ToNarrativeString());
+                    var triggerDescriptions = triggerEvents.Select(t => t.ToNarrativeString());
                     line += $" Events stirred: {string.Join("; ", triggerDescriptions)}.";
                 }
 
                 if (mode != NarrativeMode.NarrativeOnly)
-                    line += "\n" + RollingSummaryBuilder.BuildSummary(vb.TriggerEvents);
+                    line += "\n" + RollingSummaryBuilder.BuildSummary(triggerEvents);
 
                 if (mode == NarrativeMode.Hybrid)
                 {
@@ -68,13 +89,22 @@ namespace substrate_core.Generators
                 }
             }
 
-            // Intent line (already covered by template, but keep explicit crystallization note)
-            if (vb.Intent != IntentType.None && mode != NarrativeMode.TechnicalOnly)
-                line += $" Intent crystallized as {vb.Intent.GetNarrativeName()}.";
+            // Intent line (explicit crystallization note)
+            if (intent != IntentType.None && mode != NarrativeMode.TechnicalOnly)
+                line += $" Intent crystallized as {intent.GetNarrativeName()}.";
 
-            // Technical metrics
+            // Technical metrics (from PersistenceSummary + VolatilitySummary)
+            var persistenceSummary = vb.Summaries.Values.OfType<PersistenceSummary>().FirstOrDefault();
+            var volatilitySummary  = vb.Summaries.Values.OfType<VolatilitySummary>().FirstOrDefault();
+
             if (mode != NarrativeMode.NarrativeOnly)
-                line += $" Persistence anchors at {vb.Persistence:F2}, volatility surges to {vb.Volatility:F2}.";
+            {
+                var persistenceVal = persistenceSummary?.Current ?? float.NaN;
+                var volatilityVal  = volatilitySummary?.Volatility ?? float.NaN;
+
+                line += $" Persistence anchors at {(float.IsNaN(persistenceVal) ? "NaN" : persistenceVal.ToString("F2"))}, " +
+                        $"volatility surges to {(float.IsNaN(volatilityVal) ? "NaN" : volatilityVal.ToString("F2"))}.";
+            }
 
             return line;
         }

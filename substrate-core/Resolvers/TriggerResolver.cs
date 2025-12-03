@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Collections.Generic;
 using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
@@ -10,106 +10,105 @@ namespace substrate_core.Resolvers
 {
     /// <summary>
     /// Resolves trigger events based on crystallization, fragmentation, trait activations, and constellation formation.
-    /// Produces updated VectorBias plus a DeltaSummary snapshot for persistence/narration.
+    /// Produces TriggerSummary for contributor-facing narratability.
     /// </summary>
     public class TriggerResolver : IResolver
     {
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
         {
-            vb.TriggerEvents ??= new System.Collections.Generic.List<TriggerEvent>();
-            vb.Traits ??= new System.Collections.Generic.List<Trait>();
-
             var tickId = vb.TickId;
 
-            var hyp = DebugOverlay.SafeFloat(vb.Hypotenuse);
-            var area = DebugOverlay.SafeFloat(vb.Area);
+            // Get summaries
+            var delta       = vb.GetSummary<DeltaSummary>();
+            var traits      = vb.GetSummary<TraitSummary>();
+            var persistence = vb.GetSummary<PersistenceSummary>();
+            var volatility  = vb.GetSummary<VolatilitySummary>();
+
+            float persistenceVal = persistence?.Current ?? 0f;
+            float volatilityVal  = volatility?.Volatility ?? 0f;
+
+            var events = new List<TriggerEvent>();
+
+            var hyp  = DebugOverlay.SafeFloat(delta.Hypotenuse);
+            var area = DebugOverlay.SafeFloat(delta.Area);
             var crystallizationScore = hyp * area;
 
             // Crystallization attempt
             if (crystallizationScore > 50f)
             {
-                vb.TriggerEvents.Add(new TriggerEvent
+                events.Add(new TriggerEvent
                 {
                     Type        = TriggerType.CrystallizationAttempt,
                     Description = $"Crystal formed (score={crystallizationScore:F2}), bias tilted toward {vb.Legacy}",
                     Magnitude   = hyp,
                     Score       = crystallizationScore,
                     TickId      = tickId,
-                    Persistence = vb.Persistence,
-                    Volatility  = vb.Volatility
+                    Persistence = persistenceVal,
+                    Volatility  = volatilityVal
                 });
-
-                foreach (var trait in vb.Traits.Where(t => !t.IsCrystallized && DebugOverlay.SafeFloat(t.Weight) > 0.5f))
-                    trait.IsCrystallized = true;
             }
             // Fragmentation attempt
             else if (crystallizationScore < -50f)
             {
-                vb.TriggerEvents.Add(new TriggerEvent
+                events.Add(new TriggerEvent
                 {
                     Type        = TriggerType.FragmentationAttempt,
                     Description = $"Fragmentation surge (score={crystallizationScore:F2}), legacy stressed toward {vb.Legacy}",
                     Magnitude   = hyp,
                     Score       = crystallizationScore,
                     TickId      = tickId,
-                    Persistence = vb.Persistence,
-                    Volatility  = vb.Volatility
+                    Persistence = persistenceVal,
+                    Volatility  = volatilityVal
                 });
-
-                foreach (var trait in vb.Traits.Where(t => t.IsCrystallized && DebugOverlay.SafeFloat(t.Weight) < 0.4f))
-                    trait.IsCrystallized = false;
             }
 
-            // Trait activations
-            foreach (var trait in vb.Traits.Where(t => t.State == TraitState.Active))
+            // Trait activations (from TraitSummary.ActiveTraitIds/Labels)
+            if (traits != null)
             {
-                var w = DebugOverlay.SafeFloat(trait.Weight);
-                vb.TriggerEvents.Add(new TriggerEvent
+                foreach (var id in traits.ActiveTraitIds)
                 {
-                    Type        = TriggerType.TraitActivation,
-                    Description = $"{trait.Id} awakened",
-                    Magnitude   = w,
-                    Score       = w,
-                    TickId      = tickId,
-                    Persistence = vb.Persistence,
-                    Volatility  = vb.Volatility
-                });
+                    events.Add(new TriggerEvent
+                    {
+                        Type        = TriggerType.TraitActivation,
+                        Description = $"{id} awakened",
+                        Magnitude   = 1f, // you can extend TraitSummary to carry weights if needed
+                        Score       = 1f,
+                        TickId      = tickId,
+                        Persistence = persistenceVal,
+                        Volatility  = volatilityVal
+                    });
+                }
             }
 
-            // Constellation formation
-            int crystallizedCount = vb.Traits.Count(t => t.IsCrystallized);
-            if (crystallizedCount >= 3)
+            // Constellation formation (from TraitSummary.CrystallizedCount)
+            if (traits != null && traits.CrystallizedCount >= 3)
             {
-                var constellationMagnitude = DebugOverlay.SafeFloat(vb.Traits.Sum(t => DebugOverlay.SafeFloat(t.Weight)));
-                vb.TriggerEvents.Add(new TriggerEvent
+                events.Add(new TriggerEvent
                 {
                     Type        = TriggerType.ConstellationFormation,
-                    Description = $"Constellation formed with {crystallizedCount} crystallized traits, weaving mythic resonance",
-                    Magnitude   = constellationMagnitude,
-                    Score       = constellationMagnitude,
+                    Description = $"Constellation formed with {traits.CrystallizedCount} crystallized traits, weaving mythic resonance",
+                    Magnitude   = traits.CrystallizedCount,
+                    Score       = traits.CrystallizedCount,
                     TickId      = tickId,
-                    Persistence = vb.Persistence,
-                    Volatility  = vb.Volatility
+                    Persistence = persistenceVal,
+                    Volatility  = volatilityVal
                 });
             }
 
-            // Unified debug logging
-            DebugOverlay.LogTrigger(vb, crystallizationScore);
+            
 
-            // Build DeltaSummary snapshot for consistency
-            var summary = new DeltaSummary
+            // Build TriggerSummary
+            var summary = new TriggerSummary
             {
-                DeltaAxis   = mv.MoodAxis - vb.MoodAxis,
-                Magnitude   = mv.MagnitudeFrom(vb.CurrentMood),
-                Hypotenuse  = vb.Hypotenuse,
-                Area        = vb.Area,
-                AngleTheta  = vb.AngleTheta,
-                SinTheta    = vb.SinTheta,
-                CosTheta    = vb.CosTheta,
-                TanTheta    = vb.TanTheta
+                TickId = tickId,
+                Events = events,
+                Count  = events.Count
             };
+            
+            DebugOverlay.LogTrigger(vb, crystallizationScore, delta, summary);
 
-            return new ResolutionResult(vb, summary);
+            vb.AddSummary(summary);
+            return new ResolutionResult(vb);
         }
     }
 }

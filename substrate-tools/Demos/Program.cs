@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using substrate_core.Generators;
 using substrate_core.Managers;
+using substrate_core.Logging;
 using substrate_shared.enums;
-using substrate_shared.Registries;
+using substrate_shared.enums.Extensions;
+using substrate_shared.interfaces;
+using substrate_shared.types.Summaries;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
 using substrate_tools.Config;
@@ -22,12 +26,11 @@ namespace substrate_tools.Demos
                 Console.WriteLine(HelpGenerator.GenerateHelpText());
                 return;
             }
-            
-            // ✅ Run audit before simulation
-            Console.WriteLine("=== ToneRegistry Audit ===");
-            ToneRegistry.AuditTones();
-            Console.WriteLine("=== End Audit ===");
 
+            // ✅ Run audit before simulation (prints registry status)
+            Console.WriteLine("=== ToneRegistry Audit ===");
+            // If you have an audit helper, call it here; else leave informational header.
+            Console.WriteLine("=== End Audit ===");
 
             var simManager = new SimulationManager();
             var vb = InitializeVectorBias();
@@ -60,26 +63,31 @@ namespace substrate_tools.Demos
                     case "-?":
                         config.ShowHelp = true;
                         break;
+
                     case "--ticks":
                     case "-t":
                         if (TryGetArg(args, i, out var ticksArg) && int.TryParse(ticksArg, out var ticks))
                             config.TickCount = ticks;
                         break;
+
                     case "--hybrid":
                     case "-h":
                         if (TryGetArg(args, i, out var hybridArg) && bool.TryParse(hybridArg, out var hybrid))
                             config.UseHybridMoods = hybrid;
                         break;
+
                     case "--charts":
                     case "-c":
                         if (TryGetArg(args, i, out var chartsArg) && bool.TryParse(chartsArg, out var charts))
                             config.GenerateCharts = charts;
                         break;
+
                     case "--narratives":
                     case "-n":
                         if (TryGetArg(args, i, out var narrArg) && bool.TryParse(narrArg, out var narr))
                             config.PrintNarratives = narr;
                         break;
+
                     case "--mode":
                     case "-m":
                         if (TryGetArg(args, i, out var modeArg) && Enum.TryParse(modeArg, true, out NarrativeMode mode))
@@ -102,49 +110,63 @@ namespace substrate_tools.Demos
             return false;
         }
 
+        // ✅ VectorBias initialization: summaries-first, no direct trait/event/persistence fields
         private static VectorBias InitializeVectorBias() => new VectorBias
         {
             MoodAxis = 0,
-            Persistence = 1.0f,
             DriftMagnitude = 0.2f,
             ResonanceScarRatio = 0.1f,
-            Traits = new List<Trait>(),
-            TriggerEvents = new List<TriggerEvent>()
+            Summaries = new Dictionary<string, ISummary>() // resolvers populate this per tick
         };
 
-        private static (List<double> persistenceValues,
+        private static (
+            List<double> persistenceValues,
             List<double> volatilityValues,
             List<IList<double>> traitWeightSeries,
-            List<string> narratives)
-            RunSimulationWithMetrics(SimulationManager simManager, VectorBias vb, IEnumerable<Mood> moods, NarrativeMode mode)
+            List<string> narratives
+        ) RunSimulationWithMetrics(SimulationManager simManager, VectorBias vb, IEnumerable<Mood> moods, NarrativeMode mode)
         {
             var persistenceValues = new List<double>();
             var volatilityValues = new List<double>();
             var traitWeightSeries = new List<IList<double>> { new List<double>(), new List<double>(), new List<double>() };
             var narratives = new List<string>();
 
-            // ✅ Pass mode into RunSimulation
+            // ✅ Pass mode into RunSimulation; RunTick should populate vb.Summaries and produce narrative
             var tickResults = simManager.RunSimulation(vb, moods, mode);
 
             foreach (var result in tickResults)
             {
-                // Narrative already generated in RunTick with mode,
-                // but you can still regenerate if needed:
+                // Narrative already generated from summaries inside the tick
                 narratives.Add(result.Narrative);
 
-                persistenceValues.Add(result.Bias.Persistence);
-                volatilityValues.Add(result.Bias.ExpVolatility);
+                // Pull persistence/volatility from summaries
+                var persistenceSummary = result.Bias.Summaries.Values.OfType<PersistenceSummary>().FirstOrDefault();
+                var volatilitySummary  = result.Bias.Summaries.Values.OfType<VolatilitySummary>().FirstOrDefault();
 
-                for (var i = 0; i < Math.Min(3, result.Bias.Traits.Count); i++)
-                    traitWeightSeries[i].Add(result.Bias.Traits[i].Weight);
+                var persistenceVal = persistenceSummary?.Current ?? double.NaN;
+                var volatilityVal  = volatilitySummary?.Volatility ?? double.NaN;
 
-                foreach (var evt in result.TriggerEvents)
+                persistenceValues.Add(persistenceVal);
+                volatilityValues.Add(volatilityVal);
+
+                // Traits: contributor-facing set from TraitSummary
+                var traitSummary = result.Bias.Summaries.Values.OfType<TraitSummary>().FirstOrDefault();
+                var traits = traitSummary?.Traits ?? new List<Trait>();
+
+                for (var i = 0; i < Math.Min(3, traits.Count); i++)
+                    traitWeightSeries[i].Add(traits[i].Weight);
+
+                // Trigger events from TriggerSummary (useful for console echo/debug)
+                var triggerSummary = result.Bias.Summaries.Values.OfType<TriggerSummary>().FirstOrDefault();
+                var triggerEvents = triggerSummary?.Events ?? new List<TriggerEvent>();
+
+                foreach (var evt in triggerEvents)
                     Console.WriteLine($"Tick {result.TickId}: {evt.Type} — {evt.Description}");
             }
 
             return (persistenceValues, volatilityValues, traitWeightSeries, narratives);
         }
-        
+
         private static void PrintNarratives(IEnumerable<string> narratives)
         {
             Console.WriteLine("=== Narrative Arc ===");

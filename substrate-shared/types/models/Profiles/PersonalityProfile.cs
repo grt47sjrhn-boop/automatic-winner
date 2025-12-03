@@ -1,69 +1,60 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_shared.interfaces;
-using substrate_shared.types.structs;
 using substrate_shared.enums;
+using substrate_shared.interfaces;
+using substrate_shared.types.models.StateMachines;
+using substrate_shared.types.structs;
+using substrate_shared.types.Summaries;
 
 namespace substrate_shared.types.models.Profiles
 {
-    /// <summary>
-    /// PersonalityProfile aggregates VectorBias summaries and resolver-derived traits/triggers
-    /// into a narratable snapshot for contributors. It also exposes the resolved personality state
-    /// and hardened bias type from PersonalityResolver.
-    /// </summary>
     public class PersonalityProfile
     {
         private VectorBias _bias;
-        public VectorBias Bias => _bias;
+        private PersonalityStateMachine _stateMachine;
 
-        // Traits/events/intents/tones are now owned here, not on VectorBias
+        public VectorBias Bias => _bias;
+        public List<ISummary> Summaries { get; private set; } = new();
         public List<Trait> Traits { get; private set; } = new();
         public List<TriggerEvent> TriggerEvents { get; private set; } = new();
 
-        // Resolver summaries (Delta, Persistence, Volatility, Tone, etc.)
-        public List<ISummary> Summaries { get; private set; } = new();
+        // Read-only projections from state machine
+        public PersonalityState State => _stateMachine.CurrentState;
+        public HardenedBiasType HardenedBias => _stateMachine.HardenedBias;
 
-        // Personality state + hardened bias overlay
-        public PersonalityState State { get; private set; } = PersonalityState.Neutral;
-        public HardenedBiasType HardenedBias { get; private set; } = HardenedBiasType.None;
+        // Intent from IntentActionSummary
+        public IntentType Intent { get; private set; } = IntentType.None;
 
-        public PersonalityProfile(VectorBias bias)
+        public PersonalityProfile(VectorBias bias, PersonalityStateMachine stateMachine)
         {
+            _bias = bias;
+            _stateMachine = stateMachine;
             UpdateBias(bias);
+            
+            // Let the profile drive the state machine update
+            _stateMachine.Update(this);
         }
 
         public void UpdateBias(VectorBias bias)
         {
             _bias = bias;
             Summaries = bias.Summaries.Values.ToList();
+
+            // Surface intent if present
+            var intentSummary = Summaries.OfType<IntentActionSummary>().FirstOrDefault();
+            if (intentSummary != null)
+                Intent = intentSummary.Intent;
         }
 
-        public void ApplyResolution(ResolutionResult result)
-        {
-            State = result.PersonalityState;
-            HardenedBias = result.HardenedBias;
-        }
+        public void AddTraits(IEnumerable<Trait> traits) => Traits.AddRange(traits);
+        public void AddTriggers(IEnumerable<TriggerEvent> triggers) => TriggerEvents.AddRange(triggers);
 
-        public void AddTraits(IEnumerable<Trait> traits)
-        {
-            Traits.AddRange(traits);
-        }
-
-        public void AddTriggers(IEnumerable<TriggerEvent> triggers)
-        {
-            TriggerEvents.AddRange(triggers);
-        }
-
-        /// <summary>
-        /// Builds a narratable description of the profile by iterating summaries, traits, triggers,
-        /// and resolved personality state.
-        /// </summary>
         public string Describe()
         {
             var lines = new List<string>
             {
-                $"[PersonalityProfile] Tick {_bias.TickId}, State={State}, HardenedBias={HardenedBias}"
+                $"[PersonalityProfile] Tick {_bias.TickId}, State={State}, HardenedBias={HardenedBias}, Intent={Intent}"
             };
 
             foreach (var summary in Summaries)
@@ -76,11 +67,6 @@ namespace substrate_shared.types.models.Profiles
                 lines.Add($"  TriggerEvents: {string.Join(", ", TriggerEvents.Select(e => $"{e.Type} (score={e.Score:F2})"))}");
 
             return string.Join(Environment.NewLine, lines);
-        }
-
-        public void Print()
-        {
-            Console.WriteLine(Describe());
         }
     }
 }

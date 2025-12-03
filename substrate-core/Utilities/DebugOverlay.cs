@@ -1,7 +1,9 @@
 // substrate_core/Utilities/DebugOverlay.cs
 
 using System;
+using substrate_core.Resolvers;
 using substrate_shared.types.models;
+using substrate_shared.types.Summaries;
 
 namespace substrate_core.Utilities
 {
@@ -34,16 +36,16 @@ namespace substrate_core.Utilities
         }
 
 
-        /*public static void LogTrigger(VectorBias vb, float crystallizationScore)
+        public static void LogTrigger(VectorBias vb, float crystallizationScore, DeltaSummary delta, TriggerSummary triggers)
         {
-            Console.WriteLine($"[TriggerResolver] Hyp={vb.Hypotenuse:F2}, Area={vb.Area:F2}, " +
-                              $"Score={crystallizationScore:F2}, Events={vb.TriggerEvents.Count}");
-            foreach (var evt in vb.TriggerEvents)
+            Console.WriteLine($"[TriggerResolver] Hyp={delta.Hypotenuse:F2}, Area={delta.Area:F2}, " +
+                              $"Score={crystallizationScore:F2}, Events={triggers.Events.Count}");
+            foreach (var evt in triggers.Events)
             {
                 string scoreText = float.IsNaN(evt.Score) ? "NaN" : evt.Score.ToString("F2");
                 string magText = float.IsNaN(evt.Magnitude) ? "NaN" : evt.Magnitude.ToString("F2");
                 Console.WriteLine($"  Event: {evt.Type}, Score={scoreText}, Magnitude={magText}, Desc={evt.Description}");
             }
-        }*/
+        }
     }
 }

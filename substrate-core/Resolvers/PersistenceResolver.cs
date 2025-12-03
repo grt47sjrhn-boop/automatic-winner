@@ -25,7 +25,7 @@ namespace substrate_core.Resolvers
 
             // --- 2) Baseline + previous pressure ---
             var prevPersistence = vb.GetSummary<PersistenceSummary>();
-            var baseline        = prevPersistence?.Value ?? 0f;
+            var baseline        = prevPersistence?.Current ?? 0f;
             var prevLogPressure = prevPersistence?.LogPressure ?? 0f;
 
             // --- 3) Geometric adjustment (unsigned magnitude) ---
@@ -69,7 +69,7 @@ namespace substrate_core.Resolvers
             // --- 8) Attach PersistenceSummary ---
             var summary = new PersistenceSummary
             {
-                Value           = persistence,
+                Current         = persistence,
                 LogPressure     = logPressure,
                 ExpVolatility   = expVolatility,
                 Direction       = direction,

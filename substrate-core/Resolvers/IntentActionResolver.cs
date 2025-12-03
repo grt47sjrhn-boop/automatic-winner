@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
@@ -11,60 +11,90 @@ namespace substrate_core.Resolvers
 {
     /// <summary>
     /// Resolves intent actions based on tone, persistence, volatility, area, and trait duality.
-    /// Produces updated VectorBias plus a DeltaSummary for persistence/narration.
+    /// Consumes ToneClusterSummary, PersistenceSummary, VolatilitySummary, DeltaSummary.
+    /// Produces IntentActionSummary for contributor-facing narratability.
     /// </summary>
     public class IntentActionResolver : IResolver
     {
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
         {
-            vb.Intent = IntentType.None;
+            // Pull summaries instead of raw values
+            var toneCluster = vb.GetSummary<ToneClusterSummary>();
+            var persistence = vb.GetSummary<PersistenceSummary>();
+            var volatility  = vb.GetSummary<VolatilitySummary>();
+            var delta       = vb.GetSummary<DeltaSummary>();
+            var traitSummary = vb.GetSummary<TraitSummary>();
 
-            if (vb.ToneTuple.Equals(default(ToneTuple)))
-                return new ResolutionResult(vb, default);
+            if (toneCluster == null || persistence == null || volatility == null || delta == null)
+                return new ResolutionResult(vb);
 
-            var hasDuality = vb.Traits?.Any(t => t.Tags.Contains(TraitTag.Duality)) ?? false;
+            var traceLogs = new List<string>();
 
-            var persistence = DebugOverlay.SafeFloat(vb.Persistence);
-            var volatility  = DebugOverlay.SafeFloat(vb.ExpVolatility);
-            var area        = DebugOverlay.SafeFloat(vb.Area);
+            var tone           = toneCluster.FinalTone;
+            var persistenceVal = persistence.Current;
+            var volatilityVal  = volatility.Volatility;
+            var area           = delta.Area;
+            var hasDuality     = traitSummary?.ActiveTraitLabels?.Any(label => label.Contains("Duality")) ?? false;
 
-            if (vb.ToneTuple.Primary == Tone.Resonance && persistence > 2.5f)
-                vb.Intent = IntentType.Stabilize;
-            else if (vb.ToneTuple.Primary == Tone.Scar && volatility > 1.2f)
-                vb.Intent = IntentType.Disrupt;
-            else if (vb.ToneTuple.Primary == Tone.Neutral && hasDuality)
-                vb.Intent = IntentType.Reflect;
-            else if (vb.ToneTuple.Primary == Tone.Harmony && area > 10f)
-                vb.Intent = IntentType.Amplify;
-            // NEW: Creation, Destruction, Transformation
-            else if (vb.ToneTuple.Primary == Tone.Equilibrium && persistence > 5f && volatility < 1f)
-                vb.Intent = IntentType.Creation;   // strong stability births new state
-            else if (vb.ToneTuple.Primary == Tone.Fracture && persistence < -5f && volatility > 2f)
-                vb.Intent = IntentType.Destruction; // deep fracture collapses bias
-            else if (vb.ToneTuple.Primary == Tone.Resonance && volatility > 3f)
-                vb.Intent = IntentType.Transformation; // resonance under high volatility mutates into new form
+            // Default intent
+            var intent = IntentType.None;
 
-
-            Console.WriteLine(
-                $"[IntentActionResolver] Tone={vb.ToneTuple.Primary}, " +
-                $"Persistence={persistence:F2}, Volatility={volatility:F2}, Area={area:F2}, " +
-                $"Duality={hasDuality}, Intent={vb.Intent}"
-            );
-
-            // Build a DeltaSummary snapshot (even if not geometric, keeps consistency)
-            var summary = new DeltaSummary
+            // Intent resolution logic
+            if (tone == Tone.Resonance && persistenceVal > 2.5f)
             {
-                DeltaAxis   = mv.MoodAxis - vb.MoodAxis,
-                Magnitude   = mv.MagnitudeFrom(vb.CurrentMood),
-                Hypotenuse  = vb.Hypotenuse,
-                Area        = vb.Area,
-                AngleTheta  = vb.AngleTheta,
-                SinTheta    = vb.SinTheta,
-                CosTheta    = vb.CosTheta,
-                TanTheta    = vb.TanTheta
+                intent = IntentType.Stabilize;
+                traceLogs.Add("Resonance with strong persistence → Stabilize intent.");
+            }
+            else if (tone == Tone.Scar && volatilityVal > 1.2f)
+            {
+                intent = IntentType.Disrupt;
+                traceLogs.Add("Scar tone with high volatility → Disrupt intent.");
+            }
+            else if (tone == Tone.Neutral && hasDuality)
+            {
+                intent = IntentType.Reflect;
+                traceLogs.Add("Neutral tone with duality trait → Reflect intent.");
+            }
+            else if (tone == Tone.Harmony && area > 10f)
+            {
+                intent = IntentType.Amplify;
+                traceLogs.Add("Harmony tone with large area → Amplify intent.");
+            }
+            else if (tone == Tone.Equilibrium && persistenceVal > 5f && volatilityVal < 1f)
+            {
+                intent = IntentType.Creation;
+                traceLogs.Add("Equilibrium with high persistence and low volatility → Creation intent.");
+            }
+            else if (tone == Tone.Fracture && persistenceVal < -5f && volatilityVal > 2f)
+            {
+                intent = IntentType.Destruction;
+                traceLogs.Add("Fracture with low persistence and high volatility → Destruction intent.");
+            }
+            else if (tone == Tone.Resonance && volatilityVal > 3f)
+            {
+                intent = IntentType.Transformation;
+                traceLogs.Add("Resonance under extreme volatility → Transformation intent.");
+            }
+            else
+            {
+                traceLogs.Add("No matching conditions → Intent remains None.");
+            }
+
+            // Build IntentActionSummary
+            var summary = new IntentActionSummary
+            {
+                TickId      = vb.TickId,
+                Tone        = tone,
+                Persistence = persistenceVal,
+                Volatility  = volatilityVal,
+                Area        = area,
+                HasDuality  = hasDuality,
+                Intent      = intent,
+                TraceLogs   = traceLogs
             };
 
-            return new ResolutionResult(vb, summary);
+            vb.AddSummary(summary);
+            return new ResolutionResult(vb);
         }
     }
 }

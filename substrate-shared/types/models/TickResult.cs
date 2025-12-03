@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
 using substrate_shared.types.Summaries;
@@ -10,7 +11,7 @@ namespace substrate_shared.types.models
     {
         public int TickId { get; set; }
         public VectorBias Bias { get; set; }
-        public DeltaSummary Summary { get; set; }
+        public ISummary Summary { get; set; }
         public string Narrative { get; set; }
         
         // NEW: Per-tick trigger events

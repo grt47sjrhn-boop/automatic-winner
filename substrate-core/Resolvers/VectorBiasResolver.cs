@@ -12,19 +12,21 @@ namespace substrate_core.Resolvers
     public class VectorBiasResolver : IResolver
     {
         private readonly List<IResolver> _pipeline;
-
+        public List<string> TraceLog { get; } = [];
+        
         public VectorBiasResolver()
         {
-            _pipeline = new List<IResolver>
-            {
-                new DeltaVectorResolver(), //1st
-                new PersistenceResolver(), //2nd
-                new ToneClusterResolver(), //3rd
+            _pipeline =
+            [
+                new TraitsResolver(),      //1st
+                new DeltaVectorResolver(), //2st
+                new PersistenceResolver(), //3rd
                 new VolatilityResolver(),  //4th
-                new TriggerResolver(),     //5th  
-                new PersonalityResolver(), //6th
-                new IntentActionResolver() //7th
-            };
+                new ToneClusterResolver(), //5th
+                new TriggerResolver(),     //6th  
+                new PersonalityResolver(), //7th
+                new IntentActionResolver() //8th
+            ];
         }
 
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
@@ -35,8 +37,11 @@ namespace substrate_core.Resolvers
             {
                 lastResult = resolver.Resolve(vb, mv);
                 vb = lastResult.Bias;
+                TraceLog.Add($"{resolver.GetType().Name} resolved at tick {vb.TickId}");
+                
             }
 
+            lastResult.TraceLog = TraceLog;
             // Return the final resolution result after the pipeline
             return lastResult;
         }

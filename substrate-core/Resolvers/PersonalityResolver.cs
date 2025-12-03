@@ -1,83 +1,95 @@
 using System;
+using System.Collections.Generic;
+using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.types.models;
 using substrate_shared.types.structs;
-using substrate_shared.enums;
-using substrate_shared.enums.Extensions;
 using substrate_shared.types.Summaries;
 
 namespace substrate_core.Resolvers
 {
-    /// <summary>
-    /// PersonalityResolver interprets persistence trajectories from VectorBias
-    /// into narratable personality states. It applies hardened bias logic
-    /// and resilience/scar modifiers to incoming moods.
-    /// Dependencies on persistence to calculate personality
-    /// </summary>
     public class PersonalityResolver : IResolver
     {
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
         {
-            var persistence = vb.Persistence;
+            var persistence = vb.GetSummary<PersistenceSummary>();
+            var delta       = vb.GetSummary<DeltaSummary>();
 
-            var resolvedState = Neutral;
-            var hardenedBias = HardenedBiasType.None;
+            if (persistence == null)
+                throw new InvalidOperationException("PersonalityResolver requires PersistenceSummary.");
+            if(delta == null)
+                throw new InvalidOperationException("PersonalityResolver requires DeltaSummary.");
+            var resolvedState = PersonalityState.Neutral;
+            var hardenedBias  = HardenedBiasType.None;
+            var traceLogs     = new List<string>();
 
             // 1) Resolve personality state directly from persistence flags
             if (persistence.IsRecovering)
-                resolvedState = Recovering;
+                resolvedState = PersonalityState.Recovering;
             else if (persistence.IsFracturing)
-                resolvedState = Fracturing;
+                resolvedState = PersonalityState.Fracturing;
             else
+            {
                 resolvedState = persistence.Trajectory switch
                 {
-                    BiasTrajectory.SettlingResonance => Resonating,
-                    BiasTrajectory.SettlingWound => SettlingScar,
-                    _ => resolvedState
+                    BiasTrajectory.SettlingResonance => PersonalityState.Resonating,
+                    BiasTrajectory.SettlingWound     => PersonalityState.SettlingScar,
+                    _                                => resolvedState
                 };
+            }
 
+            // 2) Hardened overlay logic
             switch (resolvedState)
             {
-                // 2) Hardened overlay logic
-                case Recovering when
-                    persistence.Current > 10f && persistence.IsIncreasing:
-                    resolvedState = Hardened;
-                    hardenedBias = HardenedBiasType.Resilient; // resists negatives
-                    vb.Persistence.GrantResilienceBonus(vb.CurrentMood.MoodType.GetNarrativeGroup());
+                case PersonalityState.Recovering when persistence.Current > 10f && persistence.IsIncreasing:
+                    resolvedState = PersonalityState.Hardened;
+                    hardenedBias  = HardenedBiasType.Resilient;
+                    traceLogs.Add("Recovered strongly: hardened as Resilient.");
                     break;
-                case Fracturing when
-                    persistence.Current < -10f && persistence.IsDecreasing:
-                    resolvedState = Hardened;
-                    hardenedBias = HardenedBiasType.Scarred; // resists positives
+
+                case PersonalityState.Fracturing when persistence.Current < -10f && persistence.IsDecreasing:
+                    resolvedState = PersonalityState.Hardened;
+                    hardenedBias  = HardenedBiasType.Scarred;
+                    traceLogs.Add("Fractured deeply: hardened as Scarred.");
                     break;
-                case Neutral:
-                case SettlingScar:
-                case Resonating:
-                case Hardened:
+
+                case PersonalityState.Neutral:
+                    traceLogs.Add("Neutral state: no modifiers applied, personality stable.");
                     break;
+
+                case PersonalityState.SettlingScar:
+                    traceLogs.Add("SettlingScar: persistence trending downward, scar influence present.");
+                    break;
+
+                case PersonalityState.Resonating:
+                    traceLogs.Add("Resonating: persistence trending upward, resonance influence present.");
+                    break;
+
+                case PersonalityState.Hardened:
+                    traceLogs.Add($"Hardened: bias locked as {hardenedBias}.");
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            // 3) Apply hardened modifiers to incoming mood
-            vb.Persistence.ApplyModifiers(mv, hardenedBias);
-
-            // 4) Return resolution result with narratable state
-            return new ResolutionResult(vb, new DeltaSummary
+            // 3) Build PersonalitySummary
+            var summary = new PersonalitySummary
             {
-                DeltaAxis = persistence.Delta,
-                Magnitude = persistence.Current,
-                Hypotenuse = vb.Hypotenuse,
-                Area = vb.Area,
-                AngleTheta = vb.AngleTheta,
-                SinTheta = vb.SinTheta,
-                CosTheta = vb.CosTheta,
-                TanTheta = vb.TanTheta
-            })
-            {
-                PersonalityState = resolvedState,
-                HardenedBias = hardenedBias
+                TickId         = vb.TickId,
+                State          = resolvedState,
+                HardenedBias   = hardenedBias,
+                PersistenceVal = persistence.Current,
+                DeltaAxis      = delta?.DeltaAxis ?? mv.MoodAxis,
+                Trajectory     = persistence.Trajectory.ToString(),
+                AngleTheta     = delta?.AngleTheta ?? 0f,
+                ResilienceBonusApplied = (resolvedState == PersonalityState.Hardened && hardenedBias == HardenedBiasType.Resilient),
+                ModifiersApplied       = hardenedBias != HardenedBiasType.None,
+                TraceLogs              = traceLogs
             };
+
+            vb.AddSummary(summary);
+            return new ResolutionResult(vb);
         }
     }
 }
