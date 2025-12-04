@@ -21,24 +21,28 @@ namespace substrate_core.Generators
             if (toneSummary == null)
                 return $"[Tick {tickId}] No tonal resolution available.";
 
-            // Construct a ToneTuple from ToneClusterSummary fields (NarrativeTone-based)
-            var toneTuple = new ToneTuple
-            {
-                Primary       = toneSummary.FinalTone,
-                Adjacent1     = toneSummary.AdjacentTones.ElementAtOrDefault(0),
-                Adjacent2     = toneSummary.AdjacentTones.ElementAtOrDefault(1),
-                Complementary = toneSummary.ComplementaryTones.FirstOrDefault()
-            };
+            // Pick primary tone: first candidate in BaseLineTones, fallback to Baseline
+            var primaryTuple = toneSummary.BaseLineTones.FirstOrDefault();
+            var primaryTone  = primaryTuple.Tone ?? toneSummary.Baseline;
 
-            // Map Neutral → Equilibrium (NarrativeTone.Category check)
-            if (toneTuple.Primary != null &&
-                toneTuple.Primary.Category.Equals("Neutral", System.StringComparison.OrdinalIgnoreCase))
+            // Map Neutral → Equilibrium
+            if (primaryTone != null &&
+                primaryTone.Category.Equals("Neutral", System.StringComparison.OrdinalIgnoreCase))
             {
-                toneTuple.Primary = new NarrativeTone("Equilibrium", "Neutral", "Neutral")
+                primaryTone = new NarrativeTone("Equilibrium", "Neutral", "Neutral")
                 {
                     Category = "Equilibrium"
                 };
             }
+
+            // Build ToneTuple using available candidates
+            var toneTuple = new ToneTuple
+            {
+                Primary       = primaryTone,
+                Adjacent1     = toneSummary.BaseLineTones.ElementAtOrDefault(1).Tone,
+                Adjacent2     = toneSummary.BaseLineTones.ElementAtOrDefault(2).Tone,
+                Complementary = toneSummary.BaseLineTones.ElementAtOrDefault(3).Tone
+            };
 
             // IntentActionSummary drives intent
             var intentSummary = vb.Summaries.Values.OfType<IntentActionSummary>().FirstOrDefault();
@@ -63,12 +67,10 @@ namespace substrate_core.Generators
                 .Replace("{Adj2}", undertones.ElementAtOrDefault(1) ?? "")
                 .Replace("{Complementary}", undertones.ElementAtOrDefault(2) ?? "");
 
-            // Legacy tilt / affinity (from ToneClusterSummary)
-            if (toneSummary.ResolvedAffinity.HasValue &&
-                toneSummary.ResolvedAffinity.Value != TraitAffinity.None &&
-                mode != NarrativeMode.TechnicalOnly)
+            // Affinity narration: use affinity from primary tuple
+            if (primaryTuple.Affinity != TraitAffinity.None && mode != NarrativeMode.TechnicalOnly)
             {
-                line += $" Legacy tilt binds toward {toneSummary.ResolvedAffinity.Value.GetNarrativeName()}.";
+                line += $" Legacy tilt binds toward {primaryTuple.Affinity.GetNarrativeName()}.";
             }
 
             // Trigger events (from TriggerSummary)

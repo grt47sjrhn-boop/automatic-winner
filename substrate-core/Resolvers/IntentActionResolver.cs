@@ -9,11 +9,6 @@ using substrate_shared.types.Summaries;
 
 namespace substrate_core.Resolvers
 {
-    /// <summary>
-    /// Resolves intent actions based on tone, persistence, volatility, area, and trait duality.
-    /// Consumes ToneClusterSummary, PersistenceSummary, VolatilitySummary, DeltaSummary.
-    /// Produces IntentActionSummary for contributor-facing narratability.
-    /// </summary>
     public class IntentActionResolver : IResolver
     {
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
@@ -30,8 +25,11 @@ namespace substrate_core.Resolvers
 
             var traceLogs = new List<string>();
 
-            var tone           = toneCluster.FinalTone; // NarrativeTone
-            var category       = tone?.Category ?? "Neutral";
+            // Choose tone: prefer first candidate in BaseLineTones, fallback to Baseline
+            var toneTuple = toneCluster.BaseLineTones.FirstOrDefault();
+            var tone      = toneTuple.Tone ?? toneCluster.Baseline;
+            var category  = tone?.Category ?? "Neutral";
+
             var persistenceVal = persistence.Current;
             var volatilityVal  = volatility.Volatility;
             var area           = delta.Area;
@@ -85,7 +83,7 @@ namespace substrate_core.Resolvers
             var summary = new IntentActionSummary
             {
                 TickId      = vb.TickId,
-                Tone        = tone, // NarrativeTone
+                Tone        = tone,
                 Persistence = persistenceVal,
                 Volatility  = volatilityVal,
                 Area        = area,

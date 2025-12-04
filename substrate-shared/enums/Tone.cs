@@ -10,10 +10,10 @@ namespace substrate_shared.enums
         Fracture,
         Equilibrium,
 
-        // Optional undertones
-        Irony,
-        Volatility,
-        Duality,
+        // // Optional undertones
+        // Irony,
+        // Volatility,
+        // Duality,
 
         // Despair & Suffering
         Wretched,
@@ -81,6 +81,23 @@ namespace substrate_shared.enums
         Awestruck,
         Serene,
         Idyllic,
-        Ecstatic
+        Ecstatic,
+
+        // Intensity
+        Intense,
+        Forceful,
+
+        // Light
+        Bright,
+        Radiant,
+        Luminous,
+
+        // Resonance
+        Harmonic,
+        Melodic,
+        Resounding,
+
+        // Calm
+        Calm
     }
 }

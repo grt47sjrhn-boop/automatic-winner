@@ -4,6 +4,7 @@ using System.Linq;
 using substrate_core.Generators;
 using substrate_core.Managers;
 using substrate_core.Logging;
+using substrate_core.Resolvers;
 using substrate_shared.enums;
 using substrate_shared.enums.Extensions;
 using substrate_shared.interfaces;
@@ -34,6 +35,9 @@ namespace substrate_tools.Demos
 
             var simManager = new SimulationManager();
             var vb = InitializeVectorBias();
+
+            // === Synthetic validation ticks ===
+            RunSyntheticValidation(vb);
 
             // Choose mood generator based on config
             var moods = config.UseHybridMoods
@@ -118,6 +122,30 @@ namespace substrate_tools.Demos
             ResonanceScarRatio = 0.1f,
             Summaries = new Dictionary<string, ISummary>() // resolvers populate this per tick
         };
+
+        // === Synthetic validation harness ===
+        private static void RunSyntheticValidation(VectorBias vb)
+        {
+            var resolver = new ToneClusterResolver();
+
+            // Joy bias
+            vb.Summaries.Clear();
+            vb.AddSummary(new DeltaSummary { DeltaAxis = +6.0f, AngleTheta = 0.1f, Area = +36.0f });
+            vb.AddSummary(new PersistenceSummary { Current = 5.0f, ErosionFactor = 0.05f, Direction = +1 });
+            resolver.Resolve(vb, new Mood());
+            var joySummary = vb.Summaries.Values.OfType<ToneClusterSummary>().FirstOrDefault();
+            Console.WriteLine("=== Synthetic Joy Tick ===");
+            Console.WriteLine(joySummary?.Describe());
+
+            // Despair bias
+            vb.Summaries.Clear();
+            vb.AddSummary(new DeltaSummary { DeltaAxis = -6.0f, AngleTheta = 3.1f, Area = -36.0f });
+            vb.AddSummary(new PersistenceSummary { Current = 5.0f, ErosionFactor = 0.05f, Direction = -1 });
+            resolver.Resolve(vb, new Mood());
+            var despairSummary = vb.Summaries.Values.OfType<ToneClusterSummary>().FirstOrDefault();
+            Console.WriteLine("=== Synthetic Despair Tick ===");
+            Console.WriteLine(despairSummary?.Describe());
+        }
 
         private static (
             List<double> persistenceValues,

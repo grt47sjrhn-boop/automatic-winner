@@ -11,11 +11,14 @@ namespace substrate_shared.Registries.Lookups
     public static class ToneRegistryLookups
     {
         private static readonly Random _rng = new();
-        
+
+        // --- Angle → Category --------------------------------------------------
+
         public static string ResolveCategoryFromAngle(float theta)
         {
-            while (theta > MathF.PI) theta -= 2 * MathF.PI;
-            while (theta < -MathF.PI) theta += 2 * MathF.PI;
+            // Normalize to [0, 2π)
+            while (theta < 0) theta += 2 * MathF.PI;
+            while (theta >= 2 * MathF.PI) theta -= 2 * MathF.PI;
 
             foreach (var (min, max, category) in ToneRegistry._angularCategories)
             {
@@ -26,29 +29,54 @@ namespace substrate_shared.Registries.Lookups
             return "Neutral";
         }
 
+        // --- Angle → Tone (guarded by category) -------------------------------
+
         public static NarrativeTone ResolveFromAngle(float theta)
         {
-            while (theta > MathF.PI) theta -= 2 * MathF.PI;
-            while (theta < -MathF.PI) theta += 2 * MathF.PI;
+            // Normalize to [0, 2π) and resolve category first
+            while (theta < 0) theta += 2 * MathF.PI;
+            while (theta >= 2 * MathF.PI) theta -= 2 * MathF.PI;
 
-            foreach (var (min, max, category) in ToneRegistry._angularCategories)
-            {
-                if (theta >= min && theta < max)
-                    return SelectWeighted(category);
-            }
+            var category = ResolveCategoryFromAngle(theta);
 
-            // safe fallback
-            return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
+            // Try weighted selection
+            var sampled = SelectWeighted(category);
+
+            // Guard: ensure tone honors category; otherwise resolve strictly
+            if (sampled == null || !string.Equals(sampled.Category, category, StringComparison.OrdinalIgnoreCase))
+                sampled = ResolveFromCategory(category);
+
+            return sampled ?? DefaultNeutralTone();
         }
 
-        // --- Weighted selection ---
+        // --- Strict category resolution ---------------------------------------
+
+        public static NarrativeTone ResolveFromCategory(string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+                return DefaultNeutralTone();
+
+            var candidates = GetByCategory(category).ToList();
+            if (candidates.Count == 0)
+                return DefaultNeutralTone();
+
+            // Prefer highest-weight tone if available; otherwise first
+            var best = candidates
+                .OrderByDescending(t => ToneRegistry._weights.TryGetValue(t, out var w) ? w : 1f)
+                .First();
+
+            return best;
+        }
+
+        // --- Weighted selection ------------------------------------------------
+
         public static NarrativeTone SelectWeighted(string category)
         {
             var candidates = GetByCategory(category).ToList();
-
             if (!candidates.Any())
-                return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
+                return DefaultNeutralTone();
 
+            // Initialize missing weights
             foreach (var tone in candidates)
             {
                 if (!ToneRegistry._weights.ContainsKey(tone))
@@ -69,6 +97,7 @@ namespace substrate_shared.Registries.Lookups
                 roll -= ToneRegistry._weights[tone];
                 if (roll <= 0)
                 {
+                    // Weight decay to avoid repeated selection dominance
                     ToneRegistry._weights[tone] = Math.Max(0.1f, ToneRegistry._weights[tone] * 0.25f);
                     return tone;
                 }
@@ -77,6 +106,44 @@ namespace substrate_shared.Registries.Lookups
             return candidates.First(); // fallback
         }
 
+        // Optional deterministic selection (useful for debug-stable traces)
+        public static NarrativeTone SelectWeightedDeterministic(string category, int seed)
+        {
+            var candidates = GetByCategory(category).ToList();
+            if (!candidates.Any())
+                return DefaultNeutralTone();
+
+            foreach (var tone in candidates)
+            {
+                if (!ToneRegistry._weights.ContainsKey(tone))
+                    ToneRegistry._weights[tone] = 1f;
+            }
+
+            float total = candidates.Sum(t => ToneRegistry._weights[t]);
+            if (total <= 0)
+            {
+                foreach (var tone in candidates)
+                    ToneRegistry._weights[tone] = 1f;
+                total = candidates.Sum(t => ToneRegistry._weights[t]);
+            }
+
+            var rng = new Random(seed);
+            float roll = (float)rng.NextDouble() * total;
+
+            foreach (var tone in candidates)
+            {
+                roll -= ToneRegistry._weights[tone];
+                if (roll <= 0)
+                {
+                    return tone;
+                }
+            }
+
+            return candidates.First();
+        }
+
+        // --- Category neighborhood --------------------------------------------
+
         public static IEnumerable<NarrativeTone> GetByCategory(string category)
         {
             if (string.IsNullOrWhiteSpace(category))
@@ -84,16 +151,14 @@ namespace substrate_shared.Registries.Lookups
 
             return ToneRegistry._tones.Values
                 .SelectMany(list => list ?? new List<NarrativeTone>())
-                .Where(nt => nt != null && 
+                .Where(nt => nt != null &&
                              !string.IsNullOrEmpty(nt.Category) &&
                              nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
         }
 
-        
         /// <summary>
         /// Get all tones in the same category as the given tone.
         /// </summary>
-        // --- Neighborhoods & adjacency ---
         public static IEnumerable<NarrativeTone> GetNeighborhoodByTone(Tone tone)
         {
             if (!ToneRegistry._tones.ContainsKey(tone) || !ToneRegistry._tones[tone].Any())
@@ -102,7 +167,7 @@ namespace substrate_shared.Registries.Lookups
             var category = ToneRegistry._tones[tone].First().Category;
             return GetByCategory(category);
         }
-        
+
         /// <summary>
         /// Get adjacent categories based on theta slices.
         /// </summary>
@@ -128,7 +193,6 @@ namespace substrate_shared.Registries.Lookups
             return adjCats.SelectMany(cat => GetByCategory(cat));
         }
 
-        
         /// <summary>
         /// Get the complement category for a given tone, based on angular slices.
         /// </summary>
@@ -166,7 +230,8 @@ namespace substrate_shared.Registries.Lookups
             return GetByCategory(complementCategory);
         }
 
-        
+        // --- Bias influence & diagnostics -------------------------------------
+
         public static void ResolveAxisInfluence(BiasMap map, float axis)
         {
             var axisBias = Math.Clamp(axis / 10f, -1f, 1f);
@@ -190,7 +255,7 @@ namespace substrate_shared.Registries.Lookups
         {
             return ToneRegistry._weights;
         }
-        
+
         public static IEnumerable<AngularCategoryInfo> GetAngularCategories()
         {
             return ToneRegistry._angularCategories.Select(ac => new AngularCategoryInfo
@@ -200,7 +265,7 @@ namespace substrate_shared.Registries.Lookups
                 Category = ac.category
             });
         }
-        
+
         private static readonly Dictionary<string, TraitAffinity> _categoryAffinityMap = new()
         {
             { "Despair",   TraitAffinity.FracturedLegacy },
@@ -238,6 +303,77 @@ namespace substrate_shared.Registries.Lookups
             }
 
             Console.WriteLine("=== End Audit ===");
+        }
+
+        public static string GetComplementCategoryFromString(string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+                return "Neutral";
+
+            // Find the slice for this category
+            var slice = ToneRegistry._angularCategories.FirstOrDefault(ac =>
+                ac.category.Equals(category, StringComparison.OrdinalIgnoreCase));
+
+            if (slice == default) return "Neutral";
+
+            // Compute midpoint of slice
+            var midpoint = (slice.min + slice.max) / 2f;
+
+            // Rotate π radians to find opposite slice
+            var complementTheta = midpoint + MathF.PI;
+            while (complementTheta > MathF.PI) complementTheta -= 2 * MathF.PI;
+            while (complementTheta < -MathF.PI) complementTheta += 2 * MathF.PI;
+
+            // Resolve category at complement angle
+            return ResolveCategoryFromAngle(complementTheta);
+        }
+
+        // --- Helpers -----------------------------------------------------------
+
+        private static NarrativeTone DefaultNeutralTone()
+        {
+            return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
+        }
+        
+        public static NarrativeTone SelectFromListWeighted(List<NarrativeTone> tones, string category)
+        {
+            if (tones == null || tones.Count == 0)
+                return null;
+
+            // Filter tones by category (safety guard)
+            var candidates = tones
+                .Where(t => t.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (candidates.Count == 0)
+                candidates = tones; // fallback: use full list
+
+            // Look up weights from ToneRegistry
+            var weighted = candidates
+                .Select(t => new
+                {
+                    Tone = t,
+                    Weight = ToneRegistry._weights.TryGetValue(t, out var w) ? w : 1f
+                })
+                .ToList();
+
+            // Normalize weights
+            var total = weighted.Sum(x => x.Weight);
+            if (total <= 0) return weighted.First().Tone;
+
+            var rand = new Random();
+            var roll = rand.NextDouble() * total;
+
+            float cumulative = 0f;
+            foreach (var entry in weighted)
+            {
+                cumulative += entry.Weight;
+                if (roll <= cumulative)
+                    return entry.Tone;
+            }
+
+            // Fallback: return first
+            return weighted.First().Tone;
         }
     }
 }

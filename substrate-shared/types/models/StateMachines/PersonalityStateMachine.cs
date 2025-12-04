@@ -43,17 +43,17 @@ namespace substrate_shared.types.models.StateMachines
                     {
                         CurrentState = PersonalityState.Fracturing;
 
-                        // Prefer Delta axis (float → MoodType), otherwise map FinalTone → MoodType
+                        // Prefer Delta axis (float → MoodType), otherwise map toneCluster → MoodType
                         if (delta != null)
                         {
-                            // AxisDelta is a float; resolve to a MoodType using your extension
                             WoundSource = MoodTypeExtensions.Resolve(delta.DeltaAxis);
                         }
                         else if (toneCluster != null)
                         {
-                            WoundSource = MapToneToMood(toneCluster.FinalTone);
+                            // Use first candidate tone, fallback to baseline
+                            var candidateTone = toneCluster.BaseLineTones.FirstOrDefault().Tone ?? toneCluster.Baseline;
+                            WoundSource = MapToneToMood(candidateTone);
                         }
-
                     }
                     else if (persistence.IsRecovering)
                     {

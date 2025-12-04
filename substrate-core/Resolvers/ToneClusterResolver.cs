@@ -15,111 +15,178 @@ namespace substrate_core.Resolvers
 {
     public class ToneClusterResolver : IResolver
     {
+        #region Public API
         public ResolutionResult Resolve(VectorBias vb, Mood mv)
         {
-            // --- 1) Require summaries ---
+            #region Pre-requisites
             var delta = vb.GetSummary<DeltaSummary>();
             var persistence = vb.GetSummary<PersistenceSummary>();
+
             if (delta == null)
                 throw new InvalidOperationException("DeltaSummary must be resolved before ToneClusterResolver.");
             if (persistence == null)
                 throw new InvalidOperationException("PersistenceSummary must be resolved before ToneClusterResolver.");
+            #endregion
 
             var traces = new List<string>();
 
-            // --- 2) Build bias map step by step ---
-            var map = new BiasMap();
+            #region Build bias map
+            var map = ToneRegistry.PopulateBiasMap(
+                delta.AngleTheta,
+                delta.DeltaAxis,
+                persistence.Current,
+                persistence.ErosionFactor,
+                persistence.Direction
+            );
 
-            // Angle bias
-            var category = ToneRegistryLookups.ResolveCategoryFromAngle(delta.AngleTheta);
-            map.AddBias(category, 1.0f);
-            traces.Add($"[1] Angle θ={delta.AngleTheta:F2} → category={category}, bias +1.0");
+            traces.Add($"[BiasMap] θ={delta.AngleTheta:F2}, Δ={delta.DeltaAxis:F2}, " +
+                       $"Persistence={persistence.Current:F2}, Erosion={persistence.ErosionFactor:F2}, " +
+                       $"Direction={persistence.Direction:+0;-0;0}");
+            #endregion
 
-            // Axis bias
-            ToneRegistryLookups.ResolveAxisInfluence(map, delta.DeltaAxis);
-            traces.Add($"[1b] Axis Δ={delta.DeltaAxis:F2} → axis bias applied (Confidence/Despair/Neutral)");
-
-            // Persistence bias
-            var baseStrength = Math.Clamp(persistence.Current / 10f, 0f, 1f);
-            var erosion = Math.Clamp(persistence.ErosionFactor, 0f, 0.85f);
-            var temperedStrength = baseStrength * (1f - erosion);
-            map.AddBias(category, temperedStrength);
-            traces.Add($"[2] Persistence={persistence.Current:F2}, Erosion={erosion:F2}, bias +{temperedStrength:F2} to {category}");
-
-            // Directional bias
-            if (persistence.Direction > 0)
-            {
-                map.AddBias("Confidence", persistence.Direction, "Positive");
-                traces.Add($"[2b] Direction={persistence.Direction:+0;-0;0} → Confidence bias");
-            }
-            else if (persistence.Direction < 0)
-            {
-                map.AddBias("Despair", Math.Abs(persistence.Direction), "Negative");
-                traces.Add($"[2b] Direction={persistence.Direction:+0;-0;0} → Despair bias");
-            }
-
-            // --- 3) Baseline tone from angle ---
+            #region Baseline resolution (single tone)
             var baseline = ToneRegistryLookups.ResolveFromAngle(delta.AngleTheta);
-            traces.Add($"[3] Baseline tone from angle → {baseline.Label} ({baseline.Category}, {baseline.BiasValue})");
+            var baselineAffinity = ToneRegistryLookups.ResolveAffinityFromCategory(baseline.Category);
+            traces.Add($"[Baseline] {baseline.Label} ({baseline.Category}, {baseline.BiasValue})");
 
-            // --- 4) Final tone from the strongest group ---
-            var strongestGroup = map.GetStrongestGroup();
-            var finalTone = ToneRegistryLookups.SelectWeighted(strongestGroup);
-            traces.Add($"[4] Strongest group={strongestGroup}, final tone={finalTone.Label} ({finalTone.Category}, {finalTone.BiasValue})");
-
-            // Neighborhoods based on enum key where needed
-            var resolvedEnumForNeighborhood = MapCategoryToEnum(finalTone.Category);
-            var adjacent = ToneRegistryLookups.GetAdjacentByTone(resolvedEnumForNeighborhood);
-            var neighborhood = ToneRegistryLookups.GetNeighborhoodByTone(resolvedEnumForNeighborhood);
-            var complementary = ToneRegistryLookups.GetComplementNeighborhood(resolvedEnumForNeighborhood);
-
-            // Affinity
-            var affinity = ToneRegistryLookups.ResolveAffinityFromCategory(category);
-
-            // --- 5) Build summary ---
-            var summary = new ToneClusterSummary
+            // Use bridge lookup to ensure baseline tones are seeded
+            var baselineTones = ToneRegistry.GetTonesByCategory(baseline.Category);
+            if (baselineTones.Count == 0)
             {
-                Baseline          = baseline,
-                Blended           = baseline, // axis blending optional now; keep same for now
-                Complement        = null,     // can compute if you want: pick from complementary by weight
-                BiasAdjusted      = finalTone,
-                FinalTone         = finalTone,
-                ClusterWeights    = ToneRegistryLookups.CurrentWeights(),
-                AngularCategories = ToneRegistryLookups.GetAngularCategories(),
-                TraceLogs         = traces,
-                TickId            = vb.TickId,
-                AdjacentTones     = adjacent,
-                ClusterNeighborhood = neighborhood,
-                ComplementaryTones = complementary,
-                Category          = category,
-                ResolvedAffinity  = affinity
+                traces.Add($"[Warn] No seeded tones for baseline category {baseline.Category}. Falling back.");
+                baselineTones = ToneRegistry.GetTonesByCategory("Neutral");
+            }
+            #endregion
+
+            #region Candidate grouping (no blending; structured palette for BlendResolver)
+            const float epsilon = 0.01f;
+
+            var sorted = map.GroupBiases
+                .OrderByDescending(kvp => kvp.Value)
+                .Select(kvp => (Category: kvp.Key, Weight: kvp.Value))
+                .ToList();
+
+            traces.Add("[Distribution] " + string.Join(", ", sorted.Select(s => $"{s.Category}:{s.Weight:F2}")));
+
+            var candidates = new List<(TraitAffinity Affinity, NarrativeTone Tone)>
+            {
+                (baselineAffinity, baseline) // 1) Baseline
             };
 
-            summary.TraceLogs.Add($"[5] Adjacent tones → {string.Join(", ", summary.AdjacentTones.Select(t => t.Label))}");
-            summary.TraceLogs.Add($"[6] Cluster neighborhood → {string.Join(", ", summary.ClusterNeighborhood.Select(t => t.Label))}");
-            summary.TraceLogs.Add($"[7] Complementary tones → {string.Join(", ", summary.ComplementaryTones.Select(t => t.Label))}");
+            // Helper: sample a tone for a given category with guards and bridge lookup
+            NarrativeTone SampleToneForCategory(string category, float weight)
+            {
+                if (weight <= epsilon) return null;
 
+                // Try bridge lookup first
+                var tones = ToneRegistry.GetTonesByCategory(category);
+                if (tones.Count > 0)
+                {
+                    var picked = ToneRegistryLookups.SelectFromListWeighted(tones, category);
+                    if (picked != null) return picked;
+                    // Fallback: first in list if weighted selection fails
+                    return tones.FirstOrDefault();
+                }
+
+                // Last resort: strict resolve (may return Neutral-style)
+                traces.Add($"[Warn] No tones found via bridge for {category} (w={weight:F2}). Using strict resolve.");
+                var strict = ToneRegistryLookups.ResolveFromCategory(category);
+                return strict;
+            }
+
+            // 2) Top 2 adjacents (highest non-zero weights excluding baseline category, dedup)
+            var topAdjacents = sorted
+                .Where(e => e.Weight > epsilon &&
+                            !string.Equals(e.Category, baseline.Category, StringComparison.OrdinalIgnoreCase))
+                .Take(2)
+                .ToList();
+
+            foreach (var entry in topAdjacents)
+            {
+                var tone = SampleToneForCategory(entry.Category, entry.Weight);
+                if (tone == null) continue;
+
+                var aff = ToneRegistryLookups.ResolveAffinityFromCategory(tone.Category);
+                candidates.Add((aff, tone));
+                traces.Add($"[Adjacent] {entry.Category} → {tone.Label} ({tone.Category}, {tone.BiasValue}) w={entry.Weight:F2}");
+            }
+
+            // 3) Midpoint: from remaining non-zero entries not used above/below
+            var chosenCategories = new HashSet<string>(candidates.Select(c => c.Tone.Category),
+                StringComparer.OrdinalIgnoreCase);
+
+            var remaining = sorted
+                .Where(e => e.Weight > epsilon && !chosenCategories.Contains(e.Category))
+                .ToList();
+
+            if (remaining.Count > 0)
+            {
+                var midIndex = remaining.Count / 2;
+                var midEntry = remaining[midIndex];
+                var midTone = SampleToneForCategory(midEntry.Category, midEntry.Weight);
+                if (midTone != null)
+                {
+                    var midAff = ToneRegistryLookups.ResolveAffinityFromCategory(midTone.Category);
+                    candidates.Add((midAff, midTone));
+                    traces.Add($"[Midpoint] {midEntry.Category} → {midTone.Label} ({midTone.Category}, {midTone.BiasValue}) w={midEntry.Weight:F2}");
+                    chosenCategories.Add(midEntry.Category);
+                }
+            }
+            else
+            {
+                traces.Add("[Midpoint] Skipped (no remaining non-zero categories).");
+            }
+
+            // 4) Bottom 2: lowest non-zero weights not yet chosen
+            var bottomTwo = sorted
+                .Where(e => e.Weight > epsilon && !chosenCategories.Contains(e.Category))
+                .Reverse()
+                .Take(2)
+                .ToList();
+
+            foreach (var entry in bottomTwo)
+            {
+                var tone = SampleToneForCategory(entry.Category, entry.Weight);
+                if (tone == null) continue;
+
+                var aff = ToneRegistryLookups.ResolveAffinityFromCategory(tone.Category);
+                candidates.Add((aff, tone));
+                traces.Add($"[Complementary] {entry.Category} → {tone.Label} ({tone.Category}, {tone.BiasValue}) w={entry.Weight:F2}");
+            }
+
+            // De-duplicate by (Category:Label) while preserving order
+            candidates = candidates
+                .GroupBy(t => $"{t.Tone.Category}:{t.Tone.Label}", StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+
+            // Enforce target size: 1 baseline + 5 = 6
+            if (candidates.Count > 6)
+            {
+                candidates = candidates.Take(6).ToList();
+                traces.Add("[Trim] Candidates trimmed to baseline + 5 grouped entries.");
+            }
+
+            traces.Add("[Palette] " + string.Join(", ",
+                candidates.Select(c => $"{c.Tone.Label}({c.Tone.Category},{c.Affinity},{c.Tone.BiasValue})")));
+            #endregion
+
+            #region Build summary
+            var summary = new ToneClusterSummary
+            {
+                Baseline = baseline,
+                BaseLineTones = candidates,
+                TraceLogs = traces,
+                TickId = vb.TickId
+            };
+            #endregion
+
+            #region Attach & return
             vb.AddSummary(summary);
             DebugOverlay.LogResolver(nameof(ToneClusterResolver), vb);
             return new ResolutionResult(vb);
+            #endregion
         }
-
-        // Map category string to a canonical Tone enum for neighborhood lookups
-        private static Tone MapCategoryToEnum(string category)
-        {
-            // Minimal mapping: pick a representative enum in that category
-            // You can expand this map or derive from your registry to find the canonical representative
-            return category?.ToLowerInvariant() switch
-            {
-                "despair"   => Tone.Sad,
-                "hostility" => Tone.Angry,
-                "darkness"  => Tone.Somber,
-                "neutral"   => Tone.Neutral,
-                "anxiety"   => Tone.Tense,
-                "resonance" => Tone.Nostalgic, // neutral-leaning resonance bucket
-                "joy"       => Tone.Joyful,
-                _           => Tone.Neutral
-            };
-        }
+        #endregion
     }
 }

@@ -8,14 +8,116 @@ namespace substrate_core.Libraries
 {
     public static class NarrativeTemplateLibrary
     {
-        // Templates keyed by NarrativeTone.Category
         private static readonly Dictionary<string, List<string>> ToneTemplates = new(StringComparer.OrdinalIgnoreCase)
         {
-            { "Equilibrium", new List<string> { "Equilibrium steadied the axis, balance held firm..." } },
-            { "Harmony",     new List<string> { "Harmony shimmered across the bias, traits aligned..." } },
-            { "Resonance",   new List<string> { "Resonance echoed, persistence amplified into mythic chords..." } },
-            { "Scar",        new List<string> { "Scar pressed faintly, legacy tilt carved into the axis..." } },
-            { "Fracture",    new List<string> { "Fracture surged, volatility tore the bias apart..." } }
+            // Special states
+            { "Equilibrium", new List<string>
+                {
+                    "Equilibrium steadied the axis, balance held firm...",
+                    "Equilibrium shimmered, dual forces aligned in quiet symmetry...",
+                    "Equilibrium anchored persistence, volatility dissolved into calm..."
+                }
+            },
+            { "Harmony", new List<string>
+                {
+                    "Harmony shimmered across the bias, traits aligned...",
+                    "Harmony resonated, chords of resilience intertwined...",
+                    "Harmony pulsed gently, weaving disparate tones into unity..."
+                }
+            },
+            { "Resonance", new List<string>
+                {
+                    "Resonance echoed, persistence amplified into mythic chords...",
+                    "Resonance surged, vibrations carried legacy forward...",
+                    "Resonance shimmered, tonal arcs magnified across the cycle..."
+                }
+            },
+            { "Scar", new List<string>
+                {
+                    "Scar pressed faintly, legacy tilt carved into the axis...",
+                    "Scar shimmered, a reminder etched in persistence...",
+                    "Scar deepened, fracture lines whispered of past volatility..."
+                }
+            },
+            { "Fracture", new List<string>
+                {
+                    "Fracture surged, volatility tore the bias apart...",
+                    "Fracture widened, persistence strained under pressure...",
+                    "Fracture shimmered, legacy arcs splintered into shards..."
+                }
+            },
+
+            // Core categories
+            { "Confidence", new List<string>
+                {
+                    "Confidence arcs rose, resilience strengthened...",
+                    "Confidence shimmered, persistence anchored in bold clarity...",
+                    "Confidence surged, bias tilted toward strength and resolve..."
+                }
+            },
+            { "Despair", new List<string>
+                {
+                    "Despair arcs fractured, legacy strained...",
+                    "Despair deepened, persistence eroded under shadow...",
+                    "Despair shimmered, bias tilted toward sorrow and collapse..."
+                }
+            },
+            { "Calm", new List<string>
+                {
+                    "Calm arcs anchored, stability held...",
+                    "Calm shimmered, persistence steadied into quiet balance...",
+                    "Calm radiated, volatility dissolved into serenity..."
+                }
+            },
+            { "Anxiety", new List<string>
+                {
+                    "Anxiety arcs surged, tension built...",
+                    "Anxiety shimmered, persistence strained under unease...",
+                    "Anxiety pulsed, volatility sharpened into restless arcs..."
+                }
+            },
+            { "Light", new List<string>
+                {
+                    "Light arcs radiated, clarity and hope shone...",
+                    "Radiance surged, illuminating persistence with brilliance...",
+                    "Luminosity shimmered, bias tilted toward clarity and renewal..."
+                }
+            },
+            { "Darkness", new List<string>
+                {
+                    "Darkness arcs deepened, obscurity spread...",
+                    "Darkness shimmered, persistence drowned in shadow...",
+                    "Darkness surged, bias tilted toward concealment and doubt..."
+                }
+            },
+            { "Intensity", new List<string>
+                {
+                    "Intensity arcs flared, persistence burned hot...",
+                    "Intensity surged, volatility magnified into blazing arcs...",
+                    "Intensity shimmered, bias tilted toward fervor and drive..."
+                }
+            },
+            { "Joy", new List<string>
+                {
+                    "Joy arcs shimmered, harmony resonated...",
+                    "Joy radiated, persistence lifted into celebration...",
+                    "Joy pulsed brightly, bias tilted toward delight and unity..."
+                }
+            },
+            { "Neutral", new List<string>
+                {
+                    "Neutral arcs steadied, balance returned...",
+                    "Neutral shimmered, persistence held without tilt...",
+                    "Neutral pulsed softly, bias dissolved into equilibrium..."
+                }
+            },
+            { "Hostility", new List<string>
+                {
+                    "Hostility arcs sharpened, resonance turned discordant...",
+                    "Hostility surged, persistence fractured under aggression...",
+                    "Hostility shimmered, bias tilted toward conflict and strain..."
+                }
+            }
         };
 
         private static readonly Dictionary<IntentType, List<string>> IntentTemplates = new()

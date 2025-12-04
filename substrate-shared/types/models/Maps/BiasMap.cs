@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -65,6 +66,62 @@ namespace substrate_shared.types.models.Maps
         public string GetStrongestPolarity()
         {
             return PolarityBiases.OrderByDescending(kvp => kvp.Value).First().Key;
+        }
+
+        // Return the top N group biases as (Category, Weight) tuples
+        public IEnumerable<(string Category, float Weight)> GetTopN(int topN)
+        {
+            if (topN <= 0)
+                return Enumerable.Empty<(string, float)>();
+
+            return GroupBiases
+                .OrderByDescending(kvp => kvp.Value)
+                .Take(topN)
+                .Select(kvp => (kvp.Key, kvp.Value));
+        }
+
+        public void Normalize(float epsilon)
+        {
+            // Guard: if no biases, nothing to normalize
+            if (GroupBiases == null || GroupBiases.Count == 0)
+                return;
+
+            // 1. Clamp negatives and NaNs
+            var keys = GroupBiases.Keys.ToList();
+            foreach (var key in keys)
+            {
+                var value = GroupBiases[key];
+
+                if (float.IsNaN(value) || float.IsInfinity(value))
+                    value = 0f;
+
+                if (value < 0f)
+                    value = 0f;
+
+                // Clamp tiny values up to epsilon
+                if (value < epsilon)
+                    value = epsilon;
+
+                GroupBiases[key] = value;
+            }
+
+            // 2. Normalize so weights sum to 1.0
+            float total = GroupBiases.Values.Sum();
+
+            if (total <= 0f)
+            {
+                // If everything collapsed, assign uniform epsilon
+                foreach (var key in keys)
+                    GroupBiases[key] = epsilon;
+
+                total = GroupBiases.Values.Sum();
+            }
+
+            // Scale all values proportionally
+            foreach (var key in keys)
+            {
+                GroupBiases[key] /= total;
+            }
         }
     }
 }
