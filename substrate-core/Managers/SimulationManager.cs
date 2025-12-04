@@ -90,7 +90,7 @@ namespace substrate_core.Managers
 
         public IEnumerable<TickResult> RunSimulation(VectorBias vb, IEnumerable<Mood> moods, NarrativeMode mode = NarrativeMode.Hybrid)
         {
-            ToneRegistry.AuditToneRegistry();
+            //ToneRegistry.AuditToneRegistry();
             
             var results = new List<TickResult>();
             foreach (var mood in moods)

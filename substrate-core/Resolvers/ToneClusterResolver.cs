@@ -5,6 +5,7 @@ using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
 using substrate_shared.Registries;
+using substrate_shared.Registries.Lookups;
 using substrate_shared.types.models;
 using substrate_shared.types.models.Maps;
 using substrate_shared.types.structs;
@@ -30,12 +31,12 @@ namespace substrate_core.Resolvers
             var map = new BiasMap();
 
             // Angle bias
-            var category = ToneRegistry.ResolveCategoryFromAngle(delta.AngleTheta);
+            var category = ToneRegistryLookups.ResolveCategoryFromAngle(delta.AngleTheta);
             map.AddBias(category, 1.0f);
             traces.Add($"[1] Angle θ={delta.AngleTheta:F2} → category={category}, bias +1.0");
 
             // Axis bias
-            ToneRegistry.ResolveAxisInfluence(map, delta.DeltaAxis);
+            ToneRegistryLookups.ResolveAxisInfluence(map, delta.DeltaAxis);
             traces.Add($"[1b] Axis Δ={delta.DeltaAxis:F2} → axis bias applied (Confidence/Despair/Neutral)");
 
             // Persistence bias
@@ -58,22 +59,22 @@ namespace substrate_core.Resolvers
             }
 
             // --- 3) Baseline tone from angle ---
-            var baseline = ToneRegistry.ResolveFromAngle(delta.AngleTheta);
+            var baseline = ToneRegistryLookups.ResolveFromAngle(delta.AngleTheta);
             traces.Add($"[3] Baseline tone from angle → {baseline.Label} ({baseline.Category}, {baseline.BiasValue})");
 
             // --- 4) Final tone from the strongest group ---
             var strongestGroup = map.GetStrongestGroup();
-            var finalTone = ToneRegistry.SelectWeighted(strongestGroup);
+            var finalTone = ToneRegistryLookups.SelectWeighted(strongestGroup);
             traces.Add($"[4] Strongest group={strongestGroup}, final tone={finalTone.Label} ({finalTone.Category}, {finalTone.BiasValue})");
 
             // Neighborhoods based on enum key where needed
             var resolvedEnumForNeighborhood = MapCategoryToEnum(finalTone.Category);
-            var adjacent = ToneRegistry.GetAdjacentByTone(resolvedEnumForNeighborhood);
-            var neighborhood = ToneRegistry.GetNeighborhoodByTone(resolvedEnumForNeighborhood);
-            var complementary = ToneRegistry.GetComplementNeighborhood(resolvedEnumForNeighborhood);
+            var adjacent = ToneRegistryLookups.GetAdjacentByTone(resolvedEnumForNeighborhood);
+            var neighborhood = ToneRegistryLookups.GetNeighborhoodByTone(resolvedEnumForNeighborhood);
+            var complementary = ToneRegistryLookups.GetComplementNeighborhood(resolvedEnumForNeighborhood);
 
             // Affinity
-            var affinity = ToneRegistry.ResolveAffinityFromCategory(category);
+            var affinity = ToneRegistryLookups.ResolveAffinityFromCategory(category);
 
             // --- 5) Build summary ---
             var summary = new ToneClusterSummary
@@ -83,8 +84,8 @@ namespace substrate_core.Resolvers
                 Complement        = null,     // can compute if you want: pick from complementary by weight
                 BiasAdjusted      = finalTone,
                 FinalTone         = finalTone,
-                ClusterWeights    = ToneRegistry.CurrentWeights(),
-                AngularCategories = ToneRegistry.GetAngularCategories(),
+                ClusterWeights    = ToneRegistryLookups.CurrentWeights(),
+                AngularCategories = ToneRegistryLookups.GetAngularCategories(),
                 TraceLogs         = traces,
                 TickId            = vb.TickId,
                 AdjacentTones     = adjacent,
