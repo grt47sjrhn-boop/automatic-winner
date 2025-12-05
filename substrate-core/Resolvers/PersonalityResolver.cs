@@ -41,13 +41,13 @@ namespace substrate_core.Resolvers
             // 2) Hardened overlay logic
             switch (resolvedState)
             {
-                case PersonalityState.Recovering when persistence.Current > 10f && persistence.IsIncreasing:
+                case PersonalityState.Recovering when persistence is { Current: > 10f, IsIncreasing: true }:
                     resolvedState = PersonalityState.Hardened;
                     hardenedBias  = HardenedBiasType.Resilient;
                     traceLogs.Add("Recovered strongly: hardened as Resilient.");
                     break;
 
-                case PersonalityState.Fracturing when persistence.Current < -10f && persistence.IsDecreasing:
+                case PersonalityState.Fracturing when persistence is { Current: < -10f, IsDecreasing: true }:
                     resolvedState = PersonalityState.Hardened;
                     hardenedBias  = HardenedBiasType.Scarred;
                     traceLogs.Add("Fractured deeply: hardened as Scarred.");

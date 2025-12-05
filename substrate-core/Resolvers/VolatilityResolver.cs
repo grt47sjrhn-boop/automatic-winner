@@ -54,7 +54,7 @@ namespace substrate_core.Resolvers
 
             // --- 4) Event-based release (optional) ---
             var releaseScore = 0f;
-            if (trigger != null && trigger.Events != null)
+            if (trigger is { Events: not null })
             {
                 foreach (var e in trigger.Events)
                 {

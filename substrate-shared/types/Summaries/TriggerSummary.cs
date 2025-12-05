@@ -10,7 +10,7 @@ namespace substrate_shared.types.Summaries
         public string Name => nameof(TriggerSummary);
 
         public int TickId { get; set; }
-        public List<TriggerEvent> Events { get; set; } = new();
+        public List<TriggerEvent> Events { get; set; } = [];
         public int Count { get; set; }
 
         public string Describe()

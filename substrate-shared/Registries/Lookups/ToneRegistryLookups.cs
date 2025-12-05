@@ -83,7 +83,7 @@ namespace substrate_shared.Registries.Lookups
                     ToneRegistry._weights[tone] = 1f;
             }
 
-            float total = candidates.Sum(t => ToneRegistry._weights[t]);
+            var total = candidates.Sum(t => ToneRegistry._weights[t]);
             if (total <= 0)
             {
                 foreach (var tone in candidates)
@@ -91,7 +91,7 @@ namespace substrate_shared.Registries.Lookups
                 total = candidates.Sum(t => ToneRegistry._weights[t]);
             }
 
-            float roll = (float)_rng.NextDouble() * total;
+            var roll = (float)_rng.NextDouble() * total;
             foreach (var tone in candidates)
             {
                 roll -= ToneRegistry._weights[tone];
@@ -119,7 +119,7 @@ namespace substrate_shared.Registries.Lookups
                     ToneRegistry._weights[tone] = 1f;
             }
 
-            float total = candidates.Sum(t => ToneRegistry._weights[t]);
+            var total = candidates.Sum(t => ToneRegistry._weights[t]);
             if (total <= 0)
             {
                 foreach (var tone in candidates)
@@ -128,7 +128,7 @@ namespace substrate_shared.Registries.Lookups
             }
 
             var rng = new Random(seed);
-            float roll = (float)rng.NextDouble() * total;
+            var roll = (float)rng.NextDouble() * total;
 
             foreach (var tone in candidates)
             {
@@ -147,10 +147,10 @@ namespace substrate_shared.Registries.Lookups
         public static IEnumerable<NarrativeTone> GetByCategory(string category)
         {
             if (string.IsNullOrWhiteSpace(category))
-                return Enumerable.Empty<NarrativeTone>();
+                return [];
 
             return ToneRegistry._tones.Values
-                .SelectMany(list => list ?? new List<NarrativeTone>())
+                .SelectMany(list => list ?? [])
                 .Where(nt => nt != null &&
                              !string.IsNullOrEmpty(nt.Category) &&
                              nt.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
@@ -162,7 +162,7 @@ namespace substrate_shared.Registries.Lookups
         public static IEnumerable<NarrativeTone> GetNeighborhoodByTone(Tone tone)
         {
             if (!ToneRegistry._tones.ContainsKey(tone) || !ToneRegistry._tones[tone].Any())
-                return Enumerable.Empty<NarrativeTone>();
+                return [];
 
             var category = ToneRegistry._tones[tone].First().Category;
             return GetByCategory(category);
@@ -174,7 +174,7 @@ namespace substrate_shared.Registries.Lookups
         public static List<string> GetAdjacentCategories(string category)
         {
             var index = ToneRegistry._angularCategories.FindIndex(ac => ac.category.Equals(category, StringComparison.OrdinalIgnoreCase));
-            if (index == -1) return new List<string>();
+            if (index == -1) return [];
 
             var neighbors = new List<string>();
             if (index > 0) neighbors.Add(ToneRegistry._angularCategories[index - 1].category);
@@ -185,7 +185,7 @@ namespace substrate_shared.Registries.Lookups
         public static IEnumerable<NarrativeTone> GetAdjacentByTone(Tone tone)
         {
             if (!ToneRegistry._tones.ContainsKey(tone) || !ToneRegistry._tones[tone].Any())
-                return Enumerable.Empty<NarrativeTone>();
+                return [];
 
             var category = ToneRegistry._tones[tone].First().Category;
             var adjCats = GetAdjacentCategories(category);
@@ -335,9 +335,9 @@ namespace substrate_shared.Registries.Lookups
             return new NarrativeTone("Neutral", "Default", "Neutral") { Category = "Neutral" };
         }
         
-        public static NarrativeTone SelectFromListWeighted(List<NarrativeTone> tones, string category)
+        public static NarrativeTone? SelectFromListWeighted(List<NarrativeTone> tones, string category)
         {
-            if (tones == null || tones.Count == 0)
+            if (tones.Count == 0)
                 return null;
 
             // Filter tones by category (safety guard)
@@ -364,7 +364,7 @@ namespace substrate_shared.Registries.Lookups
             var rand = new Random();
             var roll = rand.NextDouble() * total;
 
-            float cumulative = 0f;
+            var cumulative = 0f;
             foreach (var entry in weighted)
             {
                 cumulative += entry.Weight;

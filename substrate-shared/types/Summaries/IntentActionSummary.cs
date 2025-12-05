@@ -14,24 +14,23 @@ namespace substrate_shared.types.Summaries
         public string Name => nameof(IntentActionSummary);
 
         public int TickId { get; set; }
-
-        // Refactored: use NarrativeTone instead of Tone enum
-        public NarrativeTone Tone { get; set; }
+        
+        public NarrativeTone? Tone { get; set; }
 
         public float Persistence { get; set; }
         public float Volatility { get; set; }
         public float Area { get; set; }
         public bool HasDuality { get; set; }
         public IntentType Intent { get; set; }
-        public List<string> TraceLogs { get; set; } = new();
+        public List<string> TraceLogs { get; set; } = [];
 
         public string Describe()
         {
-            var traces = TraceLogs != null && TraceLogs.Any()
+            var traces = TraceLogs.Any()
                 ? string.Join("; ", TraceLogs)
                 : "none";
 
-            string toneText = Tone != null
+            var toneText = Tone != null
                 ? $"{Tone.Label} (Category={Tone.Category}, Bias={Tone.BiasValue})"
                 : "none";
 

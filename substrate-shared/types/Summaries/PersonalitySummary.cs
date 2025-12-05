@@ -20,7 +20,7 @@ namespace substrate_shared.types.Summaries
 
         public bool ResilienceBonusApplied { get; set; }
         public bool ModifiersApplied { get; set; }
-        public List<string> TraceLogs { get; set; } = new();
+        public List<string> TraceLogs { get; set; } = [];
         public MoodType? WoundSource { get; set; }
 
         public string Describe()

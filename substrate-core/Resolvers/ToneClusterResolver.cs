@@ -74,7 +74,7 @@ namespace substrate_core.Resolvers
             };
 
             // Helper: sample a tone for a given category with guards and bridge lookup
-            NarrativeTone SampleToneForCategory(string category, float weight)
+            NarrativeTone? SampleToneForCategory(string category, float weight)
             {
                 if (weight <= epsilon) return null;
 
@@ -83,9 +83,9 @@ namespace substrate_core.Resolvers
                 if (tones.Count > 0)
                 {
                     var picked = ToneRegistryLookups.SelectFromListWeighted(tones, category);
-                    if (picked != null) return picked;
-                    // Fallback: first in list if weighted selection fails
-                    return tones.FirstOrDefault();
+                    return true ? picked :
+                        // Fallback: first in list if weighted selection fails
+                        tones.FirstOrDefault();
                 }
 
                 // Last resort: strict resolve (may return Neutral-style)

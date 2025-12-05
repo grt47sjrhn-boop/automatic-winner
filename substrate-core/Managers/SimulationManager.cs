@@ -21,7 +21,7 @@ namespace substrate_core.Managers
         private int _tickCounter = 0;
 
         // Lifetime buffer of all trigger events (logged via TriggerSummary, not vb.TriggerEvents)
-        private readonly List<TriggerEvent> _allEvents = new();
+        private readonly List<TriggerEvent> _allEvents = [];
 
         public TickResult RunTick(VectorBias vb, Mood mv, NarrativeMode mode = NarrativeMode.Hybrid)
         {
@@ -60,7 +60,7 @@ namespace substrate_core.Managers
 
             // Acquire TriggerSummary for logging and rolling window
             var triggerSummary = TryGetSummary<TriggerSummary>(vb);
-            var currentEvents  = triggerSummary?.Events ?? new List<TriggerEvent>();
+            var currentEvents  = triggerSummary?.Events ?? [];
 
             // Lifetime buffer and global event log: consume via summary only
             if (currentEvents.Count > 0)
@@ -126,7 +126,7 @@ namespace substrate_core.Managers
             }
 
             // Trigger events come from TriggerSummary, passed in as currentEvents
-            if (currentEvents != null && currentEvents.Count > 0)
+            if (currentEvents is { Count: > 0 })
             {
                 Console.WriteLine($"[Tick {tick}] Trigger Events:");
                 foreach (var e in currentEvents)

@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using substrate_core.Utilities;
 using substrate_shared.enums;
 using substrate_shared.interfaces;
@@ -33,16 +31,17 @@ namespace substrate_core.Resolvers
             var cluster     = vb.GetSummary<ToneClusterSummary>(); // provides baseline + palette
 
             // Safe floats
-            float hyp          = DebugOverlay.SafeFloat(delta.Hypotenuse);
-            float area         = DebugOverlay.SafeFloat(delta.Area);
-            float persistenceVal = persistence?.Current   ?? 0f;
-            float volatilityVal  = volatility?.Volatility ?? 0f;
+            if (delta == null) return new ResolutionResult(vb);
+            var hyp          = DebugOverlay.SafeFloat(delta.Hypotenuse);
+            var area         = DebugOverlay.SafeFloat(delta.Area);
+            var persistenceVal = persistence?.Current   ?? 0f;
+            var volatilityVal  = volatility?.Volatility ?? 0f;
 
             // Coherence score
-            float crystallizationScore = hyp * area;
+            var crystallizationScore = hyp * area;
 
             // Derive narratable tilt from cluster baseline (fallback to vb.Legacy, then None)
-            string tiltCategory = ResolveTiltCategory(cluster, vb);
+            var tiltCategory = ResolveTiltCategory(cluster, vb);
 
             var events = new List<TriggerEvent>();
 
@@ -76,7 +75,7 @@ namespace substrate_core.Resolvers
             }
 
             // Trait activations
-            if (traits?.ActiveTraitIds != null && traits.ActiveTraitIds.Count > 0)
+            if (traits?.ActiveTraitIds is { Count: > 0 })
             {
                 foreach (var id in traits.ActiveTraitIds)
                 {
@@ -94,7 +93,7 @@ namespace substrate_core.Resolvers
             }
 
             // Constellation formation
-            if (traits != null && traits.CrystallizedCount >= ConstellationMin)
+            if (traits is { CrystallizedCount: >= ConstellationMin })
             {
                 events.Add(new TriggerEvent
                 {
@@ -119,6 +118,7 @@ namespace substrate_core.Resolvers
             DebugOverlay.LogTrigger(vb, crystallizationScore, delta, summary);
 
             vb.AddSummary(summary);
+
             return new ResolutionResult(vb);
         }
 
@@ -127,15 +127,12 @@ namespace substrate_core.Resolvers
         // 2) Else use top category from distribution (highest weight)
         // 3) Else fallback to vb.Legacy
         // 4) Else "None"
-        private static string ResolveTiltCategory(ToneClusterSummary cluster, VectorBias vb)
+        private static string ResolveTiltCategory(ToneClusterSummary? cluster, VectorBias vb)
         {
-            if (!string.IsNullOrWhiteSpace(cluster?.Baseline?.Category))
+            if (cluster != null && !string.IsNullOrWhiteSpace(cluster.Baseline?.Category))
                 return cluster.Baseline.Category;
 
-            if (!string.IsNullOrWhiteSpace(vb.Legacy.ToString()))
-                return vb.Legacy.ToString();
-
-            return "None";
+            return !string.IsNullOrWhiteSpace(vb.Legacy.ToString()) ? vb.Legacy.ToString() : "None";
         }
 
     }

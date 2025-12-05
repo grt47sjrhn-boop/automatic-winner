@@ -72,7 +72,7 @@ namespace substrate_shared.types.models.Maps
         public IEnumerable<(string Category, float Weight)> GetTopN(int topN)
         {
             if (topN <= 0)
-                return Enumerable.Empty<(string, float)>();
+                return [];
 
             return GroupBiases
                 .OrderByDescending(kvp => kvp.Value)
@@ -106,7 +106,7 @@ namespace substrate_shared.types.models.Maps
             }
 
             // 2. Normalize so weights sum to 1.0
-            float total = GroupBiases.Values.Sum();
+            var total = GroupBiases.Values.Sum();
 
             if (total <= 0f)
             {

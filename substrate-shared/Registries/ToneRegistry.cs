@@ -108,8 +108,8 @@ namespace substrate_shared.Registries
         };
 
         // --- Angular wheel ----------------------------------------------------
-        internal static readonly List<(float min, float max, string category)> _angularCategories = new()
-        {
+        internal static readonly List<(float min, float max, string category)> _angularCategories =
+        [
             (-MathF.PI / 6f, MathF.PI / 6f, "Neutral"),
             (MathF.PI - MathF.PI / 6f, MathF.PI + MathF.PI / 6f, "Intensity"),
             (MathF.PI / 3f, 2 * MathF.PI / 3f, "Joy"),
@@ -120,7 +120,7 @@ namespace substrate_shared.Registries
             (-5 * MathF.PI / 6f, -2 * MathF.PI / 3f, "Darkness"),
             (23 * MathF.PI / 24f, 25 * MathF.PI / 24f, "Resonance"),
             (-25 * MathF.PI / 24f, -23 * MathF.PI / 24f, "Hostility")
-        };
+        ];
 
         // --- Weights ----------------------------------------------------------
         internal static readonly Dictionary<NarrativeTone, float> _weights =

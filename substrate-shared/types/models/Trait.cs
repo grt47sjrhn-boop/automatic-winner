@@ -9,9 +9,9 @@ namespace substrate_shared.types.models
         public int Age;                   // Cycles since crystallization
         public TraitState State;          // Dormant, Active, Dominant
         public float OrientationTilt;     // Preferred drift direction
-        public HashSet<TraitTag> Tags;    // Synergy hooks
+        public HashSet<TraitTag>? Tags;    // Synergy hooks
         public bool IsCrystallized;       // Bias that completed all cycles
-        public string Label { get; set; }
+        public string? Label { get; set; }
     }
 
     public enum TraitId { ResilientHarmony, FracturedLegacy, IronyUndertone, VolatileSpread, Duality }

@@ -42,8 +42,8 @@ namespace substrate_core.Utilities
                               $"Score={crystallizationScore:F2}, Events={triggers.Events.Count}");
             foreach (var evt in triggers.Events)
             {
-                string scoreText = float.IsNaN(evt.Score) ? "NaN" : evt.Score.ToString("F2");
-                string magText = float.IsNaN(evt.Magnitude) ? "NaN" : evt.Magnitude.ToString("F2");
+                var scoreText = float.IsNaN(evt.Score) ? "NaN" : evt.Score.ToString("F2");
+                var magText = float.IsNaN(evt.Magnitude) ? "NaN" : evt.Magnitude.ToString("F2");
                 Console.WriteLine($"  Event: {evt.Type}, Score={scoreText}, Magnitude={magText}, Desc={evt.Description}");
             }
         }

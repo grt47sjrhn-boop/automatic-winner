@@ -179,14 +179,14 @@ namespace substrate_tools.Demos
 
                 // Traits: contributor-facing set from TraitSummary
                 var traitSummary = result.Bias.Summaries.Values.OfType<TraitSummary>().FirstOrDefault();
-                var traits = traitSummary?.Traits ?? new List<Trait>();
+                var traits = traitSummary?.Traits ?? [];
 
                 for (var i = 0; i < Math.Min(3, traits.Count); i++)
                     traitWeightSeries[i].Add(traits[i].Weight);
 
                 // Trigger events from TriggerSummary (useful for console echo/debug)
                 var triggerSummary = result.Bias.Summaries.Values.OfType<TriggerSummary>().FirstOrDefault();
-                var triggerEvents = triggerSummary?.Events ?? new List<TriggerEvent>();
+                var triggerEvents = triggerSummary?.Events ?? [];
 
                 foreach (var evt in triggerEvents)
                     Console.WriteLine($"Tick {result.TickId}: {evt.Type} — {evt.Description}");

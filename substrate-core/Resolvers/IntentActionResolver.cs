@@ -33,7 +33,7 @@ namespace substrate_core.Resolvers
             var persistenceVal = persistence.Current;
             var volatilityVal  = volatility.Volatility;
             var area           = delta.Area;
-            var hasDuality     = traitSummary?.ActiveTraitLabels?.Any(label => label.Contains("Duality")) ?? false;
+            var hasDuality     = traitSummary?.ActiveTraitLabels.Any(label => label != null && label.Contains("Duality")) ?? false;
 
             // Default intent
             var intent = IntentType.None;

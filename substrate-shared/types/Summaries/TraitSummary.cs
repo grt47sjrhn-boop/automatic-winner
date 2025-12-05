@@ -17,16 +17,16 @@ namespace substrate_shared.types.Summaries
         public int CrystallizedCount { get; set; }
 
         // Contributor-facing IDs and labels
-        public List<string> ActiveTraitIds { get; set; } = new();
-        public List<string> CrystallizedTraitIds { get; set; } = new();
-        public List<string> ActiveTraitLabels { get; set; } = new();
-        public List<string> CrystallizedTraitLabels { get; set; } = new();
+        public List<string> ActiveTraitIds { get; set; } = [];
+        public List<string> CrystallizedTraitIds { get; set; } = [];
+        public List<string?> ActiveTraitLabels { get; set; } = [];
+        public List<string?> CrystallizedTraitLabels { get; set; } = [];
 
         // Lifecycle notes: state + age per trait
-        public List<string> LifecycleNotes { get; set; } = new();
+        public List<string> LifecycleNotes { get; set; } = [];
 
         // Full trait objects for weight tracking and metrics
-        public List<Trait> Traits { get; set; } = new();
+        public List<Trait> Traits { get; set; } = [];
 
         public string Describe()
         {

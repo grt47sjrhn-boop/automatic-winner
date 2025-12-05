@@ -12,12 +12,12 @@ namespace substrate_shared.types.Summaries
         public string Name => nameof(ToneClusterSummary);
 
         // Core tone states
-        public NarrativeTone Baseline { get; set; }               // from angle bias
+        public NarrativeTone? Baseline { get; set; }               // from angle bias
         public IList<(TraitAffinity Affinity, NarrativeTone Tone)> BaseLineTones { get; set; } 
             = new List<(TraitAffinity, NarrativeTone)>();         // candidates fully resolved
 
         // Trace logs for contributors
-        public List<string> TraceLogs { get; set; } = new();
+        public List<string> TraceLogs { get; set; } = [];
 
         // Tick context
         public int TickId { get; set; }
@@ -31,7 +31,7 @@ namespace substrate_shared.types.Summaries
                 ? string.Join(", ", BaseLineTones.Select(ToneText))
                 : "none";
 
-            var baseline = $"{Baseline.Label}({Baseline.Category},{Baseline.BiasValue})";
+            var baseline = $"{Baseline?.Label}({Baseline?.Category},{Baseline?.BiasValue})";
 
             var traces = TraceLogs.Any()
                 ? string.Join(" | ", TraceLogs)

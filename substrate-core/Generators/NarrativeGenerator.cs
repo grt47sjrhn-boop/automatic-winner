@@ -54,7 +54,7 @@ namespace substrate_core.Generators
                 : NarrativeTemplateLibrary.GetTemplate(toneTuple, tickId);
 
             // Deduplicate undertones
-            var undertones = new HashSet<string>
+            var undertones = new HashSet<string?>
             {
                 toneTuple.Adjacent1?.Label,
                 toneTuple.Adjacent2?.Label,
@@ -75,7 +75,7 @@ namespace substrate_core.Generators
 
             // Trigger events (from TriggerSummary)
             var triggerSummary = vb.Summaries.Values.OfType<TriggerSummary>().FirstOrDefault();
-            var triggerEvents = triggerSummary?.Events ?? new List<TriggerEvent>();
+            var triggerEvents = triggerSummary?.Events ?? [];
 
             if (triggerEvents.Any())
             {

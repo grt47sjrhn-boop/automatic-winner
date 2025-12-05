@@ -15,9 +15,9 @@ namespace substrate_shared.types.models.Profiles
         private PersonalityStateMachine _stateMachine;
 
         public VectorBias Bias => _bias;
-        public List<ISummary> Summaries { get; private set; } = new();
-        public List<Trait> Traits { get; private set; } = new();
-        public List<TriggerEvent> TriggerEvents { get; private set; } = new();
+        public List<ISummary> Summaries { get; private set; } = [];
+        public List<Trait> Traits { get; private set; } = [];
+        public List<TriggerEvent> TriggerEvents { get; private set; } = [];
 
         // Read-only projections from state machine
         public PersonalityState State => _stateMachine.CurrentState;

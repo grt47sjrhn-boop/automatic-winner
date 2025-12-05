@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using substrate_core.Resolvers;
 using substrate_shared.enums;
 using substrate_shared.enums.Extensions;
 using substrate_shared.types.models.Profiles;
@@ -66,7 +65,7 @@ namespace substrate_shared.types.models.StateMachines
                     {
                         CurrentState = PersonalityState.Recovering;
                     }
-                    else if (!persistence.IsRecovering && persistence.Current < -10)
+                    else if (persistence is { IsRecovering: false, Current: < -10 })
                     {
                         CurrentState = PersonalityState.Hardened;
                         HardenedBias = HardenedBiasType.Wounded; // resists positives
@@ -78,7 +77,7 @@ namespace substrate_shared.types.models.StateMachines
                     {
                         CurrentState = PersonalityState.Fracturing;
                     }
-                    else if (persistence.Current > 10 && persistence.IsIncreasing)
+                    else if (persistence is { Current: > 10, IsIncreasing: true })
                     {
                         CurrentState = PersonalityState.Hardened;
                         HardenedBias = HardenedBiasType.Scarred; // resists negatives
@@ -87,7 +86,7 @@ namespace substrate_shared.types.models.StateMachines
                     break;
 
                 case PersonalityState.Hardened:
-                    if (persistence.IsFracturing && persistence.Current < -15)
+                    if (persistence is { IsFracturing: true, Current: < -15 })
                     {
                         CurrentState = PersonalityState.Fracturing;
                         HardenedBias = HardenedBiasType.None;
@@ -151,26 +150,8 @@ namespace substrate_shared.types.models.StateMachines
                 }
             }
         }
-
-
-        /// <summary>
-        /// Map Tone → representative MoodType when MoodDelta is not available.
-        /// </summary>
-        private MoodType MapToneToMood(Tone tone)
-        {
-            return tone switch
-            {
-                Tone.Resonance   => MoodType.Happiness,
-                Tone.Harmony     => MoodType.Contentment,
-                Tone.Scar        => MoodType.Sadness,
-                Tone.Fracture    => MoodType.Anxiety,
-                Tone.Neutral     => MoodType.Neutral,
-                Tone.Equilibrium => MoodType.Neutral,
-                _                => MoodType.Neutral
-            };
-        }
         
-        private MoodType MapToneToMood(NarrativeTone nt)
+        private static MoodType MapToneToMood(NarrativeTone? nt)
         {
             if (nt == null) return MoodType.Neutral;
 

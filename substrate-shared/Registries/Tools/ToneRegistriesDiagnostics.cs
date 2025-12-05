@@ -89,7 +89,7 @@ namespace substrate_shared.Registries.Tools
                 }
 
                 // Fallback: geometric validation
-                float oppositeMid = NormalizeToPiRange(src.Mid + MathF.PI);
+                var oppositeMid = NormalizeToPiRange(src.Mid + MathF.PI);
 
                 var match = midpoints
                     .OrderBy(m => Math.Abs(NormalizeToPiRange(m.Mid - oppositeMid)))

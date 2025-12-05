@@ -6,7 +6,7 @@ namespace substrate_core.Logging
 {
     public static class EventLog
     {
-        private static readonly List<TriggerEvent> _events = new();
+        private static readonly List<TriggerEvent> _events = [];
 
         public static void AddEvents(IEnumerable<TriggerEvent> events)
         {

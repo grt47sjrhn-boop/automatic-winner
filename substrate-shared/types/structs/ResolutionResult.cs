@@ -12,50 +12,36 @@ namespace substrate_shared.types.structs
     /// - Updated VectorBias
     /// - Outputs from each resolver (delta, tone, persistence, volatility, triggers, personality, intent)
     /// </summary>
-    public struct ResolutionResult
+    public struct ResolutionResult(VectorBias bias)
     {
         // Always present
-        public VectorBias Bias { get; set; }
+        public VectorBias Bias { get; set; } = bias;
 
         // DeltaVectorResolver
-        public DeltaSummary DeltaSummary { get; set; }
+        public DeltaSummary? DeltaSummary { get; set; } = null;
 
         // ToneClusterResolver
-        public ToneResolutionResult ToneCluster { get; set; }
+        public ToneResolutionResult? ToneCluster { get; set; } = null;
 
         // PersistenceResolver
-        public PersistenceState Persistence { get; set; }
+        public PersistenceState? Persistence { get; set; } = null;
 
         // VolatilityResolver
-        public float Volatility { get; set; }
+        public float Volatility { get; set; } = 0f;
 
         // TriggerResolver
-        public List<TriggerEvent> TriggerEvents { get; set; }
+        public List<TriggerEvent> TriggerEvents { get; set; } = [];
 
         // PersonalityResolver
-        public PersonalityState PersonalityState { get; set; }
-        public HardenedBiasType HardenedBias { get; set; }
-        public PersonalityProfile PersonalityProfile { get; set; }
+        public PersonalityState PersonalityState { get; set; } = PersonalityState.Neutral;
+        public HardenedBiasType HardenedBias { get; set; } = HardenedBiasType.None;
+        public PersonalityProfile? PersonalityProfile { get; set; } = null;
 
         // IntentActionResolver
-        public IntentType IntentBias { get; set; }
-        public List<string> TraceLog { get; set; }
-        public ISummary Summary { get; set; }
+        public IntentType IntentBias { get; set; } = default;
+        public List<string>? TraceLog { get; set; }
+        public ISummary? Summary { get; set; }
 
         // Constructor for minimal init
-        public ResolutionResult(VectorBias bias)
-        {
-            Bias = bias;
-
-            DeltaSummary = default;
-            ToneCluster = default;
-            Persistence = default;
-            Volatility = 0f;
-            TriggerEvents = new List<TriggerEvent>();
-            PersonalityState = PersonalityState.Neutral;
-            HardenedBias = HardenedBiasType.None;
-            PersonalityProfile = default;
-            IntentBias = default;
-        }
     }
 }

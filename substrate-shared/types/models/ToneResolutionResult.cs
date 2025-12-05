@@ -15,7 +15,7 @@ namespace substrate_shared.types.models
 
         public ToneResolutionResult()
         {
-            TraceLog = new List<string>();
+            TraceLog = [];
         }
 
         public void AddTrace(string message)
