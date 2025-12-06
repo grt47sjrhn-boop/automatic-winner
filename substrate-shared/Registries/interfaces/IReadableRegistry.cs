@@ -7,5 +7,8 @@ namespace substrate_shared.Registries.interfaces
         string GetDescription();
         Bias GetBias();
         NarrativeGroup GetGroup();
+        // New: expose the compact enum identifier
+        ToneType GetToneType();
+
     }
 }

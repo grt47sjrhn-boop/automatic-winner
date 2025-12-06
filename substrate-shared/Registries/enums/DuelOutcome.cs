@@ -6,6 +6,8 @@ namespace substrate_shared.Registries.enums
         Recovery,        // Positive dominates
         Equilibrium,     // Neutral or balanced
         MixedConflict,   // Positive and Negative with near parity
-        Wound            // Persistent consequence beyond the duel
+        Wound,            // Persistent consequence beyond the duel
+        Conflict,
+        Unknown
     }
 }

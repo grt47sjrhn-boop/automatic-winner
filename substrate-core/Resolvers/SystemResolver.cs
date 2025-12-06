@@ -1,5 +1,5 @@
-using substrate_core.Resolvers.Base;
 using substrate_shared.interfaces;
+using substrate_shared.Resolvers.Base;
 
 namespace substrate_core.Resolvers
 {

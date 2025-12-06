@@ -26,6 +26,10 @@ namespace substrate_shared.Registries.enums
         Critical,
 
         [RegistryNarrative("Despairing tones seep like seawater into cracked stone, a tide that cannot be turned.", Bias.Negative, NarrativeGroup.AbyssalStates)]
-        Despairing
+        Despairing,
+        
+        // New synthetic entry for multi-axis duels
+        [RegistryNarrative("Composite duel tone, forged from multiple axes into a singular resonance.", Bias.Neutral, NarrativeGroup.Composite)]
+        Composite
     }
 }

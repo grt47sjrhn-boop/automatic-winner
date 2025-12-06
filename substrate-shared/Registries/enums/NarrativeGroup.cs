@@ -47,6 +47,9 @@ namespace substrate_shared.Registries.enums
         FracturedActions,
 
         [Narrative("Abyssal actions, despairing voices, hopeless tides that cannot be turned.", Bias.Negative)]
-        AbyssalActions
+        AbyssalActions,
+        
+        [Narrative("Composite synthesis, forged from multiple axes into a singular resonance.", Bias.Neutral)]
+        Composite
     }
 }

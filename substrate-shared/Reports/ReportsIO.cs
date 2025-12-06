@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using substrate_shared;
+using substrate_core.Reporting;
 using substrate_shared.interfaces;
-using substrate_shared.Reports;
 
-namespace substrate_core.Reporting
+namespace substrate_shared.Reports
 {
     public static class ResilienceReportIO
     {

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Resolvers.Base;
 using substrate_shared.interfaces;
 using substrate_shared.Overlays;
 using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
+using substrate_shared.Resolvers.Base;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
 using substrate_shared.types;
@@ -42,7 +42,7 @@ namespace substrate_shared.Resolvers
                 _   => Bias.Neutral
             };
 
-            var compositeTone = new NarrativeTone("Composite Duel", "MultiAxis", bias, "Composite");
+            var compositeTone = new NarrativeTone(ToneType.Composite,"Composite Duel", "MultiAxis", bias, "Composite");
             var resolvedVector = new BiasVector(compositeTone, Math.Max(1, totalMagnitude / _vectors.Count()));
 
             DuelOutcome outcome = bias switch

@@ -4,6 +4,7 @@ using System.Linq;
 using substrate_shared.interfaces;
 using substrate_shared.types;
 using substrate_shared.Overlays;
+using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
 
@@ -31,17 +32,24 @@ namespace substrate_core.Resolvers
         {
             _duelSummaries.Add(summary);
 
-            if (summary.Description.Contains("Recovery")) _resilienceIndex += 2;
-            else if (summary.Description.Contains("Collapse")) _resilienceIndex -= 2;
-            else if (summary.Description.Contains("Wound")) _resilienceIndex -= 1;
-            else if (summary.Description.Contains("MixedConflict")) _resilienceIndex -= 1;
-            else if (summary.Description.Contains("Equilibrium")) _resilienceIndex += 1;
+            if (summary is DuelEventSummary duelSummary)
+            {
+                switch (duelSummary.Outcome)
+                {
+                    case DuelOutcome.Recovery: _resilienceIndex += 2; break;
+                    case DuelOutcome.Collapse: _resilienceIndex -= 2; break;
+                    case DuelOutcome.Wound:    _resilienceIndex -= 1; break;
+                    case DuelOutcome.Conflict: _resilienceIndex -= 1; break;
+                    case DuelOutcome.Equilibrium: _resilienceIndex += 1; break;
+                }
+            }
 
             if (a.HasValue && b.HasValue)
                 _duelPairs.Add((a.Value, b.Value));
 
             return BuildOverlay();
         }
+
 
         private ISummary BuildOverlay()
         {

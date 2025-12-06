@@ -12,6 +12,7 @@ namespace substrate_shared.Registries.Factories
         private static BiasVector FromRegistryEntry(IReadableRegistry entry, int magnitude)
         {
             var narrativeTone = new NarrativeTone(
+                type: entry.GetToneType(),
                 label: entry.GetDescription(),
                 category: entry.GetGroup().ToString(),
                 biasValue: entry.GetBias(),
