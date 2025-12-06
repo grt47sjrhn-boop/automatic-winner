@@ -78,9 +78,9 @@ namespace substrate_shared.Registries.Managers
         // --- Bias scoring ---
         private static string ClassifyBias(IEnumerable<IReadableRegistry> entries)
         {
-            int positive = entries.Count(e => e.GetBias() == Bias.Positive);
-            int negative = entries.Count(e => e.GetBias() == Bias.Negative);
-            int neutral  = entries.Count(e => e.GetBias() == Bias.Neutral);
+            var positive = entries.Count(e => e.GetBias() == Bias.Positive);
+            var negative = entries.Count(e => e.GetBias() == Bias.Negative);
+            var neutral  = entries.Count(e => e.GetBias() == Bias.Neutral);
 
             if (positive > 0 && negative > 0)
                 return "Mixed (Conflict)";

@@ -1,7 +1,7 @@
 using System;
 using substrate_shared.interfaces;
 
-namespace substrate_core.Summaries
+namespace substrate_shared.Summaries.Base
 {
     public abstract class SummaryBase : ISummary
     {

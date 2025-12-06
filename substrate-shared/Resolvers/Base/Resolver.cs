@@ -1,6 +1,6 @@
 using substrate_shared.interfaces;
 
-namespace substrate_core.Resolvers
+namespace substrate_core.Resolvers.Base
 {
     public abstract class Resolver : IResolver
     {

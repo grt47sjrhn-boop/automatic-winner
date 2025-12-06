@@ -1,3 +1,4 @@
+using substrate_core.Resolvers.Base;
 using substrate_shared.interfaces;
 
 namespace substrate_core.Resolvers

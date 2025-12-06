@@ -8,7 +8,9 @@ namespace substrate_shared.structs
         public NarrativeTone Tone { get; } = tone ?? throw new ArgumentNullException(nameof(tone));
         public int Magnitude { get; } = magnitude;
 
+        public int SignedStrength => Tone.BiasMultiplier * Magnitude; // BiasValue ∈ {-1,0,+1}
+
         public override string ToString() =>
-            $"{Tone.Label} ({Tone.BiasValue}, Magnitude: {Magnitude})";
+            $"{Tone.Label} (Bias: {Tone.BiasValue}, Magnitude: {Magnitude})";
     }
 }
