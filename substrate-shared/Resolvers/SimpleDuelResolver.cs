@@ -98,12 +98,12 @@ namespace substrate_shared.Resolvers
 
             var resolvedVector = new BiasVector(resolvedTone, resolvedMagnitude);
 
-            string overlay = (_a.SignedStrength > 0 && _b.SignedStrength < 0) ||
-                             (_a.SignedStrength < 0 && _b.SignedStrength > 0)
+            var overlay = (_a.SignedStrength > 0 && _b.SignedStrength < 0) ||
+                          (_a.SignedStrength < 0 && _b.SignedStrength > 0)
                 ? GeometryOverlay.DescribeOverlay(_a, _b)
                 : "Overlay → No opposing vectors for geometry.";
 
-            string description =
+            var description =
                 $"Outcome: {outcome}, Delta: {delta}, Resolved: {resolvedVector}. {overlay}";
 
             return new DuelEventSummary(

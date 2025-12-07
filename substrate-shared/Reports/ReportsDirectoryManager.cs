@@ -9,8 +9,8 @@ namespace substrate_core.Reporting
     {
         private static string EnsureDateDirectory(string baseDirectory)
         {
-            string dateFolder = DateTime.Now.ToString("yyyy-MM-dd");
-            string fullPath = Path.Combine(baseDirectory, dateFolder);
+            var dateFolder = DateTime.Now.ToString("yyyy-MM-dd");
+            var fullPath = Path.Combine(baseDirectory, dateFolder);
 
             if (!Directory.Exists(fullPath))
                 Directory.CreateDirectory(fullPath);
@@ -21,12 +21,12 @@ namespace substrate_core.Reporting
         // Save single report into dated folder
         public static string SaveToDateDirectory(ResilienceReport report, string baseDirectory, string format = "json")
         {
-            string directory = EnsureDateDirectory(baseDirectory);
-            string extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
-            string fileName = $"report_{DateTime.Now:HHmmss}{extension}";
-            string fullPath = Path.Combine(directory, fileName);
+            var directory = EnsureDateDirectory(baseDirectory);
+            var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
+            var fileName = $"report_{DateTime.Now:HHmmss}{extension}";
+            var fullPath = Path.Combine(directory, fileName);
 
-            string data = ReportExporter.ReportIO.Export(report, format);
+            var data = ReportExporter.ReportIO.Export(report, format);
             File.WriteAllText(fullPath, data);
 
             return fullPath;
@@ -35,12 +35,12 @@ namespace substrate_core.Reporting
         // Save batch of reports into dated folder
         public static string SaveBatchToDateDirectory(IEnumerable<ResilienceReport> reports, string baseDirectory, string format = "json")
         {
-            string directory = EnsureDateDirectory(baseDirectory);
-            string extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
-            string fileName = $"reports_{DateTime.Now:HHmmss}{extension}";
-            string fullPath = Path.Combine(directory, fileName);
+            var directory = EnsureDateDirectory(baseDirectory);
+            var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
+            var fileName = $"reports_{DateTime.Now:HHmmss}{extension}";
+            var fullPath = Path.Combine(directory, fileName);
 
-            string data = ReportExporter.ReportIO.ExportBatch(reports, format);
+            var data = ReportExporter.ReportIO.ExportBatch(reports, format);
             File.WriteAllText(fullPath, data);
 
             return fullPath;

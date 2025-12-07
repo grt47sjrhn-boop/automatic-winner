@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared.Reports
 {
@@ -22,29 +22,27 @@ namespace substrate_shared.Reports
         public double LogScaledIndex { get; set; }
         public double ExpScaledIndex { get; set; }
 
-        // New: Tone and Intent aggregation
+        // Tone and Intent aggregation
         public Dictionary<string,int> ToneCounts { get; set; } = new();
         public Dictionary<string,int> IntentCounts { get; set; } = new();
-
-        // New: normalized tone labels
         public Dictionary<string,int> ToneLabels { get; set; } = new();
-        
-        public override string ToString()
-        {
-            var tones = ToneCounts.Count > 0 
-                ? string.Join(", ", ToneCounts.Select(kv => $"{kv.Key}:{kv.Value}")) 
-                : "none";
 
-            var intents = IntentCounts.Count > 0 
-                ? string.Join(", ", IntentCounts.Select(kv => $"{kv.Key}:{kv.Value}")) 
-                : "none";
+        // 🔹 Crystal inventory (grouped)
+        public List<TraitCrystalGroup> CrystalGroups { get; set; } = new();
+        public List<TraitCrystal> Crystals { get; set; } = new();
+    }
 
-            return
-                $"Resilience Report → Duels: {DuelCount}, Index: {ResilienceIndex}, " +
-                $"Recoveries: {RecoveryCount}, Collapses: {CollapseCount}, Wounds: {WoundCount}, Conflicts: {ConflictCount}, Equilibria: {EquilibriumCount}. " +
-                $"Math → AvgHyp: {AverageHypotenuse:F2}, CumArea: {CumulativeArea:F2}, MeanCos: {MeanCos:F2}, MeanSin: {MeanSin:F2}, " +
-                $"LogIndex: {LogScaledIndex:F2}, ExpIndex: {ExpScaledIndex:F2}. " +
-                $"Tones → {tones}. Intents → {intents}";
-        }
+    public class TraitCrystalGroup
+    {
+        public string Signature { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public string DominantTone { get; set; } = string.Empty;
+        public string Bias { get; set; } = string.Empty;
+        public int MinModifier { get; set; }
+        public int MaxModifier { get; set; }
+
+        // Keep strongly typed reference to actual crystals
+        public List<TraitCrystal> Crystals { get; set; } = new();
+        public Dictionary<string, int> MaxFacetValues { get; set; }
     }
 }

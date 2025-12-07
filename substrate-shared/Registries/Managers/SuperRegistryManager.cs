@@ -4,6 +4,8 @@ using System.Linq;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Extensions.structs;
 using substrate_shared.Registries.interfaces;
+using substrate_shared.Traits;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared.Registries.Managers
 {
@@ -159,6 +161,57 @@ namespace substrate_shared.Registries.Managers
 
             return string.Join(Environment.NewLine, report);
 
+        }
+        
+        public static string DescribeCrystalWithScore(TraitCrystal crystal)
+        {
+            var facets = crystal.Facets;
+            var biasEntries = facets.Select(f =>
+            {
+                var toneEntry = RegistryManager<ToneType>.Get(f.Key);
+                return toneEntry;
+            }).ToList();
+
+            var score = ClassifyBias(biasEntries);
+
+            var header = $"{crystal.Rarity} {crystal.Type} Crystal (Threshold: {crystal.Threshold})";
+            var lines = facets.Select(f =>
+                $"- {RegistryManager<ToneType>.Get(f.Key).GetDescription()} x{f.Value} ({RegistryManager<ToneType>.Get(f.Key).GetBias()})");
+
+            return header + Environment.NewLine +
+                   string.Join(Environment.NewLine, lines) +
+                   Environment.NewLine +
+                   $"Overall Bias: {score}, Modifier: {crystal.ModifierValue}";
+        }
+        
+        public static string DescribeCrystalCluster(IEnumerable<TraitCrystal> crystals)
+        {
+            var traitCrystals = crystals.ToList();
+            if (!traitCrystals.Any())
+                return "No crystals forged yet.";
+
+            var report = new List<string>
+            {
+                $"Crystal Cluster Report ({traitCrystals.Count()} total)"
+            };
+
+            foreach (var crystal in traitCrystals)
+            {
+                // Bias scoring from facets
+                var facetEntries = crystal.Facets.Select(f => RegistryManager<ToneType>.Get(f.Key));
+                var score = ClassifyBias(facetEntries);
+
+                var header = $"{crystal.Rarity} {crystal.Type} Crystal (Threshold: {crystal.Threshold})";
+                var lines = crystal.Facets.Select(f =>
+                    $"- {RegistryManager<ToneType>.Get(f.Key).GetDescription()} x{f.Value} ({RegistryManager<ToneType>.Get(f.Key).GetBias()})");
+
+                report.Add(header);
+                report.AddRange(lines);
+                report.Add($"Overall Bias: {score}, Modifier: {crystal.ModifierValue}");
+                report.Add("");
+            }
+
+            return string.Join(Environment.NewLine, report);
         }
     }
 }

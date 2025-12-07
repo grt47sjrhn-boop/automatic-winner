@@ -11,13 +11,13 @@ public static class DuelistFactory
     // Create a random duelist with varied bias/resilience
     public static Duelist CreateRandom(string? name = null)
     {
-        string generatedName = name ?? $"Opponent_{Guid.NewGuid().ToString()[..6]}";
+        var generatedName = name ?? $"Opponent_{Guid.NewGuid().ToString()[..6]}";
 
         // Bias between -1.0 and +1.0
-        double bias = _rng.NextDouble() * 2 - 1;
+        var bias = _rng.NextDouble() * 2 - 1;
 
         // Resilience between 0.5 and 1.5
-        double resilience = 0.5 + _rng.NextDouble();
+        var resilience = 0.5 + _rng.NextDouble();
 
         return new Duelist(generatedName, bias)
         {
@@ -41,7 +41,7 @@ public static class DuelistFactory
     public static List<Duelist> CreateBatch(int count)
     {
         var duelists = new List<Duelist>();
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             duelists.Add(CreateRandom());
         }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using substrate_shared.structs;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared.interfaces
 {
@@ -8,6 +9,10 @@ namespace substrate_shared.interfaces
         // Existing narrative-facing properties
         IReadOnlyList<ISummary> DuelSummaries { get; }
         int ResilienceIndex { get; }
+        
+        // Crystal inventory
+        IReadOnlyList<TraitCrystal> Crystals { get; }
+
 
         // Existing methods
         public ISummary Record(ISummary summary, BiasVector? a = null, BiasVector? b = null);

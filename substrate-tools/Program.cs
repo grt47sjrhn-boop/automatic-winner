@@ -15,15 +15,15 @@ namespace substrate_tools
             var persistent = new Duelist("Persistent Hero", initialBias: 0.0);
             var engine = new DuelEngine(tracker, persistent);
 
-            int tickCount = 5;
-            bool verbose = false;
-            bool export = false;
-            string exportFormat = "json";
+            var tickCount = 5;
+            var verbose = false;
+            var export = false;
+            var exportFormat = "json";
 
             // Parse CLI args
             foreach (var arg in args)
             {
-                if (int.TryParse(arg, out int parsed))
+                if (int.TryParse(arg, out var parsed))
                 {
                     tickCount = parsed;
                 }
@@ -47,8 +47,8 @@ namespace substrate_tools
 
             if (export)
             {
-                var report = ResilienceReportIO.Build(tracker);
-                var filePath = ResilienceReportIO.SaveWithTimestamp(report, "report", exportFormat);
+                var report = ResilienceReportIo.Build(tracker);
+                var filePath = ResilienceReportIo.SaveWithTimestamp(report, "report", exportFormat);
                 Console.WriteLine($"Report exported to {filePath}");
             }
 
@@ -61,8 +61,8 @@ namespace substrate_tools
                 if (string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
                     break;
 
-                int count = 1;
-                if (!string.IsNullOrWhiteSpace(input) && int.TryParse(input, out int parsedCount))
+                var count = 1;
+                if (!string.IsNullOrWhiteSpace(input) && int.TryParse(input, out var parsedCount))
                 {
                     count = parsedCount;
                 }
@@ -72,8 +72,8 @@ namespace substrate_tools
 
                 if (export)
                 {
-                    var report = ResilienceReportIO.Build(tracker);
-                    var filePath = ResilienceReportIO.SaveWithTimestamp(report, "report", exportFormat);
+                    var report = ResilienceReportIo.Build(tracker);
+                    var filePath = ResilienceReportIo.SaveWithTimestamp(report, "report", exportFormat);
                     Console.WriteLine($"Report exported to {filePath}");
                 }
             }

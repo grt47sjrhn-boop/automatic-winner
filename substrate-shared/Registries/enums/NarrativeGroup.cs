@@ -50,6 +50,9 @@ namespace substrate_shared.Registries.enums
         AbyssalActions,
         
         [Narrative("Composite synthesis, forged from multiple axes into a singular resonance.", Bias.Neutral)]
-        Composite
+        Composite,
+        
+        [Narrative("Crystalline artifacts forged at resilience thresholds, embodying tone facets and rarity.", Bias.Neutral)]
+        Crystal
     }
 }

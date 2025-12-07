@@ -1,3 +1,4 @@
+using substrate_shared.Registries.enums;
 using substrate_shared.Registries.enums.Attributes;
 
 namespace substrate_shared.Registries.enums
@@ -28,8 +29,17 @@ namespace substrate_shared.Registries.enums
         [RegistryNarrative("Despairing tones seep like seawater into cracked stone, a tide that cannot be turned.", Bias.Negative, NarrativeGroup.AbyssalStates)]
         Despairing,
         
-        // New synthetic entry for multi-axis duels
+        // 🔹 New synthetic entries for multi-axis duels
         [RegistryNarrative("Composite duel tone, forged from multiple axes into a singular resonance.", Bias.Neutral, NarrativeGroup.Composite)]
-        Composite
+        Composite,
+
+        [RegistryNarrative("Wound bleeds into the narrative, a scar etched in fragile flesh and haunted memory.", Bias.Negative, NarrativeGroup.Crystal)]
+        Wound,
+
+        [RegistryNarrative("Conflict reverberates like clashing iron in a cathedral of shadows, unresolved and eternal.", Bias.Mixed, NarrativeGroup.Crystal)]
+        Conflict,
+
+        [RegistryNarrative("Equilibrium whispers of fragile balance, a stasis trembling before collapse or recovery.", Bias.Neutral, NarrativeGroup.Crystal)]
+        Equilibrium
     }
 }

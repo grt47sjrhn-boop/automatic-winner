@@ -4,6 +4,7 @@ namespace substrate_shared.Registries.enums
     {
         Positive,
         Negative,
-        Neutral
+        Neutral,
+        Mixed
     }
 }

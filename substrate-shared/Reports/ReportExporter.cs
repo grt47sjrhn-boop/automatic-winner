@@ -99,9 +99,9 @@ namespace substrate_shared.Reports
                 var reports = new List<ResilienceReport>();
                 var lines = csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-                int startIndex = hasHeader ? 1 : 0;
+                var startIndex = hasHeader ? 1 : 0;
 
-                for (int i = startIndex; i < lines.Length; i++)
+                for (var i = startIndex; i < lines.Length; i++)
                 {
                     var parts = lines[i].Split(',');
 
@@ -211,21 +211,21 @@ namespace substrate_shared.Reports
             // Save single report
             public static void Save(ResilienceReport report, string filePath, string format = "json")
             {
-                string data = ReportIO.Export(report, format);
+                var data = ReportIO.Export(report, format);
                 File.WriteAllText(filePath, data);
             }
 
             // Save batch of reports
             public static void SaveBatch(IEnumerable<ResilienceReport> reports, string filePath, string format = "json")
             {
-                string data = ReportIO.ExportBatch(reports, format);
+                var data = ReportIO.ExportBatch(reports, format);
                 File.WriteAllText(filePath, data);
             }
 
             // Load reports (auto-detect format if not specified)
             public static List<ResilienceReport> Load(string filePath, string format = "")
             {
-                string data = File.ReadAllText(filePath);
+                var data = File.ReadAllText(filePath);
                 return ReportIO.Import(data, format);
             }
         }
@@ -234,17 +234,17 @@ namespace substrate_shared.Reports
         {
             private static string AddTimestamp(string baseFileName, string extension)
             {
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 return $"{Path.GetFileNameWithoutExtension(baseFileName)}_{timestamp}{extension}";
             }
 
             // Save single report with timestamped filename
             public static string SaveWithTimestamp(ResilienceReport report, string baseFileName, string format = "json")
             {
-                string extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
-                string fileName = AddTimestamp(baseFileName, extension);
+                var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
+                var fileName = AddTimestamp(baseFileName, extension);
 
-                string data = ReportIO.Export(report, format);
+                var data = ReportIO.Export(report, format);
                 File.WriteAllText(fileName, data);
 
                 return fileName; // return actual saved filename
@@ -253,10 +253,10 @@ namespace substrate_shared.Reports
             // Save batch of reports with timestamped filename
             public static string SaveBatchWithTimestamp(IEnumerable<ResilienceReport> reports, string baseFileName, string format = "json")
             {
-                string extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
-                string fileName = AddTimestamp(baseFileName, extension);
+                var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
+                var fileName = AddTimestamp(baseFileName, extension);
 
-                string data = ReportIO.ExportBatch(reports, format);
+                var data = ReportIO.ExportBatch(reports, format);
                 File.WriteAllText(fileName, data);
 
                 return fileName; // return actual saved filename

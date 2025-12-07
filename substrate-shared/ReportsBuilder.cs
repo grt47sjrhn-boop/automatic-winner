@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using substrate_shared.interfaces;
 using substrate_shared.Reports;
 using substrate_shared.Summaries;
+using substrate_shared.Registries.Managers;
+using substrate_shared.Registries.enums;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared
 {
@@ -37,33 +40,60 @@ namespace substrate_shared
                 LogScaledIndex    = _tracker.LogScaledIndex,
                 ExpScaledIndex    = _tracker.ExpScaledIndex,
 
-                // Initialize tone/intent dictionaries
                 ToneCounts   = new Dictionary<string,int>(),
-                IntentCounts = new Dictionary<string,int>()
+                IntentCounts = new Dictionary<string,int>(),
+                ToneLabels   = new Dictionary<string,int>(),
+                CrystalGroups = new List<TraitCrystalGroup>(),
             };
 
-            // Aggregate tones and intents from DuelEventSummary
+            // Aggregate tones and intents
             foreach (var summary in _tracker.DuelSummaries.OfType<DuelEventSummary>())
             {
-                // Full prose tone string
                 var proseTone = summary.ResolvedVector?.Tone?.Label ?? "Unknown";
                 if (!report.ToneCounts.ContainsKey(proseTone))
                     report.ToneCounts[proseTone] = 0;
                 report.ToneCounts[proseTone]++;
 
-                // Normalized short label
                 var normalized = $"{summary.DuelistA.Tone.Type}+{summary.DuelistB.Tone.Type}";
                 if (!report.ToneLabels.ContainsKey(normalized))
                     report.ToneLabels[normalized] = 0;
                 report.ToneLabels[normalized]++;
 
-                // Intent aggregation
                 var intentName = summary.ResolvedVector?.Tone?.BiasValue.ToString() ?? "Unknown";
                 if (!report.IntentCounts.ContainsKey(intentName))
                     report.IntentCounts[intentName] = 0;
                 report.IntentCounts[intentName]++;
             }
-            
+
+            // 🔹 Group crystals by facet signature (set of facet keys)
+            var grouped = _tracker.Crystals
+                .GroupBy(c => string.Join("+", c.Facets.Keys.OrderBy(k => k.ToString())))
+                .Select(g =>
+                {
+                    var sample = g.First();
+
+                    // compute highest facet values across group
+                    var maxFacetValues = new Dictionary<string,int>();
+                    foreach (var facetKey in sample.Facets.Keys)
+                    {
+                        maxFacetValues[facetKey.ToString()] = g.Max(c => c.Facets[facetKey]);
+                    }
+
+                    return new TraitCrystalGroup
+                    {
+                        Signature = g.Key,
+                        Count = g.Count(),
+                        DominantTone = g.Last().GetToneType().ToString(),
+                        Bias = g.Last().GetBias().ToString(),
+                        MinModifier = g.Min(c => c.ModifierValue),
+                        MaxModifier = g.Max(c => c.ModifierValue),
+                        MaxFacetValues = maxFacetValues
+                    };
+                })
+                .ToList();
+
+            report.CrystalGroups = grouped;
+
             return report;
         }
     }

@@ -4,7 +4,7 @@ using substrate_shared.interfaces;
 
 namespace substrate_shared.Reports
 {
-    public static class ResilienceReportIO
+    public static class ResilienceReportIo
     {
         // Build a report from tracker
         public static ResilienceReport Build(IResilienceTracker tracker)

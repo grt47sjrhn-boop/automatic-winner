@@ -54,13 +54,13 @@ namespace substrate_shared.Profiles
         public BiasVector ToBiasVector()
         {
             // Map bias sign to a ToneType enum key (registry-backed)
-            ToneType toneKey =
+            var toneKey =
                 Bias > 0 ? ToneType.Joy :
                 Bias < 0 ? ToneType.Despairing :
                            ToneType.Neutral;
 
             // Scale resilience into an integer magnitude for the resolver
-            int magnitude = MapResilienceToMagnitude(Resilience);
+            var magnitude = MapResilienceToMagnitude(Resilience);
 
             // Delegate construction to the registry-aware BiasVectorFactory
             return BiasVectorFactory.FromTone(toneKey, magnitude);

@@ -7,6 +7,9 @@ using substrate_shared.Overlays;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
+using substrate_shared.Factories;
+using substrate_shared.Registries.Managers;
+using substrate_shared.Traits.Base;
 
 namespace substrate_core.Resolvers
 {
@@ -14,9 +17,11 @@ namespace substrate_core.Resolvers
     {
         private readonly List<ISummary> _duelSummaries = new();
         private readonly List<(BiasVector, BiasVector)> _duelPairs = new();
+        private readonly List<TraitCrystal> _crystals = new();   // 🔹 Crystal inventory
         private int _resilienceIndex = 0;
 
         public IReadOnlyList<ISummary> DuelSummaries => _duelSummaries;
+        public IReadOnlyList<TraitCrystal> Crystals => _crystals;
         public int ResilienceIndex => _resilienceIndex;
 
         // 🔹 Math overlay properties exposed via interface
@@ -34,13 +39,36 @@ namespace substrate_core.Resolvers
 
             if (summary is DuelEventSummary duelSummary)
             {
+                // 🔹 Update resilience index based on outcome
                 switch (duelSummary.Outcome)
                 {
-                    case DuelOutcome.Recovery: _resilienceIndex += 2; break;
-                    case DuelOutcome.Collapse: _resilienceIndex -= 2; break;
-                    case DuelOutcome.Wound:    _resilienceIndex -= 1; break;
-                    case DuelOutcome.Conflict: _resilienceIndex -= 1; break;
+                    case DuelOutcome.Recovery:    _resilienceIndex += 2; break;
+                    case DuelOutcome.Collapse:    _resilienceIndex -= 2; break;
+                    case DuelOutcome.Wound:       _resilienceIndex -= 1; break;
+                    case DuelOutcome.Conflict:    _resilienceIndex -= 1; break;
                     case DuelOutcome.Equilibrium: _resilienceIndex += 1; break;
+                }
+
+                // 🔹 Crystal forging check (mod-6 rule, multiple crystals if needed)
+                while (Math.Abs(_resilienceIndex) >= 6)
+                {
+                    var facets = CollectFacets();
+                    var narrative = SuperRegistryManager.DescribeClusterWithScore(NarrativeGroup.Crystal);
+
+                    var crystal = TraitCrystalFactory.CreateCrystal(
+                        threshold: _resilienceIndex > 0 ? 6 : -6,
+                        isPositive: _resilienceIndex > 0,
+                        facets: facets,
+                        narrative: narrative,
+                        existingCrystals: _crystals
+                    );
+
+                    _crystals.Add(crystal);
+
+                    // carry remainder by subtracting/adding 6 until back in range
+                    _resilienceIndex = _resilienceIndex > 0
+                        ? _resilienceIndex - 6
+                        : _resilienceIndex + 6;
                 }
             }
 
@@ -50,20 +78,52 @@ namespace substrate_core.Resolvers
             return BuildOverlay();
         }
 
+        // 🔹 Collect facets from duel summaries
+        private IReadOnlyDictionary<ToneType,int> CollectFacets()
+        {
+            var facetCounts = new Dictionary<ToneType,int>();
+
+            foreach (var summary in _duelSummaries.OfType<DuelEventSummary>())
+            {
+                // Map duel outcome → tone facet
+                ToneType tone = summary.Outcome switch
+                {
+                    DuelOutcome.Recovery    => ToneType.Joy,
+                    DuelOutcome.Collapse    => ToneType.Despairing,
+                    DuelOutcome.Wound       => ToneType.Wound,
+                    DuelOutcome.Conflict    => ToneType.Conflict,
+                    DuelOutcome.Equilibrium => ToneType.Equilibrium,
+                    _ => ToneType.Neutral
+                };
+
+                if (!facetCounts.ContainsKey(tone))
+                    facetCounts[tone] = 0;
+
+                facetCounts[tone]++;
+            }
+
+            return facetCounts;
+        }
 
         private ISummary BuildOverlay()
         {
-            int recoveries = _duelSummaries.Count(s => s.Description.Contains("Recovery"));
-            int collapses  = _duelSummaries.Count(s => s.Description.Contains("Collapse"));
-            int wounds     = _duelSummaries.Count(s => s.Description.Contains("Wound"));
-            int conflicts  = _duelSummaries.Count(s => s.Description.Contains("MixedConflict"));
+            var recoveries = _duelSummaries.Count(s => s.Description.Contains("Recovery"));
+            var collapses  = _duelSummaries.Count(s => s.Description.Contains("Collapse"));
+            var wounds     = _duelSummaries.Count(s => s.Description.Contains("Wound"));
+            var conflicts  = _duelSummaries.Count(s => s.Description.Contains("MixedConflict"));
 
-            string description =
+            var crystalSummary = _crystals.Any()
+                ? $"Crystals forged: {_crystals.Count} → " +
+                  string.Join(", ", _crystals.Select(c => $"{c.Rarity} {c.Type}"))
+                : "No crystals forged yet.";
+
+            var description =
                 $"Trajectory: {recoveries} recoveries, {collapses} collapses, {wounds} wounds, {conflicts} conflicts. " +
                 $"Resilience Index: {_resilienceIndex}. " +
                 $"Math Overlay → AvgHyp: {AverageHypotenuse:F2}, CumArea: {CumulativeArea:F2}, " +
                 $"MeanCos: {MeanCos:F2}, MeanSin: {MeanSin:F2}, " +
-                $"LogIndex: {LogScaledIndex:F2}, ExpIndex: {ExpScaledIndex:F2}";
+                $"LogIndex: {LogScaledIndex:F2}, ExpIndex: {ExpScaledIndex:F2}. " +
+                crystalSummary;
 
             return new EventSummary(
                 $"Resilience Overlay (after {_duelSummaries.Count} duel{(_duelSummaries.Count == 1 ? "" : "s")})",
@@ -79,16 +139,13 @@ namespace substrate_core.Resolvers
                 return new EventSummary("Resilience Report", "No duels recorded yet.", SummaryType.System, false);
 
             string description;
-            bool resolved = false;
+            var resolved = false;
 
-            if (_resilienceIndex >= 6)
+            if (Math.Abs(_resilienceIndex) >= 6)
             {
-                description = $"System crystallizes with resilience index {_resilienceIndex}.";
-                resolved = true;
-            }
-            else if (_resilienceIndex <= -6)
-            {
-                description = $"System collapses into fragments with resilience index {_resilienceIndex}.";
+                description = _resilienceIndex > 0
+                    ? $"System crystallizes with resilience index {_resilienceIndex}."
+                    : $"System collapses into fragments with resilience index {_resilienceIndex}.";
                 resolved = true;
             }
             else

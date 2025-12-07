@@ -32,10 +32,10 @@ namespace substrate_shared.Resolvers
             if (!_vectors.Any())
                 throw new ArgumentException("No vectors provided for resolution.");
 
-            int totalStrength = _vectors.Sum(v => v.SignedStrength);
-            int totalMagnitude = _vectors.Sum(v => v.Magnitude);
+            var totalStrength = _vectors.Sum(v => v.SignedStrength);
+            var totalMagnitude = _vectors.Sum(v => v.Magnitude);
 
-            Bias bias = Math.Sign(totalStrength) switch
+            var bias = Math.Sign(totalStrength) switch
             {
                 > 0 => Bias.Positive,
                 < 0 => Bias.Negative,
@@ -45,7 +45,7 @@ namespace substrate_shared.Resolvers
             var compositeTone = new NarrativeTone(ToneType.Composite,"Composite Duel", "MultiAxis", bias, "Composite");
             var resolvedVector = new BiasVector(compositeTone, Math.Max(1, totalMagnitude / _vectors.Count()));
 
-            DuelOutcome outcome = bias switch
+            var outcome = bias switch
             {
                 Bias.Positive => DuelOutcome.Recovery,
                 Bias.Negative => DuelOutcome.Collapse,
@@ -71,7 +71,7 @@ namespace substrate_shared.Resolvers
                 overlay = "Overlay → No opposing vectors for geometry.";
             }
 
-            string description = $"Outcome: {outcome}, Delta: {Math.Abs(totalStrength)}, Resolved: {resolvedVector}. {overlay}";
+            var description = $"Outcome: {outcome}, Delta: {Math.Abs(totalStrength)}, Resolved: {resolvedVector}. {overlay}";
 
             return new EventSummary("Multi-Axis Duel Resolution", description, SummaryType.Duel, true);
         }

@@ -13,8 +13,8 @@ namespace substrate_core.Reporting
             if (!Directory.Exists(sourceDirectory))
                 throw new DirectoryNotFoundException($"Source directory not found: {sourceDirectory}");
 
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string archiveFile = $"{archiveBaseName}_{timestamp}.zip";
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var archiveFile = $"{archiveBaseName}_{timestamp}.zip";
 
             ZipFile.CreateFromDirectory(sourceDirectory, archiveFile);
 
@@ -31,8 +31,8 @@ namespace substrate_core.Reporting
 
             foreach (var dir in Directory.GetDirectories(baseDirectory))
             {
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string archiveFile = $"{archiveBaseName}_{Path.GetFileName(dir)}_{timestamp}.zip";
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var archiveFile = $"{archiveBaseName}_{Path.GetFileName(dir)}_{timestamp}.zip";
 
                 ZipFile.CreateFromDirectory(dir, archiveFile);
                 archives.Add(archiveFile);

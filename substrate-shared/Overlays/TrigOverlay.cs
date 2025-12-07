@@ -22,7 +22,7 @@ namespace substrate_shared.Overlays
         {
             var values = duels.Select(d =>
             {
-                double hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
+                var hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
                 return hyp > 0 ? d.Item1.Magnitude / hyp : 0;
             });
             return values.Any() ? values.Average() : 0;
@@ -32,7 +32,7 @@ namespace substrate_shared.Overlays
         {
             var values = duels.Select(d =>
             {
-                double hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
+                var hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
                 return hyp > 0 ? d.Item2.Magnitude / hyp : 0;
             });
             return values.Any() ? values.Average() : 0;

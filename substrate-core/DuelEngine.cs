@@ -21,7 +21,7 @@ namespace substrate_core
 
         public void Tick(int duelCount = 1)
         {
-            for (int i = 0; i < duelCount; i++)
+            for (var i = 0; i < duelCount; i++)
             {
                 // Spin up a random opponent
                 var opponent = DuelistFactory.CreateRandom();
