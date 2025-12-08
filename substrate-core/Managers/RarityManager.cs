@@ -20,11 +20,11 @@ namespace substrate_core.Managers
         /// </summary>
         public int ComputeScore(FacetDistribution distribution)
         {
-            int resilience = distribution.Values.ContainsKey(FacetType.Resilience)
+            var resilience = distribution.Values.ContainsKey(FacetType.Resilience)
                 ? distribution.Values[FacetType.Resilience] : 0;
-            int harmony    = distribution.Values.ContainsKey(FacetType.Harmony)
+            var harmony    = distribution.Values.ContainsKey(FacetType.Harmony)
                 ? distribution.Values[FacetType.Harmony] : 0;
-            int conflict   = distribution.Values.ContainsKey(FacetType.Conflict)
+            var conflict   = distribution.Values.ContainsKey(FacetType.Conflict)
                 ? distribution.Values[FacetType.Conflict] : 0;
 
             return resilience + harmony - conflict;
@@ -44,7 +44,7 @@ namespace substrate_core.Managers
         /// </summary>
         public RarityTier AssignTier(int score)
         {
-            CrystalRarity rarity = score switch
+            var rarity = score switch
             {
                 < 3  => CrystalRarity.Common,
                 < 6  => CrystalRarity.Rare,
@@ -52,7 +52,7 @@ namespace substrate_core.Managers
                 _    => CrystalRarity.Legendary
             };
 
-            string description = GetNarrative(rarity);
+            var description = GetNarrative(rarity);
             return new RarityTier(rarity.ToString(), description);
         }
 

@@ -35,7 +35,7 @@ namespace substrate_core.runners
             Engagement.ResolveStep(ticks);
 
             // 🔹 Finalize trial into ISummary
-            ISummary trialSummary = Engagement.Finalize();
+            var trialSummary = Engagement.Finalize();
 
             // 🔹 Create EngagementResult for traceability
             var result = new EngagementResult

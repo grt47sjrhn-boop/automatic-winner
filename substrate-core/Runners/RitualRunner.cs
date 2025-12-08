@@ -35,7 +35,7 @@ namespace substrate_core.runners
             Engagement.ResolveStep(ticks);
 
             // 🔹 Finalize ritual into ISummary
-            ISummary ritualSummary = Engagement.Finalize();
+            var ritualSummary = Engagement.Finalize();
 
             // 🔹 Create EngagementResult for traceability
             var result = new EngagementResult

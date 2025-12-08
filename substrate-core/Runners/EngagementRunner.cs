@@ -33,7 +33,7 @@ namespace substrate_core.runners
         {
             Engagement.ResolveStep(ticks);
 
-            ISummary engagementSummary = Engagement.Finalize();
+            var engagementSummary = Engagement.Finalize();
 
             var result = new EngagementResult
             {

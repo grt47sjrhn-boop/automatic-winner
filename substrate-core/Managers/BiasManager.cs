@@ -17,10 +17,10 @@ namespace substrate_core.Managers
         /// </summary>
         public BiasDescriptor Summarize(FacetDistribution shape)
         {
-            int resilience = shape.Values[FacetType.Resilience];
-            int conflict   = shape.Values[FacetType.Conflict];
-            int harmony    = shape.Values[FacetType.Harmony];
-            int radiance   = shape.Values[FacetType.Radiance];
+            var resilience = shape.Values[FacetType.Resilience];
+            var conflict   = shape.Values[FacetType.Conflict];
+            var harmony    = shape.Values[FacetType.Harmony];
+            var radiance   = shape.Values[FacetType.Radiance];
 
             Bias bias;
             if (resilience > conflict) bias = Bias.Positive;
@@ -28,7 +28,7 @@ namespace substrate_core.Managers
             else if (harmony > 0) bias = Bias.Neutral;
             else bias = Bias.Mixed;
 
-            string notes = $"Resilience({resilience}), Conflict({conflict}), Harmony({harmony}), Radiance({radiance})";
+            var notes = $"Resilience({resilience}), Conflict({conflict}), Harmony({harmony}), Radiance({radiance})";
 
             return new BiasDescriptor
             {

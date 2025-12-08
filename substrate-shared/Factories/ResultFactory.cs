@@ -11,7 +11,7 @@ namespace substrate_core.Engagements.Results
         public static ToneCut CreateToneCut(IReadOnlyDictionary<ToneType,int> facets, int threshold = 1)
         {
             var cut = new ToneCut();
-            int max = int.MinValue;
+            var max = int.MinValue;
 
             foreach (var kv in facets)
             {

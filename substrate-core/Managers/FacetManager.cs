@@ -18,10 +18,10 @@ namespace substrate_core.Managers
         /// </summary>
         public BiasDescriptor Narrate(FacetDistribution shape)
         {
-            int resilience = shape.Values[FacetType.Resilience];
-            int harmony    = shape.Values[FacetType.Harmony];
-            int conflict   = shape.Values[FacetType.Conflict];
-            int radiance   = shape.Values[FacetType.Radiance];
+            var resilience = shape.Values[FacetType.Resilience];
+            var harmony    = shape.Values[FacetType.Harmony];
+            var conflict   = shape.Values[FacetType.Conflict];
+            var radiance   = shape.Values[FacetType.Radiance];
 
             Bias bias;
             if (resilience > conflict) bias = Bias.Positive;
@@ -29,7 +29,7 @@ namespace substrate_core.Managers
             else if (harmony > 0) bias = Bias.Neutral;
             else bias = Bias.Mixed;
 
-            string notes = $"Resilience({resilience}), Harmony({harmony}), Conflict({conflict}), Radiance({radiance})";
+            var notes = $"Resilience({resilience}), Harmony({harmony}), Conflict({conflict}), Radiance({radiance})";
 
             return new BiasDescriptor
             {
@@ -44,12 +44,12 @@ namespace substrate_core.Managers
         private static FacetDistribution NormalizeInternal(IDictionary<FacetType,int> rawValues)
         {
             var normalized = new Dictionary<FacetType,int>();
-            foreach (FacetType type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
+            foreach (var type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
             {
                 normalized[type] = rawValues.TryGetValue(type, out var value) ? value : 0;
             }
 
-            int max = normalized.Values.Max();
+            var max = normalized.Values.Max();
             if (max > 0)
             {
                 foreach (var key in normalized.Keys.ToList())
@@ -81,7 +81,7 @@ namespace substrate_core.Managers
             }
 
             var aggregate = new Dictionary<FacetType,int>();
-            foreach (FacetType type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
+            foreach (var type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
             {
                 aggregate[type] = 0;
             }

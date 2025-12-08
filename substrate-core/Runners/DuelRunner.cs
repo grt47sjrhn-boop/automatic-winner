@@ -34,7 +34,7 @@ namespace substrate_core.runners
             Engagement.ResolveStep(ticks);
 
             // 🔹 Finalize duel into ISummary
-            ISummary duelSummary = Engagement.Finalize();
+            var duelSummary = Engagement.Finalize();
 
             // 🔹 Create EngagementResult for traceability
             var result = new EngagementResult
