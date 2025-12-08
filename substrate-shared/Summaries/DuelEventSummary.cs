@@ -1,12 +1,12 @@
 using System;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
+using substrate_shared.Summaries.Base;
 using substrate_shared.types;
-using substrate_shared.interfaces;
 
 namespace substrate_shared.Summaries
 {
-    public class DuelEventSummary : EventSummary, ISummary
+    public class DuelEventSummary : EventSummary
     {
         public BiasVector DuelistA { get; }
         public BiasVector DuelistB { get; }

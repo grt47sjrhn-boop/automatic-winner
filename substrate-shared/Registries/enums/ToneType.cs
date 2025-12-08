@@ -29,6 +29,16 @@ namespace substrate_shared.Registries.enums
         [RegistryNarrative("Despairing tones seep like seawater into cracked stone, a tide that cannot be turned.", Bias.Negative, NarrativeGroup.AbyssalStates)]
         Despairing,
         
+        // 🔹 New synthetic entries for facet axes
+        [RegistryNarrative("Resilience shines as a defiant flame, enduring collapse and narrating recovery.", Bias.Positive, NarrativeGroup.Crystal)]
+        Resilient,
+
+        [RegistryNarrative("Harmony hums like hidden chords, weaving disparate voices into fragile unity.", Bias.Neutral, NarrativeGroup.Crystal)]
+        Harmonious,
+
+        [RegistryNarrative("Radiance bursts like a star in shadow, brilliance tempered by the abyss.", Bias.Positive, NarrativeGroup.Crystal)]
+        Radiant,
+        
         // 🔹 New synthetic entries for multi-axis duels
         [RegistryNarrative("Composite duel tone, forged from multiple axes into a singular resonance.", Bias.Neutral, NarrativeGroup.Composite)]
         Composite,
@@ -40,6 +50,7 @@ namespace substrate_shared.Registries.enums
         Conflict,
 
         [RegistryNarrative("Equilibrium whispers of fragile balance, a stasis trembling before collapse or recovery.", Bias.Neutral, NarrativeGroup.Crystal)]
-        Equilibrium
+        Equilibrium,
+        
     }
 }

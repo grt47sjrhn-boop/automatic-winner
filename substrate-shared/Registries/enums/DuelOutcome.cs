@@ -8,6 +8,8 @@ namespace substrate_shared.Registries.enums
         MixedConflict,   // Positive and Negative with near parity
         Wound,            // Persistent consequence beyond the duel
         Conflict,
-        Unknown
+        Unknown,
+        Stalemate,
+        Unresolved
     }
 }

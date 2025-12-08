@@ -8,6 +8,7 @@ using substrate_shared.Registries.enums;
 using substrate_shared.Resolvers.Base;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
+using substrate_shared.Summaries.Base;
 using substrate_shared.types;
 
 namespace substrate_shared.Resolvers

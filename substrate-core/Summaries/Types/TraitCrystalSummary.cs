@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using substrate_shared.Summaries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Managers;
+using substrate_shared.Summaries.Base;
 using substrate_shared.Traits.Base;
 
-namespace substrate_shared.Summaries
+namespace substrate_core.Summaries.Types
 {
     public class TraitCrystalSummary : SummaryBase
     {

@@ -1,8 +1,7 @@
 using System;
-using substrate_shared.Summaries.Base;
 using substrate_shared.types;
 
-namespace substrate_shared.Summaries
+namespace substrate_shared.Summaries.Base
 {
     public class EventSummary(string title, string description, SummaryType type, bool isResolved = false)
         : SummaryBase

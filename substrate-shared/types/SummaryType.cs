@@ -5,6 +5,13 @@ namespace substrate_shared.types
         System,
         Duel,
         Recovery,
-        Event
+        Event,
+        Dialogue,
+        Trial,
+        Ritual,
+        Positive,
+        Negative,
+        Neutral,
+        Mixed
     }
 }

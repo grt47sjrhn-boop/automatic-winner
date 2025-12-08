@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using substrate_core.Managers;
+using substrate_core.Summaries.Types;
 using substrate_shared.interfaces;
 using substrate_shared.types;
 using substrate_shared.Overlays;
@@ -9,6 +11,7 @@ using substrate_shared.structs;
 using substrate_shared.Summaries;
 using substrate_shared.Factories;
 using substrate_shared.Registries.Managers;
+using substrate_shared.Summaries.Base;
 using substrate_shared.Traits.Base;
 
 namespace substrate_core.Resolvers
@@ -55,13 +58,23 @@ namespace substrate_core.Resolvers
                     var facets = CollectFacets();
                     var narrative = SuperRegistryManager.DescribeClusterWithScore(NarrativeGroup.Crystal);
 
+                    // 🔹 Build tone cut from facets
+                    var toneCut = ToneManager.Cut(facets);
+
+                    // 🔹 Assign rarity tier from resilience score
+                    var rarityTier = RarityManager.AssignTier(_resilienceIndex);
+
+                    // 🔹 Create crystal with full parameter set
                     var crystal = TraitCrystalFactory.CreateCrystal(
                         threshold: _resilienceIndex > 0 ? 6 : -6,
                         isPositive: _resilienceIndex > 0,
                         facets: facets,
                         narrative: narrative,
-                        existingCrystals: _crystals
+                        existingCrystals: _crystals,
+                        toneCut: toneCut,
+                        rarityTier: rarityTier
                     );
+
 
                     _crystals.Add(crystal);
 
@@ -86,7 +99,7 @@ namespace substrate_core.Resolvers
             foreach (var summary in _duelSummaries.OfType<DuelEventSummary>())
             {
                 // Map duel outcome → tone facet
-                ToneType tone = summary.Outcome switch
+                var tone = summary.Outcome switch
                 {
                     DuelOutcome.Recovery    => ToneType.Joy,
                     DuelOutcome.Collapse    => ToneType.Despairing,
@@ -96,8 +109,7 @@ namespace substrate_core.Resolvers
                     _ => ToneType.Neutral
                 };
 
-                if (!facetCounts.ContainsKey(tone))
-                    facetCounts[tone] = 0;
+                facetCounts.TryAdd(tone, 0);
 
                 facetCounts[tone]++;
             }

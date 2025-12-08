@@ -5,6 +5,7 @@ using substrate_shared.Summaries;
 using substrate_shared.types;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Factories;
+using substrate_shared.Summaries.Base;
 
 namespace substrate_shared.Profiles
 {

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using substrate_shared.Models;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.interfaces;
 using substrate_shared.Registries.Managers;
@@ -14,14 +16,20 @@ namespace substrate_shared.Traits.Base
         public int Threshold { get; }
         public IReadOnlyDictionary<ToneType,int> Facets { get; }
         public int ModifierValue { get; }
+        public Guid EngagementId { get; set; }
+        public ToneCut ToneCut { get; set; }
+        public RarityTier RarityTier { get; set; }
+
 
         protected TraitCrystal(CrystalType type, CrystalRarity rarity, int threshold,
-            IReadOnlyDictionary<ToneType,int> facets)
+            IReadOnlyDictionary<ToneType,int> facets, ToneCut toneCut, RarityTier rarityTier)
         {
             Type = type;
             Rarity = rarity;
             Threshold = threshold;
             Facets = facets;
+            ToneCut = toneCut;
+            RarityTier = rarityTier;
             ModifierValue = CalculateModifier(facets, rarity);
         }
 
@@ -32,7 +40,7 @@ namespace substrate_shared.Traits.Base
         protected virtual int CalculateModifier(
             IReadOnlyDictionary<ToneType,int> facets, CrystalRarity rarity)
         {
-            int sum = facets.Values.Sum();
+            var sum = facets.Values.Sum();
             return rarity switch
             {
                 CrystalRarity.Rare => (int)(sum * 1.5),

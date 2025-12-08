@@ -5,6 +5,8 @@ using substrate_shared.Registries.enums;
 using substrate_shared.Traits.Base;
 using substrate_shared.Traits.Enums;
 using substrate_shared.Traits.Types;
+using substrate_core.Engagements.Results;
+using substrate_shared.Models;
 
 namespace substrate_shared.Factories
 {
@@ -21,7 +23,9 @@ namespace substrate_shared.Factories
             bool isPositive,
             IReadOnlyDictionary<ToneType,int> facets,
             string narrative,
-            List<TraitCrystal> existingCrystals)
+            List<TraitCrystal> existingCrystals,
+            ToneCut toneCut,
+            RarityTier rarityTier)
         {
             // 🔹 Ultra rare fusion roll
             if (existingCrystals.Any(c => c.Type == CrystalType.Resilience) &&
@@ -29,35 +33,51 @@ namespace substrate_shared.Factories
             {
                 if (_rng.NextDouble() < 0.02) // 2% chance
                 {
-                    return new FusionCrystal(threshold, facets, CrystalRarity.UltraRare);
+                    return new FusionCrystal(
+                        threshold,
+                        facets,
+                        CrystalRarity.UltraRare,
+                        toneCut,
+                        rarityTier
+                    );
                 }
             }
 
             // 🔹 Rare chance logic
-            bool makeRare = false;
+            var makeRare = false;
             if (isPositive)
             {
                 resilienceCount++;
-                double chance = 0.1 * Math.Pow(2, resilienceCount - 1);
+                var chance = 0.1 * Math.Pow(2, resilienceCount - 1);
                 if (resilienceCount > collapseCount) chance *= 2;
                 chance = Math.Min(chance, 0.5); // cap at 50%
                 makeRare = !rareResilienceExists && _rng.NextDouble() < chance;
                 if (makeRare) rareResilienceExists = true;
 
-                return new ResilienceCrystal(threshold, facets,
-                    makeRare ? CrystalRarity.Rare : CrystalRarity.Normal);
+                return new ResilienceCrystal(
+                    threshold,
+                    facets,
+                    makeRare ? CrystalRarity.Rare : CrystalRarity.Common,
+                    toneCut,
+                    rarityTier
+                );
             }
             else
             {
                 collapseCount++;
-                double chance = 0.1 * Math.Pow(2, collapseCount - 1);
+                var chance = 0.1 * Math.Pow(2, collapseCount - 1);
                 if (collapseCount > resilienceCount) chance *= 2;
                 chance = Math.Min(chance, 0.5);
                 makeRare = !rareCollapseExists && _rng.NextDouble() < chance;
                 if (makeRare) rareCollapseExists = true;
 
-                return new CollapseCrystal(threshold, facets,
-                    makeRare ? CrystalRarity.Rare : CrystalRarity.Normal);
+                return new CollapseCrystal(
+                    threshold,
+                    facets,
+                    makeRare ? CrystalRarity.Rare : CrystalRarity.Common,
+                    toneCut,
+                    rarityTier
+                );
             }
         }
     }
