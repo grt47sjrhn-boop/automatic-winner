@@ -44,7 +44,7 @@ namespace substrate_core.Summaries.Types
 
             foreach (var duel in DuelSummaries)
             {
-                Console.WriteLine($"  Duel → {duel.Title}: {duel.Outcome}, Bias: {duel.ResolvedVector?.Tone.Label}");
+                Console.WriteLine($"  Duel → {duel.Title}: {duel.Outcome}, Bias: {duel.ResolvedVector.Tone.Label}");
             }
         }
     }

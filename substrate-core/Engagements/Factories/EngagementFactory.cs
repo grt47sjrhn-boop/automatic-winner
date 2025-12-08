@@ -13,6 +13,10 @@ namespace substrate_core.Engagements.Factories
         public static IEngagement Create(
             EngagementType type,
             InventoryManager inventory,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             Guid? biasSeedId = null,
             BiasVector? duelistA = null,
             BiasVector? duelistB = null,
@@ -25,17 +29,40 @@ namespace substrate_core.Engagements.Factories
                     inventory,
                     duelistA ?? BiasVector.GenerateRandom(),
                     duelistB ?? BiasVector.GenerateRandom(),
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
-                EngagementType.Dialogue => new DialogueEngagement(inventory, biasSeedId),
+                EngagementType.Dialogue => new DialogueEngagement(
+                    inventory,
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
+                    biasSeedId
+                ),
 
                 EngagementType.Trial => new TrialEngagement(
                     inventory,
                     duels ?? new List<DuelEngagement>
                     {
-                        new DuelEngagement(inventory, BiasVector.GenerateRandom(), BiasVector.GenerateRandom())
+                        new DuelEngagement(
+                            inventory,
+                            BiasVector.GenerateRandom(),
+                            BiasVector.GenerateRandom(),
+                            biasManager,
+                            facetManager,
+                            toneManager,
+                            rarityManager
+                        )
                     },
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
@@ -47,6 +74,10 @@ namespace substrate_core.Engagements.Factories
                         BiasVector.GenerateRandom(),
                         BiasVector.GenerateRandom()
                     },
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
@@ -57,6 +88,10 @@ namespace substrate_core.Engagements.Factories
         public static ISummary RunAndFinalize(
             EngagementType type,
             InventoryManager inventory,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             Guid? biasSeedId = null,
             int ticks = 1,
             BiasVector? duelistA = null,
@@ -64,7 +99,19 @@ namespace substrate_core.Engagements.Factories
             IEnumerable<DuelEngagement>? duels = null,
             IEnumerable<BiasVector>? participants = null)
         {
-            var engagement = Create(type, inventory, biasSeedId, duelistA, duelistB, duels, participants);
+            var engagement = Create(
+                type,
+                inventory,
+                biasManager,
+                facetManager,
+                toneManager,
+                rarityManager,
+                biasSeedId,
+                duelistA,
+                duelistB,
+                duels,
+                participants
+            );
 
             // Advance engagement by ticks
             engagement.ResolveStep(ticks);

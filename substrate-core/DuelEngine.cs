@@ -13,10 +13,26 @@ namespace substrate_core
         private readonly Duelist _persistentDuelist;
         private readonly Random _rng = new Random();
 
-        public DuelEngine(IResilienceTracker tracker, Duelist persistent)
+        // 🔹 Injected managers
+        private readonly IBiasManager _biasManager;
+        private readonly IFacetManager _facetManager;
+        private readonly IToneManager _toneManager;
+        private readonly IRarityManager _rarityManager;
+
+        public DuelEngine(
+            IResilienceTracker tracker,
+            Duelist persistent,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager)
         {
-            _tracker = tracker;
+            _tracker        = tracker;
             _persistentDuelist = persistent;
+            _biasManager    = biasManager;
+            _facetManager   = facetManager;
+            _toneManager    = toneManager;
+            _rarityManager  = rarityManager;
         }
 
         public void Tick(int duelCount = 1)
@@ -36,8 +52,16 @@ namespace substrate_core
                 // Choose resolver type (Simple for 2 vectors, MultiAxis otherwise)
                 var resolverType = vectors.Count == 2 ? ResolverType.Simple : ResolverType.MultiAxis;
 
-                // Create resolver
-                var resolver = ResolverFactory.CreateResolver(resolverType, vectors);
+                // Create resolver with manager interfaces
+                var resolver = ResolverFactory.CreateResolver(
+                    resolverType,
+                    vectors,
+                    _biasManager,
+                    _facetManager,
+                    _toneManager,
+                    _rarityManager,
+                    conflictBand: 1
+                );
 
                 // Resolve duel -> ISummary (EventSummary or DuelEventSummary)
                 var summary = resolver.Resolve();

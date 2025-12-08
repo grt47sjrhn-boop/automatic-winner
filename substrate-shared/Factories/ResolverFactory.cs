@@ -17,6 +17,10 @@ namespace substrate_shared.Factories
         public static IResolver CreateResolver(
             ResolverType type,
             IEnumerable<BiasVector> vectors,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             int conflictBand = 1)
         {
             switch (type)
@@ -24,11 +28,27 @@ namespace substrate_shared.Factories
                 case ResolverType.Simple:
                     // Expect exactly two vectors for SimpleDuelResolver
                     var list = new List<BiasVector>(vectors);
-                    return list.Count != 2 ? throw new System.ArgumentException("SimpleDuelResolver requires exactly two vectors.") : 
-                        new SimpleDuelResolver(list[0], list[1], conflictBand);
+                    if (list.Count != 2)
+                        throw new System.ArgumentException("SimpleDuelResolver requires exactly two vectors.");
+
+                    return new SimpleDuelResolver(
+                        list[0],
+                        list[1],
+                        biasManager,
+                        facetManager,
+                        toneManager,
+                        conflictBand
+                    );
 
                 case ResolverType.MultiAxis:
-                    return new MultiAxisDuelResolver(vectors, conflictBand);
+                    return new MultiAxisDuelResolver(
+                        vectors,
+                        biasManager,
+                        facetManager,
+                        toneManager,
+                        rarityManager,
+                        conflictBand
+                    );
 
                 default:
                     throw new System.NotSupportedException($"Resolver type {type} not supported.");

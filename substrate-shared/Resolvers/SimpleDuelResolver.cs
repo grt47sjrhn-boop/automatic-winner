@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using substrate_shared.interfaces;
+using substrate_shared.Mappers;
 using substrate_shared.Overlays;
 using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
@@ -24,17 +25,31 @@ namespace substrate_shared.Resolvers
         private readonly Func<int, int> _magnitudeScaler;
         private readonly Random _rng = new Random();
 
-        public SimpleDuelResolver(BiasVector a, BiasVector b, int conflictBand = 1, Func<int, int>? magnitudeScaler = null)
+        // 🔹 Injected managers via IManager interfaces
+        private readonly IBiasManager _biasManager;
+        private readonly IFacetManager _facetManager;
+        private readonly IToneManager _toneManager;
+
+        public SimpleDuelResolver(
+            BiasVector a,
+            BiasVector b,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            int conflictBand = 1,
+            Func<int, int>? magnitudeScaler = null)
         {
             _a = a;
             _b = b;
+            _biasManager = biasManager;
+            _facetManager = facetManager;
+            _toneManager = toneManager;
             _conflictBand = conflictBand;
             _magnitudeScaler = magnitudeScaler ?? (d => Math.Max(1, d));
         }
 
         private NarrativeTone PickToneByBias(Bias bias)
         {
-            // Get all ToneType values that match the bias
             var candidates = Enum.GetValues(typeof(ToneType))
                                  .Cast<ToneType>()
                                  .Where(t => t.GetBias() == bias)
@@ -46,7 +61,6 @@ namespace substrate_shared.Resolvers
                 return compositeTone;
             }
 
-            // Randomly select one candidate
             var chosen = candidates[_rng.Next(candidates.Count)];
             return NarrativeToneFactory.FromRegistry(new RegistryValue<ToneType>(chosen));
         }
@@ -74,7 +88,6 @@ namespace substrate_shared.Resolvers
 
                 resolvedMagnitude = _magnitudeScaler(delta);
 
-                // Instead of always blending Joy, pick a tone by bias
                 var sampledTone = PickToneByBias(winner.Tone.BiasValue);
                 resolvedTone = sampledTone.BlendAgainst(loser.Tone);
 
@@ -106,6 +119,12 @@ namespace substrate_shared.Resolvers
             var description =
                 $"Outcome: {outcome}, Delta: {delta}, Resolved: {resolvedVector}. {overlay}";
 
+            // 🔹 Use injected managers to compute brilliance and bias
+            var shape = _facetManager.Normalize(resolvedVector.ToFacetDistribution().Values);
+            var toneDict = FacetToneMapper.ToToneDictionary(shape);
+            var brilliance = _toneManager.Cut(toneDict);
+            var bias = _biasManager.Summarize(shape);
+
             return new DuelEventSummary(
                 "Duel Resolution",
                 description,
@@ -114,6 +133,8 @@ namespace substrate_shared.Resolvers
                 _b,
                 resolvedVector,
                 outcome,
+                brilliance,
+                bias,
                 true
             );
         }

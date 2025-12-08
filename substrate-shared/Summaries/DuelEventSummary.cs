@@ -1,4 +1,5 @@
 using System;
+using substrate_shared.Models;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.Summaries.Base;
@@ -10,7 +11,12 @@ namespace substrate_shared.Summaries
     {
         public BiasVector DuelistA { get; }
         public BiasVector DuelistB { get; }
+        public BiasVector ResolvedVector { get; }
+        public DuelOutcome Outcome { get; }
         
+        // 🔹 New enriched fields
+        public ToneCut Brilliance { get; }
+        public BiasDescriptor Bias { get; }
 
         public DuelEventSummary(
             string title,
@@ -20,6 +26,8 @@ namespace substrate_shared.Summaries
             BiasVector duelistB,
             BiasVector resolvedVector,
             DuelOutcome outcome,
+            ToneCut brilliance,
+            BiasDescriptor bias,
             bool isResolved = false)
             : base(title, description, type, isResolved)
         {
@@ -27,6 +35,8 @@ namespace substrate_shared.Summaries
             DuelistB = duelistB;
             ResolvedVector = resolvedVector;
             Outcome = outcome;
+            Brilliance = brilliance;
+            Bias = bias;
         }
 
         public override void Print()
@@ -35,8 +45,10 @@ namespace substrate_shared.Summaries
             Console.WriteLine(
                 $"{Title} - {Description} [{Type}] " +
                 $"Duelists: {DuelistA.Tone.Label} vs {DuelistB.Tone.Label} " +
-                $"Resolved: {ResolvedVector?.Tone.Label} (Mag {ResolvedVector?.Magnitude}) " +
-                $"Outcome: {Outcome}{resolvedText}"
+                $"Resolved: {ResolvedVector.Tone.Label} (Mag {ResolvedVector.Magnitude}) " +
+                $"Outcome: {Outcome}{resolvedText} " +
+                $"Brilliance: {Brilliance?.Primary} " +
+                $"Bias: {Bias?.Bias}"
             );
         }
     }

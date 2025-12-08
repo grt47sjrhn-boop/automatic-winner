@@ -23,6 +23,18 @@ namespace substrate_core.Resolvers
         private readonly List<TraitCrystal> _crystals = new();   // 🔹 Crystal inventory
         private int _resilienceIndex = 0;
 
+        // 🔹 Injected managers
+        private readonly IToneManager _toneManager;
+        private readonly IRarityManager _rarityManager;
+
+        public ResilienceTracker(
+            IToneManager toneManager,
+            IRarityManager rarityManager)
+        {
+            _toneManager = toneManager;
+            _rarityManager = rarityManager;
+        }
+
         public IReadOnlyList<ISummary> DuelSummaries => _duelSummaries;
         public IReadOnlyList<TraitCrystal> Crystals => _crystals;
         public int ResilienceIndex => _resilienceIndex;
@@ -59,10 +71,10 @@ namespace substrate_core.Resolvers
                     var narrative = SuperRegistryManager.DescribeClusterWithScore(NarrativeGroup.Crystal);
 
                     // 🔹 Build tone cut from facets
-                    var toneCut = ToneManager.Cut(facets);
+                    var toneCut = _toneManager.Cut(facets);
 
                     // 🔹 Assign rarity tier from resilience score
-                    var rarityTier = RarityManager.AssignTier(_resilienceIndex);
+                    var rarityTier = _rarityManager.AssignTier(_resilienceIndex);
 
                     // 🔹 Create crystal with full parameter set
                     var crystal = TraitCrystalFactory.CreateCrystal(
@@ -74,7 +86,6 @@ namespace substrate_core.Resolvers
                         toneCut: toneCut,
                         rarityTier: rarityTier
                     );
-
 
                     _crystals.Add(crystal);
 
@@ -110,7 +121,6 @@ namespace substrate_core.Resolvers
                 };
 
                 facetCounts.TryAdd(tone, 0);
-
                 facetCounts[tone]++;
             }
 

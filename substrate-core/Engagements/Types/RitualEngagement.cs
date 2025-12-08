@@ -19,7 +19,12 @@ namespace substrate_core.Engagements.Types
     public sealed class RitualEngagement : EngagementBase
     {
         private readonly InventoryManager _inventory;
-        private readonly BiasManager _biasManager = new BiasManager();
+
+        // 🔹 Injected managers
+        private readonly IBiasManager _biasManager;
+        private readonly IFacetManager _facetManager;
+        private readonly IToneManager _toneManager;
+        private readonly IRarityManager _rarityManager;
 
         public IReadOnlyList<BiasVector> Participants { get; }
         public FacetDistribution CollectiveShape { get; private set; }
@@ -30,11 +35,19 @@ namespace substrate_core.Engagements.Types
         public RitualEngagement(
             InventoryManager inventory,
             IEnumerable<BiasVector> participants,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             Guid? biasSeedId = null)
         {
-            _inventory = inventory;
-            Participants = new List<BiasVector>(participants);
-            BiasSeedId = biasSeedId;
+            _inventory     = inventory;
+            Participants   = new List<BiasVector>(participants);
+            _biasManager   = biasManager;
+            _facetManager  = facetManager;
+            _toneManager   = toneManager;
+            _rarityManager = rarityManager;
+            BiasSeedId     = biasSeedId;
 
             // Hydrate seed bias if provided
             if (BiasSeedId.HasValue)
@@ -56,7 +69,7 @@ namespace substrate_core.Engagements.Types
             // Ritual-specific tick logic:
             // - Aggregate participant vectors into a collective facet distribution
             var participantShapes = Participants.Select(p => p.ToFacetDistribution()).ToList();
-            CollectiveShape = FacetManager.Aggregate(participantShapes);
+            CollectiveShape = _facetManager.Aggregate(participantShapes);
 
             // If seeded bias exists, tilt the collective bias
             CollectiveBias = BiasSeedId.HasValue && Bias != null
@@ -65,16 +78,17 @@ namespace substrate_core.Engagements.Types
 
             // Convert facets → tones → brilliance
             var toneDict = FacetToneMapper.ToToneDictionary(CollectiveShape);
-            CollectiveBrilliance = ToneManager.Cut(toneDict);
+            CollectiveBrilliance = _toneManager.Cut(toneDict);
 
             // Assign rarity tier
-            RitualRarity = RarityManager.AssignTier(RarityManager.ComputeScore(this));
+            var score = _rarityManager.ComputeScore(CollectiveShape);
+            RitualRarity = _rarityManager.AssignTier(score);
         }
 
-        public override void UpdateFacets() => Shape = CollectiveShape;
-        public override void UpdateBias()   => Bias = CollectiveBias;
-        public override void UpdateBrilliance() => Brilliance = CollectiveBrilliance;
-        public override void UpdateRarity() => Rarity = RitualRarity;
+        public override void UpdateFacets()      => Shape = CollectiveShape;
+        public override void UpdateBias()        => Bias = CollectiveBias;
+        public override void UpdateBrilliance()  => Brilliance = CollectiveBrilliance;
+        public override void UpdateRarity()      => Rarity = RitualRarity;
 
         // Example: ritual resolves after 3+ participants
         public override bool IsComplete => Participants.Count >= 3;

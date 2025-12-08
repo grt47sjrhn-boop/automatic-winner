@@ -1,5 +1,6 @@
 using System;
 using substrate_core;
+using substrate_core.Managers;   // <-- concrete manager implementations
 using substrate_core.Resolvers;
 using substrate_shared.interfaces;
 using substrate_shared.Profiles;
@@ -11,9 +12,26 @@ namespace substrate_tools
     {
         static void Main(string[] args)
         {
-            IResilienceTracker tracker = new ResilienceTracker();
+            // 🔹 Initialize concrete managers first
+            IBiasManager biasManager       = new BiasManager();
+            IFacetManager facetManager     = new FacetManager();
+            IToneManager toneManager       = new ToneManager();
+            IRarityManager rarityManager   = new RarityManager();
+
+            // 🔹 Pass tone/rarity managers into ResilienceTracker
+            IResilienceTracker tracker = new ResilienceTracker(toneManager, rarityManager);
+
             var persistent = new Duelist("Persistent Hero", initialBias: 0.0);
-            var engine = new DuelEngine(tracker, persistent);
+
+            // 🔹 Pass managers into DuelEngine
+            var engine = new DuelEngine(
+                tracker,
+                persistent,
+                biasManager,
+                facetManager,
+                toneManager,
+                rarityManager
+            );
 
             var tickCount = 5;
             var verbose = false;

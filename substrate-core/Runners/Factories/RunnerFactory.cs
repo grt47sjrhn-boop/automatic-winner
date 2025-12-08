@@ -14,6 +14,10 @@ namespace substrate_core.Runners.Factories
         public static IRunner Create(
             EngagementType type,
             InventoryManager inventory,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             Guid? biasSeedId = null,
             IEnumerable<BiasVector>? participants = null,
             IEnumerable<DuelEngagement>? duels = null)
@@ -25,12 +29,20 @@ namespace substrate_core.Runners.Factories
                     inventory,
                     BiasVector.GenerateRandom(),
                     BiasVector.GenerateRandom(),
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
                 // Dialogue typically resolves around a seed; adapt as needed
                 EngagementType.Dialogue => new DialogueEngagement(
                     inventory,
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
@@ -39,10 +51,38 @@ namespace substrate_core.Runners.Factories
                     inventory,
                     duels ?? new[]
                     {
-                        new DuelEngagement(inventory, BiasVector.GenerateRandom(), BiasVector.GenerateRandom(), biasSeedId),
-                        new DuelEngagement(inventory, BiasVector.GenerateRandom(), BiasVector.GenerateRandom(), biasSeedId),
-                        new DuelEngagement(inventory, BiasVector.GenerateRandom(), BiasVector.GenerateRandom(), biasSeedId)
+                        new DuelEngagement(
+                            inventory,
+                            BiasVector.GenerateRandom(),
+                            BiasVector.GenerateRandom(),
+                            biasManager,
+                            facetManager,
+                            toneManager,
+                            rarityManager
+                        ),
+                        new DuelEngagement(
+                            inventory,
+                            BiasVector.GenerateRandom(),
+                            BiasVector.GenerateRandom(),
+                            biasManager,
+                            facetManager,
+                            toneManager,
+                            rarityManager
+                        ),
+                        new DuelEngagement(
+                            inventory,
+                            BiasVector.GenerateRandom(),
+                            BiasVector.GenerateRandom(),
+                            biasManager,
+                            facetManager,
+                            toneManager,
+                            rarityManager
+                        )
                     },
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 
@@ -55,6 +95,10 @@ namespace substrate_core.Runners.Factories
                         BiasVector.GenerateRandom(),
                         BiasVector.GenerateRandom()
                     },
+                    biasManager,
+                    facetManager,
+                    toneManager,
+                    rarityManager,
                     biasSeedId
                 ),
 

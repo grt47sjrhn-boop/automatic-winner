@@ -10,7 +10,7 @@ namespace substrate_core.Managers
     /// Manager responsible for summarizing and resolving bias vectors.
     /// Implements IManager for orchestration consistency.
     /// </summary>
-    public class BiasManager : IManager
+    public class BiasManager : IBiasManager
     {
         /// <summary>
         /// Summarize a facet distribution into a BiasDescriptor.

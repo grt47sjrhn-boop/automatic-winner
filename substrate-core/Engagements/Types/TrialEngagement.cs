@@ -21,7 +21,12 @@ namespace substrate_core.Engagements.Types
     public sealed class TrialEngagement : EngagementBase
     {
         private readonly InventoryManager _inventory;
-        private readonly BiasManager _biasManager = new BiasManager();
+
+        // 🔹 Injected managers
+        private readonly IBiasManager _biasManager;
+        private readonly IFacetManager _facetManager;
+        private readonly IToneManager _toneManager;
+        private readonly IRarityManager _rarityManager;
 
         public IReadOnlyList<DuelEngagement> Duels { get; }
         public BiasDescriptor AggregateBias { get; private set; }
@@ -31,11 +36,19 @@ namespace substrate_core.Engagements.Types
         public TrialEngagement(
             InventoryManager inventory,
             IEnumerable<DuelEngagement> duels,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
             Guid? biasSeedId = null)
         {
-            _inventory = inventory;
-            Duels = duels.ToList();
-            BiasSeedId = biasSeedId;
+            _inventory     = inventory;
+            Duels          = duels.ToList();
+            _biasManager   = biasManager;
+            _facetManager  = facetManager;
+            _toneManager   = toneManager;
+            _rarityManager = rarityManager;
+            BiasSeedId     = biasSeedId;
 
             // Hydrate seed bias if provided
             if (BiasSeedId.HasValue)
@@ -62,7 +75,7 @@ namespace substrate_core.Engagements.Types
 
             // Aggregate results across duels
             var allShapes = Duels.Select(d => d.Shape).ToList();
-            Shape = FacetManager.Aggregate(allShapes);
+            Shape = _facetManager.Aggregate(allShapes);
 
             // Bias resolution
             AggregateBias = BiasSeedId.HasValue && Bias != null
@@ -71,14 +84,15 @@ namespace substrate_core.Engagements.Types
 
             // Tone resolution
             var toneDict = FacetToneMapper.ToToneDictionary(Shape);
-            DominantTone = ToneManager.Cut(toneDict).Primary;
+            DominantTone = _toneManager.Cut(toneDict).Primary;
 
             // Rarity resolution
-            TrialRarity = RarityManager.AssignTier(RarityManager.ComputeScore(this));
+            var score = _rarityManager.ComputeScore(Shape);
+            TrialRarity = _rarityManager.AssignTier(score);
         }
 
         public override void UpdateFacets() =>
-            Shape = FacetManager.Aggregate(Duels.Select(d => d.Shape));
+            Shape = _facetManager.Aggregate(Duels.Select(d => d.Shape));
 
         public override void UpdateBias() =>
             Bias = AggregateBias;
@@ -86,7 +100,7 @@ namespace substrate_core.Engagements.Types
         public override void UpdateBrilliance()
         {
             var toneDict = FacetToneMapper.ToToneDictionary(Shape);
-            Brilliance = ToneManager.Cut(toneDict);
+            Brilliance = _toneManager.Cut(toneDict);
         }
 
         public override void UpdateRarity() =>

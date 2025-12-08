@@ -13,7 +13,7 @@ namespace substrate_core.Managers
     /// Manager responsible for interpreting and narrating tones.
     /// Implements IManager for orchestration consistency.
     /// </summary>
-    public class ToneManager : IManager
+    public class ToneManager : IToneManager
     {
         /// <summary>
         /// Summarize a tone into a BiasDescriptor.
@@ -80,12 +80,12 @@ namespace substrate_core.Managers
         /// <summary>
         /// Determine the dominant tone type between two bias vectors.
         /// </summary>
-        public static ToneType DetermineDominant(BiasVector a, BiasVector b)
+        public ToneType DetermineDominant(BiasVector a, BiasVector b)
         {
             return a.Magnitude >= b.Magnitude ? a.DominantTone : b.DominantTone;
         }
 
-        public static bool CheckBalance(BiasVector a, BiasVector b)
+        public bool CheckBalance(BiasVector a, BiasVector b)
         {
             var diff = Math.Abs(a.Magnitude - b.Magnitude);
             return diff <= 2;
@@ -94,7 +94,7 @@ namespace substrate_core.Managers
         /// <summary>
         /// Cut a normalized facet shape into a ToneCut (brilliance representation).
         /// </summary>
-        public static ToneCut Cut(IReadOnlyDictionary<ToneType,int> facets)
+        public ToneCut Cut(IReadOnlyDictionary<ToneType,int> facets)
         {
             var cut = new ToneCut();
             if (facets == null || facets.Count == 0)

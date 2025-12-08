@@ -30,6 +30,13 @@ namespace substrate_shared.Reports
         // 🔹 Crystal inventory (grouped)
         public List<TraitCrystalGroup> CrystalGroups { get; set; } = new();
         public List<TraitCrystal> Crystals { get; set; } = new();
+        
+        // 🔹 New enriched fields
+        public Dictionary<string,int> BrillianceCuts { get; set; } = new();
+        public Dictionary<string,int> RarityCounts { get; set; } = new();
+        public List<string> CrystalNarratives { get; set; } = new();
+        public List<string> BiasSummaries { get; set; } = new();
+
     }
 
     public class TraitCrystalGroup

@@ -18,17 +18,32 @@ namespace substrate_core.Engagements.Types
     public sealed class DialogueEngagement : EngagementBase
     {
         private readonly InventoryManager _inventory;
-        private readonly BiasManager _biasManager = new BiasManager();
+
+        // 🔹 Injected managers
+        private readonly IBiasManager _biasManager;
+        private readonly IFacetManager _facetManager;
+        private readonly IToneManager _toneManager;
+        private readonly IRarityManager _rarityManager;
 
         public BiasVector SpeakerA { get; private set; }
         public BiasVector SpeakerB { get; private set; }
         public ToneType DominantTone { get; private set; }
         public bool IsBalanced { get; private set; }
 
-        public DialogueEngagement(InventoryManager inventory, Guid? biasSeedId = null)
+        public DialogueEngagement(
+            InventoryManager inventory,
+            IBiasManager biasManager,
+            IFacetManager facetManager,
+            IToneManager toneManager,
+            IRarityManager rarityManager,
+            Guid? biasSeedId = null)
         {
-            _inventory = inventory;
-            BiasSeedId = biasSeedId;
+            _inventory     = inventory;
+            _biasManager   = biasManager;
+            _facetManager  = facetManager;
+            _toneManager   = toneManager;
+            _rarityManager = rarityManager;
+            BiasSeedId     = biasSeedId;
 
             // Hydrate seed bias if provided
             if (BiasSeedId.HasValue)
@@ -51,36 +66,31 @@ namespace substrate_core.Engagements.Types
             SpeakerA = BiasVector.GenerateRandom(); // TODO: replace with actual dialogue input
             SpeakerB = BiasVector.GenerateRandom();
 
-            DominantTone = ToneManager.DetermineDominant(SpeakerA, SpeakerB);
-            IsBalanced   = ToneManager.CheckBalance(SpeakerA, SpeakerB);
+            DominantTone = _toneManager.DetermineDominant(SpeakerA, SpeakerB);
+            IsBalanced   = _toneManager.CheckBalance(SpeakerA, SpeakerB);
         }
 
         public override void UpdateFacets()
         {
             // Normalize dialogue outcomes into a facet distribution
-            Shape = FacetManager.Normalize(new Dictionary<FacetType,int>());
+            Shape = _facetManager.Normalize(new Dictionary<FacetType,int>());
         }
 
         public override void UpdateBias()
         {
-            // Use instance BiasManager
             Bias = _biasManager.Summarize(Shape);
         }
 
         public override void UpdateBrilliance()
         {
-            // Convert facet distribution into tone distribution
             var toneDict = FacetToneMapper.ToToneDictionary(Shape);
-
-            // Brilliance now represented as ToneCut
-            Brilliance = ToneManager.Cut(toneDict);
+            Brilliance = _toneManager.Cut(toneDict);
         }
-
 
         public override void UpdateRarity()
         {
-            // Rarity now represented as RarityTier
-            Rarity = RarityManager.AssignTier(RarityManager.ComputeScore(this));
+            var score = _rarityManager.ComputeScore(Shape);
+            Rarity = _rarityManager.AssignTier(score);
         }
 
         public override bool IsComplete => Shape.Values.Count >= 3;
