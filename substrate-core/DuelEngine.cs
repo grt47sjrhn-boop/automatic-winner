@@ -1,23 +1,25 @@
-using System;
-using System.Collections.Generic;
-using substrate_shared.Factories;
+using substrate_core.Managers;
+using substrate_shared.Engagements.Types;
 using substrate_shared.interfaces;
+using substrate_shared.Managers;
 using substrate_shared.Profiles;
 using substrate_shared.structs;
+using EnvironmentMood = substrate_shared.Environment.EnvironmentMood;
 
 namespace substrate_core
 {
+    /// <summary>
+    /// Engine that runs duels for a persistent duelist and records outcomes.
+    /// </summary>
     public class DuelEngine
     {
         private readonly IResilienceTracker _tracker;
-        private readonly Duelist _persistentDuelist;
-        private readonly Random _rng = new Random();
-
-        // 🔹 Injected managers
+        private readonly Duelist _persistent;
         private readonly IBiasManager _biasManager;
         private readonly IFacetManager _facetManager;
         private readonly IToneManager _toneManager;
         private readonly IRarityManager _rarityManager;
+        private readonly InventoryManager _inventory;
 
         public DuelEngine(
             IResilienceTracker tracker,
@@ -25,54 +27,56 @@ namespace substrate_core
             IBiasManager biasManager,
             IFacetManager facetManager,
             IToneManager toneManager,
-            IRarityManager rarityManager)
+            IRarityManager rarityManager,
+            InventoryManager inventory)
         {
-            _tracker        = tracker;
-            _persistentDuelist = persistent;
-            _biasManager    = biasManager;
-            _facetManager   = facetManager;
-            _toneManager    = toneManager;
-            _rarityManager  = rarityManager;
+            _tracker       = tracker;
+            _persistent    = persistent;
+            _biasManager   = biasManager;
+            _facetManager  = facetManager;
+            _toneManager   = toneManager;
+            _rarityManager = rarityManager;
+            _inventory     = inventory;
         }
 
-        public void Tick(int duelCount = 1)
+        /// <summary>
+        /// Run a number of duel ticks.
+        /// </summary>
+        public void Tick(int count)
         {
-            for (var i = 0; i < duelCount; i++)
+            for (int i = 0; i < count; i++)
             {
-                // Spin up a random opponent
-                var opponent = DuelistFactory.CreateRandom();
+                // 🔹 Instead of the simple generator:
+                // var opponent = _biasManager.GenerateOpponent();
 
-                // Build vector list: persistent + opponent
-                var vectors = new List<BiasVector>
-                {
-                    _persistentDuelist.ToBiasVector(),
-                    opponent.ToBiasVector()
-                };
+                // 🔹 Use tuned generator with profile + mood
+                var profile = OpponentProfiles.Challenge; // or StoryMode/Nightmare
+                var mood    = EnvironmentMood.Storm;      // or Sanctuary/Void/Carnival
+                BiasDescriptor? tilt = null;              // optional seed tilt
 
-                // Choose resolver type (Simple for 2 vectors, MultiAxis otherwise)
-                var resolverType = vectors.Count == 2 ? ResolverType.Simple : ResolverType.MultiAxis;
+                var opponent = _biasManager.GenerateOpponentWeighted(profile, mood, tilt);
 
-                // Create resolver with manager interfaces
-                var resolver = ResolverFactory.CreateResolver(
-                    resolverType,
-                    vectors,
+                // Continue duel as before
+                var duel = new DuelEngagement(
+                    _inventory,
+                    _persistent.BiasVector,
+                    opponent,
                     _biasManager,
                     _facetManager,
                     _toneManager,
-                    _rarityManager,
-                    conflictBand: 1
+                    _rarityManager
                 );
 
-                // Resolve duel -> ISummary (EventSummary or DuelEventSummary)
-                var summary = resolver.Resolve();
+                duel.Resolve();
+                var summary = duel.Finalize();
 
-                // Record into tracker (using tones instead of AxisA/B)
-                _tracker.Record(summary,
-                    vectors[0],
-                    vectors[1]);
+                _tracker.AddSummary(summary);
+                foreach (var crystal in _inventory.GetCrystals())
+                {
+                    _tracker.AddCrystal(crystal);
+                }
 
-                // Persist results back into the persistent duelist
-                _persistentDuelist.ApplyOutcome(summary);
+                _persistent.ApplyOutcome(summary);
             }
         }
     }

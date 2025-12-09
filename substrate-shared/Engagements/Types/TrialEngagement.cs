@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Engagements.Base;
-using substrate_core.Managers;
-using substrate_core.Summaries.Types;
-using substrate_shared.Facets.Enums;
+using substrate_shared.Engagements.Base;
 using substrate_shared.interfaces;
+using substrate_shared.Managers;
 using substrate_shared.Mappers;
 using substrate_shared.Models;
 using substrate_shared.Registries.enums;
@@ -13,7 +11,7 @@ using substrate_shared.structs;
 using substrate_shared.Summaries;
 using substrate_shared.types;
 
-namespace substrate_core.Engagements.Types
+namespace substrate_shared.Engagements.Types
 {
     /// <summary>
     /// Engagement representing a trial composed of multiple duels.

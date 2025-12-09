@@ -25,6 +25,11 @@ namespace substrate_shared.interfaces
         double MeanSin { get; }
         double LogScaledIndex { get; }
         double ExpScaledIndex { get; }
+        
+        // 🔹 Add methods
+        void AddSummary(ISummary summary);
+        void AddCrystal(TraitCrystal crystal);
+
     }
 
 }

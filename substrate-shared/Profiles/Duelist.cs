@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using substrate_shared.interfaces;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
@@ -6,6 +7,7 @@ using substrate_shared.types;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Factories;
 using substrate_shared.Summaries.Base;
+using substrate_shared.Registries.Extensions; // for GetScaleValue, ResolveByScale
 
 namespace substrate_shared.Profiles
 {
@@ -16,6 +18,10 @@ namespace substrate_shared.Profiles
         public double Resilience { get; private set; }
         public int Wounds { get; private set; }
         public int Recoveries { get; private set; }
+        public BiasVector BiasVector { get; set; }
+
+        // 🔹 Explicit seed tone override
+        private ToneType? _seedTone;
 
         public Duelist(string name, double initialBias = 0.0)
         {
@@ -27,22 +33,35 @@ namespace substrate_shared.Profiles
         }
 
         // Apply duel outcome from EventSummary
+        // Apply duel outcome from EventSummary
         public void ApplyOutcome(ISummary summary)
         {
             if (summary is EventSummary eventSummary && eventSummary.Type == SummaryType.Duel)
             {
                 if (eventSummary.IsResolved)
                 {
-                    Bias += 0.1;
+                    Bias += 0.1 * Resilience;
                     Resilience += 0.05;
                     Recoveries++;
                 }
                 else
                 {
-                    Bias -= 0.1;
+                    Bias -= 0.1 * (2.0 - Resilience);
                     Resilience = Math.Max(0, Resilience - 0.05);
                     Wounds++;
                 }
+
+                // ✅ Refresh BiasVector after every outcome
+                var toneKey   = _seedTone.HasValue
+                    ? _seedTone.Value
+                    : Bias > 0 ? ToneType.Joy
+                        : Bias < 0 ? ToneType.Despairing
+                            : ToneType.Neutral;
+
+                var moodKey   = ResolveMoodFromBias(Bias);
+                var magnitude = MapResilienceToMagnitude(Resilience);
+
+                BiasVector = BiasVectorFactory.FromToneAndMood(toneKey, moodKey, magnitude);
             }
         }
 
@@ -51,27 +70,73 @@ namespace substrate_shared.Profiles
             return $"{Name} | Bias={Bias:F2}, Resilience={Resilience:F2}, Wounds={Wounds}, Recoveries={Recoveries}";
         }
 
-        // Convert Duelist state to a BiasVector using the registry-backed ToneType and factory
+        // 🔹 Convert Duelist state to a BiasVector
         public BiasVector ToBiasVector()
         {
-            // Map bias sign to a ToneType enum key (registry-backed)
-            var toneKey =
-                Bias > 0 ? ToneType.Joy :
-                Bias < 0 ? ToneType.Despairing :
-                           ToneType.Neutral;
+            var toneKey = _seedTone.HasValue
+                ? _seedTone.Value
+                : Bias > 0 ? ToneType.Joy
+                : Bias < 0 ? ToneType.Despairing
+                : ToneType.Neutral;
 
-            // Scale resilience into an integer magnitude for the resolver
+            var moodKey = ResolveMoodFromBias(Bias);
             var magnitude = MapResilienceToMagnitude(Resilience);
 
-            // Delegate construction to the registry-aware BiasVectorFactory
-            return BiasVectorFactory.FromTone(toneKey, magnitude);
+            return BiasVectorFactory.FromToneAndMood(toneKey, moodKey, magnitude);
         }
 
-        // Clamp + scale resilience to resolver-friendly integer magnitude
         private static int MapResilienceToMagnitude(double resilience)
         {
-            var clamped = Math.Max(0.0, Math.Min(resilience, 2.0)); // [0, 2]
-            return (int)Math.Round(clamped * 10);                    // 0–20
+            var clamped = Math.Max(0.0, Math.Min(resilience, 2.0));
+            return (int)Math.Round(clamped * 10); // 0–20
+        }
+
+        private static MoodType ResolveMoodFromBias(double bias)
+        {
+            var clamped = Math.Max(-11, Math.Min(11, (int)Math.Round(bias * 10)));
+            var entries = Enum.GetValues(typeof(MoodType)).Cast<MoodType>();
+            return entries.FirstOrDefault(m => m.GetScaleValue() == clamped);
+        }
+
+        // 🔹 Seed duelist with a starting tone
+        // 🔹 Seed duelist with a starting tone
+        public void SeedTone(ToneType seedTone)
+        {
+            var biasAttr = seedTone.GetBias(); // returns your Bias enum
+
+            switch (biasAttr)
+            {
+                case substrate_shared.Registries.enums.Bias.Positive:
+                    Bias = 1.0;
+                    Resilience = 1.5;
+                    Recoveries++;
+                    break;
+
+                case substrate_shared.Registries.enums.Bias.Negative:
+                    // Stronger collapse for abyssal tones
+                    Bias = seedTone is ToneType.Forsaken or ToneType.Corrupted or ToneType.Doomed ? -2.0 : -1.0;
+                    Resilience = 0.5;
+                    Wounds++;
+                    break;
+
+                case substrate_shared.Registries.enums.Bias.Mixed:
+                    Bias = 0.0;
+                    Resilience = 1.0;
+                    break;
+
+                case substrate_shared.Registries.enums.Bias.Neutral:
+                default:
+                    Bias = 0.0;
+                    Resilience = 1.0;
+                    break;
+            }
+
+            _seedTone = seedTone;
+
+            // ✅ Build a BiasVector immediately so summaries have a valid tone
+            var moodKey   = ResolveMoodFromBias(Bias);
+            var magnitude = MapResilienceToMagnitude(Resilience);
+            BiasVector    = BiasVectorFactory.FromToneAndMood(seedTone, moodKey, magnitude);
         }
     }
 }

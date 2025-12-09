@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Engagements.Factories;
-using substrate_shared.interfaces;
-using substrate_shared.Traits.Base;
 using substrate_core.Engagements.Results;
-using substrate_core.Summaries.Types;
 using substrate_shared.Factories;
+using substrate_shared.interfaces;
 using substrate_shared.Models;
 using substrate_shared.Registries.enums;
+using substrate_shared.Traits.Base;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     /// <summary>
     /// Manager responsible for storing and retrieving crystals and engagement results.
@@ -107,5 +105,16 @@ namespace substrate_core.Managers
             _crystals.Clear();
             _results.Clear();
         }
+        
+        /// <summary>
+        /// Reset session state: wipe inventory and reset rare-roll factory counters.
+        /// </summary>
+        public void ResetSession()
+        {
+            _crystals.Clear();
+            _results.Clear();
+            TraitCrystalFactory.ResetSession();
+        }
+
     }
 }

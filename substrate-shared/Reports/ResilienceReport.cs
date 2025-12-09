@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using substrate_shared.Traits.Base;
 
 namespace substrate_shared.Reports
@@ -27,16 +29,73 @@ namespace substrate_shared.Reports
         public Dictionary<string,int> IntentCounts { get; set; } = new();
         public Dictionary<string,int> ToneLabels { get; set; } = new();
 
-        // 🔹 Crystal inventory (grouped)
+        // Crystal inventory (grouped)
         public List<TraitCrystalGroup> CrystalGroups { get; set; } = new();
         public List<TraitCrystal> Crystals { get; set; } = new();
-        
-        // 🔹 New enriched fields
+
+        // Enriched fields
         public Dictionary<string,int> BrillianceCuts { get; set; } = new();
-        public Dictionary<string,int> RarityCounts { get; set; } = new();
+
+        // Collapse rarities
+        public Dictionary<string,int> RarityCounts { get; set; } = new()
+        {
+            { "Common", 0 },
+            { "Rare", 0 },
+            { "Epic", 0 },
+            { "Mythic", 0 },
+            { "Legendary", 0 },
+            { "UltraRare", 0 },
+            { "Fragile", 0 },
+            { "Corrupted", 0 },
+            { "Doomed", 0 }
+        };
+
         public List<string> CrystalNarratives { get; set; } = new();
         public List<string> BiasSummaries { get; set; } = new();
 
+        // ✅ Put Print() here, inside the class
+        public void Print()
+        {
+            Console.WriteLine("=== Resilience Report ===");
+            Console.WriteLine("=== Report Summary ===");
+            Console.WriteLine($"Duels: {DuelCount} | Resilience Index: {ResilienceIndex}");
+            Console.WriteLine($"Outcomes → Recoveries: {RecoveryCount}, Collapses: {CollapseCount}, Wounds: {WoundCount}, Conflicts: {ConflictCount}, Equilibriums: {EquilibriumCount}");
+
+            // 🔹 Math overlay values
+            Console.WriteLine();
+            Console.WriteLine("Math Overlay Metrics:");
+            Console.WriteLine($"  Average Hypotenuse: {AverageHypotenuse:F2}");
+            Console.WriteLine($"  Cumulative Area:    {CumulativeArea:F2}");
+            Console.WriteLine($"  Mean Cos:           {MeanCos:F4}");
+            Console.WriteLine($"  Mean Sin:           {MeanSin:F4}");
+            Console.WriteLine($"  LogScaled Index:    {LogScaledIndex:F2}");
+            Console.WriteLine($"  ExpScaled Index:    {ExpScaledIndex:F2}");
+
+            Console.WriteLine();
+            Console.WriteLine("Tone Distribution:");
+            foreach (var kvp in ToneLabels)
+                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
+
+            Console.WriteLine();
+            Console.WriteLine("Intent Distribution:");
+            foreach (var kvp in IntentCounts)
+                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
+
+            Console.WriteLine();
+            Console.WriteLine("Crystal Rarity:");
+            foreach (var kvp in RarityCounts)
+                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
+
+            Console.WriteLine();
+            Console.WriteLine("Crystal Narratives:");
+            foreach (var narrative in CrystalNarratives)
+                Console.WriteLine($"  - {narrative}");
+
+            Console.WriteLine();
+            Console.WriteLine("Bias Summaries:");
+            foreach (var bias in BiasSummaries)
+                Console.WriteLine($"  - {bias}");
+        }
     }
 
     public class TraitCrystalGroup
@@ -48,8 +107,7 @@ namespace substrate_shared.Reports
         public int MinModifier { get; set; }
         public int MaxModifier { get; set; }
 
-        // Keep strongly typed reference to actual crystals
         public List<TraitCrystal> Crystals { get; set; } = new();
-        public Dictionary<string, int> MaxFacetValues { get; set; }
+        public Dictionary<string, int> MaxFacetValues { get; set; } = new();
     }
 }

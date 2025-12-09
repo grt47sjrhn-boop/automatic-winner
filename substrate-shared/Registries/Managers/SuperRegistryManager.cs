@@ -74,7 +74,7 @@ namespace substrate_shared.Registries.Managers
 
             var header = $"Narrative Group: {group} (Overall Bias: {score})";
             var lines = items.Select(v => $"- {v.GetDescription()} ({v.GetBias()})");
-            return header + Environment.NewLine + string.Join(Environment.NewLine, lines);
+            return header + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines);
         }
 
         // --- Bias scoring ---
@@ -159,7 +159,7 @@ namespace substrate_shared.Registries.Managers
             report.Add("Sample Triad:");
             report.Add(DescribeTriad(tone, mood, intent));
 
-            return string.Join(Environment.NewLine, report);
+            return string.Join(System.Environment.NewLine, report);
 
         }
         
@@ -178,9 +178,9 @@ namespace substrate_shared.Registries.Managers
             var lines = facets.Select(f =>
                 $"- {RegistryManager<ToneType>.Get(f.Key).GetDescription()} x{f.Value} ({RegistryManager<ToneType>.Get(f.Key).GetBias()})");
 
-            return header + Environment.NewLine +
-                   string.Join(Environment.NewLine, lines) +
-                   Environment.NewLine +
+            return header + System.Environment.NewLine +
+                   string.Join(System.Environment.NewLine, lines) +
+                   System.Environment.NewLine +
                    $"Overall Bias: {score}, Modifier: {crystal.ModifierValue}";
         }
         
@@ -211,7 +211,7 @@ namespace substrate_shared.Registries.Managers
                 report.Add("");
             }
 
-            return string.Join(Environment.NewLine, report);
+            return string.Join(System.Environment.NewLine, report);
         }
     }
 }

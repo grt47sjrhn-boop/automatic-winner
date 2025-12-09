@@ -1,55 +1,53 @@
+using substrate_shared.Registries.enums;
 using substrate_shared.Registries.enums.Attributes;
 
-namespace substrate_shared.Registries.enums
+public enum IntentAction
 {
-    public enum IntentAction
-    {
-        // --- Positive -----------------------------------------------------
-        [RegistryNarrative("Encourage: a torch raised in the dark, fragile flame against endless night.", Bias.Positive, NarrativeGroup.SupportiveActions)]
-        Encourage,
+    // --- Positive -----------------------------------------------------
+    [RegistryNarrative("Encourage: a torch raised in the dark...", Bias.Positive, NarrativeGroup.SupportiveActions, scaleValue: 1)]
+    Encourage,
 
-        [RegistryNarrative("Support: a hand extended across the abyss, steadying the trembling soul.", Bias.Positive, NarrativeGroup.SupportiveActions)]
-        Support,
+    [RegistryNarrative("Support: a hand extended across the abyss...", Bias.Positive, NarrativeGroup.SupportiveActions, scaleValue: 2)]
+    Support,
 
-        [RegistryNarrative("Comfort: a whisper in the storm, soft words against the howling void.", Bias.Positive, NarrativeGroup.SupportiveActions)]
-        Comfort,
+    [RegistryNarrative("Comfort: a whisper in the storm...", Bias.Positive, NarrativeGroup.SupportiveActions, scaleValue: 3)]
+    Comfort,
 
-        [RegistryNarrative("Approve: a nod beneath dim lanterns, fleeting warmth in a cold hall.", Bias.Positive, NarrativeGroup.AffirmativeActions)]
-        Approve,
+    [RegistryNarrative("Approve: a nod beneath dim lanterns...", Bias.Positive, NarrativeGroup.AffirmativeActions, scaleValue: 4)]
+    Approve,
 
-        [RegistryNarrative("Inspire: a vision glimpsed in dream, stars burning beyond mortal reach.", Bias.Positive, NarrativeGroup.AffirmativeActions)]
-        Inspire,
+    [RegistryNarrative("Inspire: a vision glimpsed in dream...", Bias.Positive, NarrativeGroup.AffirmativeActions, scaleValue: 5)]
+    Inspire,
 
-        [RegistryNarrative("Celebrate: laughter rising like smoke, defiant joy in crumbling ruins.", Bias.Positive, NarrativeGroup.AffirmativeActions)]
-        Celebrate,
+    [RegistryNarrative("Celebrate: laughter rising like smoke...", Bias.Positive, NarrativeGroup.AffirmativeActions, scaleValue: 6)]
+    Celebrate,
 
-        // --- Neutral ------------------------------------------------------
-        [RegistryNarrative("Observe: eyes unblinking, watching the tide of fate without judgment.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Observe,
+    // --- Neutral ------------------------------------------------------
+    [RegistryNarrative("Observe: eyes unblinking...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Observe,
 
-        [RegistryNarrative("Inform: words etched like runes, cold clarity carved into stone.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Inform,
+    [RegistryNarrative("Inform: words etched like runes...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Inform,
 
-        [RegistryNarrative("Question: a voice in the dark corridor, asking what lurks beyond the door.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Question,
+    [RegistryNarrative("Question: a voice in the dark corridor...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Question,
 
-        [RegistryNarrative("Reflect: a mirror cracked, showing truths both comforting and monstrous.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Reflect,
+    [RegistryNarrative("Reflect: a mirror cracked...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Reflect,
 
-        // --- Negative -----------------------------------------------------
-        [RegistryNarrative("Criticize: a blade of thought, cutting deep into fragile hope.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Criticize,
+    // --- Negative -----------------------------------------------------
+    [RegistryNarrative("Criticize: a blade of thought...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -1)]
+    Criticize,
 
-        [RegistryNarrative("Challenge: a gauntlet thrown in the dust, daring the abyss to answer.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Challenge,
+    [RegistryNarrative("Challenge: a gauntlet thrown...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -2)]
+    Challenge,
 
-        [RegistryNarrative("Reject: a door slammed in the storm, leaving the wanderer outside.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Reject,
+    [RegistryNarrative("Reject: a door slammed...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -3)]
+    Reject,
 
-        [RegistryNarrative("Distract: whispers that lead astray, paths winding into labyrinths of madness.", Bias.Negative, NarrativeGroup.FracturedActions)]
-        Distract,
+    [RegistryNarrative("Distract: whispers that lead astray...", Bias.Negative, NarrativeGroup.FracturedActions, scaleValue: -4)]
+    Distract,
 
-        [RegistryNarrative("Cynical: laughter hollow as tombs, mocking every fragile dream.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Cynical
-    }
+    [RegistryNarrative("Cynical: laughter hollow as tombs...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -5)]
+    Cynical
 }

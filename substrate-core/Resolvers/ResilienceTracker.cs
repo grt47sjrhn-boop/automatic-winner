@@ -46,6 +46,36 @@ namespace substrate_core.Resolvers
         public double MeanSin => TrigOverlay.MeanSin(_duelPairs);
         public double LogScaledIndex => TrigOverlay.LogScaledIndex(_resilienceIndex);
         public double ExpScaledIndex => TrigOverlay.ExpScaledIndex(_resilienceIndex);
+        public void AddSummary(ISummary summary)
+        {
+            // Add to duel summaries
+            _duelSummaries.Add(summary);
+
+            // If it’s a duel event, update resilience index
+            if (summary is DuelEventSummary duelSummary)
+            {
+                switch (duelSummary.Outcome)
+                {
+                    case DuelOutcome.Recovery:    _resilienceIndex += 2; break;
+                    case DuelOutcome.Collapse:    _resilienceIndex -= 2; break;
+                    case DuelOutcome.Wound:       _resilienceIndex -= 1; break;
+                    case DuelOutcome.Conflict:    _resilienceIndex -= 1; break;
+                    case DuelOutcome.Equilibrium: _resilienceIndex += 1; break;
+                }
+            }
+        }
+
+        public void AddCrystal(TraitCrystal crystal)
+        {
+            // Attach metadata if needed
+            if (crystal.ToneCut == null)
+                crystal.ToneCut = _toneManager.Cut(crystal.Facets);
+
+            if (crystal.RarityTier == null)
+                crystal.RarityTier = _rarityManager.AssignTier(_resilienceIndex);
+
+            _crystals.Add(crystal);
+        }
 
         // Record duel summary and optional vector pair for math overlay
         public ISummary Record(ISummary summary, BiasVector? a = null, BiasVector? b = null)

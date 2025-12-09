@@ -1,56 +1,65 @@
-using substrate_shared.Registries.enums;
 using substrate_shared.Registries.enums.Attributes;
 
-namespace substrate_shared.Registries.enums
+namespace substrate_shared.Registries.enums;
+
+public enum ToneType
 {
-    public enum ToneType
-    {
-        [RegistryNarrative("Joy rings like bells in a haunted city, fragile yet defiant against the void.", Bias.Positive, NarrativeGroup.CoreJoy)]
-        Joy,
+    // 🌞 Positive tones
+    [RegistryNarrative("Joy rings...", Bias.Positive, NarrativeGroup.CoreJoy, scaleValue: 1)]
+    Joy,
 
-        [RegistryNarrative("Playful shadows dance at the edge of sanity, laughter echoing in forgotten halls.", Bias.Positive, NarrativeGroup.CoreJoy)]
-        Playful,
+    [RegistryNarrative("Playful shadows...", Bias.Positive, NarrativeGroup.CoreJoy, scaleValue: 2)]
+    Playful,
 
-        [RegistryNarrative("Calm descends like mist over a graveyard, still waters hiding unfathomable depths.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Calm,
+    [RegistryNarrative("Resilience shines...", Bias.Positive, NarrativeGroup.Crystal, scaleValue: 3)]
+    Resilient,
 
-        [RegistryNarrative("Neutral silence, the hush before revelation, neither salvation nor damnation.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Neutral,
+    [RegistryNarrative("Radiance bursts...", Bias.Positive, NarrativeGroup.Crystal, scaleValue: 4)]
+    Radiant,
 
-        [RegistryNarrative("Reflection stirs like a lantern in the abyss, casting fleeting shapes on cavern walls.", Bias.Neutral, NarrativeGroup.Equilibrium)]
-        Reflective,
+    // ⚖️ Neutral tones
+    [RegistryNarrative("Neutral silence...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Neutral,
 
-        [RegistryNarrative("Hostility burns like black stars, a corrosive fire that devours all bonds.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Hostile,
+    [RegistryNarrative("Calm descends...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Calm,
 
-        [RegistryNarrative("Criticism cuts like rusted iron, sharp words echoing in chambers of doubt.", Bias.Negative, NarrativeGroup.HostileActions)]
-        Critical,
+    [RegistryNarrative("Reflective lantern...", Bias.Neutral, NarrativeGroup.Equilibrium, scaleValue: 0)]
+    Reflective,
 
-        [RegistryNarrative("Despairing tones seep like seawater into cracked stone, a tide that cannot be turned.", Bias.Negative, NarrativeGroup.AbyssalStates)]
-        Despairing,
-        
-        // 🔹 New synthetic entries for facet axes
-        [RegistryNarrative("Resilience shines as a defiant flame, enduring collapse and narrating recovery.", Bias.Positive, NarrativeGroup.Crystal)]
-        Resilient,
+    [RegistryNarrative("Harmony hums...", Bias.Neutral, NarrativeGroup.Crystal, scaleValue: 0)]
+    Harmonious,
 
-        [RegistryNarrative("Harmony hums like hidden chords, weaving disparate voices into fragile unity.", Bias.Neutral, NarrativeGroup.Crystal)]
-        Harmonious,
+    [RegistryNarrative("Composite duel tone...", Bias.Neutral, NarrativeGroup.Composite, scaleValue: 0)]
+    Composite,
 
-        [RegistryNarrative("Radiance bursts like a star in shadow, brilliance tempered by the abyss.", Bias.Positive, NarrativeGroup.Crystal)]
-        Radiant,
-        
-        // 🔹 New synthetic entries for multi-axis duels
-        [RegistryNarrative("Composite duel tone, forged from multiple axes into a singular resonance.", Bias.Neutral, NarrativeGroup.Composite)]
-        Composite,
+    [RegistryNarrative("Equilibrium whispers...", Bias.Neutral, NarrativeGroup.Crystal, scaleValue: 0)]
+    Equilibrium,
 
-        [RegistryNarrative("Wound bleeds into the narrative, a scar etched in fragile flesh and haunted memory.", Bias.Negative, NarrativeGroup.Crystal)]
-        Wound,
+    // 🔥 Mixed tones
+    [RegistryNarrative("Conflict reverberates...", Bias.Mixed, NarrativeGroup.Crystal, scaleValue: -1)]
+    Conflict,
 
-        [RegistryNarrative("Conflict reverberates like clashing iron in a cathedral of shadows, unresolved and eternal.", Bias.Mixed, NarrativeGroup.Crystal)]
-        Conflict,
+    // 🌑 Negative tones (existing)
+    [RegistryNarrative("Wound bleeds...", Bias.Negative, NarrativeGroup.Crystal, scaleValue: -2)]
+    Wound,
 
-        [RegistryNarrative("Equilibrium whispers of fragile balance, a stasis trembling before collapse or recovery.", Bias.Neutral, NarrativeGroup.Crystal)]
-        Equilibrium,
-        
-    }
+    [RegistryNarrative("Despairing tones...", Bias.Negative, NarrativeGroup.AbyssalStates, scaleValue: -3)]
+    Despairing,
+
+    [RegistryNarrative("Hostile burns...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -1)]
+    Hostile,
+
+    [RegistryNarrative("Critical cuts...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -1)]
+    Critical,
+
+    // 🌌 Extended abyssal tones (new)
+    [RegistryNarrative("Forsaken echoes...", Bias.Negative, NarrativeGroup.AbyssalStates, scaleValue: -4)]
+    Forsaken,
+
+    [RegistryNarrative("Corrupted resonance...", Bias.Negative, NarrativeGroup.AbyssalStates, scaleValue: -5)]
+    Corrupted,
+
+    [RegistryNarrative("Doomed silence...", Bias.Negative, NarrativeGroup.AbyssalStates, scaleValue: -6)]
+    Doomed
 }

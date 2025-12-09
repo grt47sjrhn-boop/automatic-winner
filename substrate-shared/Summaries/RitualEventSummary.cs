@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using substrate_shared.Models;
-using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.Summaries.Base;
 using substrate_shared.types;
 
-namespace substrate_core.Summaries.Types
+namespace substrate_shared.Summaries
 {
     public class RitualEventSummary : EventSummary
     {

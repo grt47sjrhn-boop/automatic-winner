@@ -5,6 +5,7 @@ using substrate_shared.interfaces;
 using substrate_shared.Registries.enums;
 using substrate_shared.Traits.Base;
 using substrate_core.Engagements.Results;
+using substrate_shared.Managers;
 
 namespace substrate_core.Managers
 {

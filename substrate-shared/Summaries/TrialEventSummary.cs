@@ -5,11 +5,10 @@ using substrate_shared.interfaces;
 using substrate_shared.Models;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
-using substrate_shared.Summaries;
 using substrate_shared.Summaries.Base;
 using substrate_shared.types;
 
-namespace substrate_core.Summaries.Types
+namespace substrate_shared.Summaries
 {
     public class TrialEventSummary : EventSummary, ISummary
     {

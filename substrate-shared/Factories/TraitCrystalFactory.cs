@@ -5,7 +5,6 @@ using substrate_shared.Registries.enums;
 using substrate_shared.Traits.Base;
 using substrate_shared.Traits.Enums;
 using substrate_shared.Traits.Types;
-using substrate_core.Engagements.Results;
 using substrate_shared.Models;
 
 namespace substrate_shared.Factories
@@ -18,6 +17,15 @@ namespace substrate_shared.Factories
         private static bool rareResilienceExists = false;
         private static bool rareCollapseExists = false;
 
+        // 🔹 Session reset for rare-roll state
+        public static void ResetSession()
+        {
+            resilienceCount = 0;
+            collapseCount   = 0;
+            rareResilienceExists = false;
+            rareCollapseExists   = false;
+        }
+
         public static TraitCrystal CreateCrystal(
             int threshold,
             bool isPositive,
@@ -27,7 +35,7 @@ namespace substrate_shared.Factories
             ToneCut toneCut,
             RarityTier rarityTier)
         {
-            // 🔹 Ultra rare fusion roll
+            // Ultra rare fusion roll
             if (existingCrystals.Any(c => c.Type == CrystalType.Resilience) &&
                 existingCrystals.Any(c => c.Type == CrystalType.Collapse))
             {
@@ -43,14 +51,14 @@ namespace substrate_shared.Factories
                 }
             }
 
-            // 🔹 Rare chance logic
+            // Rare chance logic
             var makeRare = false;
             if (isPositive)
             {
                 resilienceCount++;
                 var chance = 0.1 * Math.Pow(2, resilienceCount - 1);
                 if (resilienceCount > collapseCount) chance *= 2;
-                chance = Math.Min(chance, 0.5); // cap at 50%
+                chance = Math.Min(chance, 0.5);
                 makeRare = !rareResilienceExists && _rng.NextDouble() < chance;
                 if (makeRare) rareResilienceExists = true;
 

@@ -4,7 +4,7 @@ using substrate_shared.Models;
 using substrate_shared.Registries.enums;
 using substrate_shared.Traits.Base;
 
-namespace substrate_core.Engagements.Results
+namespace substrate_shared.Factories
 {
     public static class ResultFactory
     {
@@ -37,37 +37,82 @@ namespace substrate_core.Engagements.Results
         }
 
         /// <summary>
-        /// Create a rarity tier from threshold + facets (used during forging).
+        /// Recovery-only path (legacy).
         /// </summary>
         public static RarityTier CreateRarityTier(int threshold, IReadOnlyDictionary<ToneType,int> facets)
         {
-            var tier = new RarityTier();
             var sum = facets.Values.Sum();
+            var tier = new RarityTier();
 
             if (sum < 10)
             {
                 tier.Tier = "Common";
-                tier.Description = "Basic resonance, easily forged.";
+                tier.Description = "Common crystal: faint glimmers forged at low thresholds.";
             }
             else if (sum < 20)
             {
                 tier.Tier = "Rare";
-                tier.Description = "Distinct resonance, moderately uncommon.";
+                tier.Description = "Rare crystal: resilience forged at moderate thresholds.";
             }
             else if (sum < 30)
             {
                 tier.Tier = "Epic";
-                tier.Description = "Powerful resonance, rare to encounter.";
+                tier.Description = "Epic crystal: radiant arcs forged in duels.";
             }
             else if (sum < 50)
             {
                 tier.Tier = "Mythic";
-                tier.Description = "Legendary resonance, forged in extraordinary conditions.";
+                tier.Description = "Mythic crystal: extraordinary resonance forged in rare conditions.";
             }
             else
             {
                 tier.Tier = "UltraRare";
-                tier.Description = "Transcendent resonance, bending fate itself.";
+                tier.Description = "UltraRare crystal: transcendent resonance bending fate itself.";
+            }
+
+            return tier;
+        }
+
+        /// <summary>
+        /// Outcome-aware path: collapse duels produce Fragile/Corrupted/Doomed.
+        /// </summary>
+        public static RarityTier CreateRarityTier(DuelOutcome outcome, int threshold, IReadOnlyDictionary<ToneType,int> facets)
+        {
+            var sum = facets.Values.Sum();
+            var tier = new RarityTier();
+
+            if (outcome == DuelOutcome.Collapse)
+            {
+                var dominantNegative = facets
+                    .Where(kv => kv.Key == ToneType.Hostile
+                              || kv.Key == ToneType.Critical
+                              || kv.Key == ToneType.Despairing
+                              || kv.Key == ToneType.Wound
+                              || kv.Key == ToneType.Forsaken
+                              || kv.Key == ToneType.Corrupted
+                              || kv.Key == ToneType.Doomed)
+                    .Sum(kv => kv.Value);
+
+                if (dominantNegative < 10)
+                {
+                    tier.Tier = "Fragile";
+                    tier.Description = "Fragile crystal: brittle shard born of collapse.";
+                }
+                else if (dominantNegative < 20)
+                {
+                    tier.Tier = "Corrupted";
+                    tier.Description = "Corrupted crystal: resonance twisted into despair.";
+                }
+                else
+                {
+                    tier.Tier = "Doomed";
+                    tier.Description = "Doomed crystal: artifact of irreversible collapse.";
+                }
+            }
+            else
+            {
+                // fallback to recovery path
+                return CreateRarityTier(threshold, facets);
             }
 
             return tier;

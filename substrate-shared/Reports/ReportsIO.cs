@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using substrate_core.Reporting;
 using substrate_shared.interfaces;
+using substrate_shared.Managers;
 
 namespace substrate_shared.Reports
 {
     public static class ResilienceReportIo
     {
         // Build a report from tracker
-        public static ResilienceReport Build(IResilienceTracker tracker)
+        public static ResilienceReport Build(IResilienceTracker tracker, InventoryManager inventoryManager)
         {
-            var builder = new ReportBuilder(tracker);
+            var builder = new ReportBuilder(tracker, inventoryManager);
             return builder.BuildReport();
         }
 

@@ -37,6 +37,7 @@ namespace substrate_shared.Factories
                         biasManager,
                         facetManager,
                         toneManager,
+                        rarityManager,   // 🔹 now passed in
                         conflictBand
                     );
 

@@ -3,7 +3,7 @@ using substrate_shared.interfaces;
 using substrate_shared.Models;
 using substrate_shared.structs;
 
-namespace substrate_core.Engagements.Base
+namespace substrate_shared.Engagements.Base
 {
     public abstract class EngagementBase : IEngagement
     {

@@ -1,8 +1,12 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using substrate_shared.interfaces;
+using substrate_shared.Managers;
+using substrate_shared.Registries.enums;
 using substrate_shared.Reports;
 using substrate_shared.Summaries;
+using substrate_shared.Summaries.Base;
 using substrate_shared.Traits.Base;
 
 namespace substrate_shared
@@ -10,25 +14,35 @@ namespace substrate_shared
     public class ReportBuilder
     {
         private readonly IResilienceTracker _tracker;
+        private readonly InventoryManager _inventory;
 
-        public ReportBuilder(IResilienceTracker tracker)
+        public ReportBuilder(IResilienceTracker tracker, InventoryManager inventory)
         {
-            _tracker = tracker;
+            _tracker   = tracker;
+            _inventory = inventory;
         }
 
         public ResilienceReport BuildReport()
         {
+            if (_tracker == null) throw new ArgumentNullException(nameof(_tracker));
+            if (_inventory == null) throw new ArgumentNullException(nameof(_inventory));
+
+            var summaries = _tracker.DuelSummaries ?? new List<EventSummary>();
+
             var report = new ResilienceReport
             {
-                DuelCount        = _tracker.DuelSummaries.Count,
-                ResilienceIndex  = _tracker.ResilienceIndex,
+                DuelCount        = summaries.Count,
 
-                // Narrative counts
-                RecoveryCount    = _tracker.DuelSummaries.Count(s => s.Description.Contains("Recovery")),
-                CollapseCount    = _tracker.DuelSummaries.Count(s => s.Description.Contains("Collapse")),
-                WoundCount       = _tracker.DuelSummaries.Count(s => s.Description.Contains("Wound")),
-                ConflictCount    = _tracker.DuelSummaries.Count(s => s.Description.Contains("Conflict")),
-                EquilibriumCount = _tracker.DuelSummaries.Count(s => s.Description.Contains("Equilibrium")),
+                // ✅ Outcome-based resilience index
+                ResilienceIndex  = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery)
+                                 - summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound),
+
+                // ✅ Outcome counts
+                RecoveryCount    = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery),
+                CollapseCount    = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse),
+                WoundCount       = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound),
+                ConflictCount    = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict),
+                EquilibriumCount = summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium),
 
                 // Math overlay values
                 AverageHypotenuse = _tracker.AverageHypotenuse,
@@ -36,89 +50,84 @@ namespace substrate_shared
                 MeanCos           = _tracker.MeanCos,
                 MeanSin           = _tracker.MeanSin,
                 LogScaledIndex    = _tracker.LogScaledIndex,
-                ExpScaledIndex    = _tracker.ExpScaledIndex,
-
-                ToneCounts        = new Dictionary<string,int>(),
-                IntentCounts      = new Dictionary<string,int>(),
-                ToneLabels        = new Dictionary<string,int>(),
-                BrillianceCuts    = new Dictionary<string,int>(),
-                RarityCounts      = new Dictionary<string,int>(),
-                CrystalNarratives = new List<string>(),
-                BiasSummaries     = new List<string>(),
-                CrystalGroups     = new List<TraitCrystalGroup>(),
-                Crystals          = new List<TraitCrystal>()
+                ExpScaledIndex    = _tracker.ExpScaledIndex
             };
 
-            // Aggregate tones, intents, brilliance, and bias summaries
-            foreach (var summary in _tracker.DuelSummaries.OfType<DuelEventSummary>())
+            // Aggregate tones, intents, brilliance, bias
+            foreach (var summary in summaries.OfType<DuelEventSummary>())
             {
                 var proseTone = summary.ResolvedVector.Tone?.Label ?? "Unknown";
-                if (!report.ToneCounts.ContainsKey(proseTone))
-                    report.ToneCounts[proseTone] = 0;
-                report.ToneCounts[proseTone]++;
+                report.ToneCounts[proseTone] = report.ToneCounts.TryGetValue(proseTone, out var count) ? count + 1 : 1;
 
-                var normalized = $"{summary.DuelistA.Tone.Type}+{summary.DuelistB.Tone.Type}";
-                if (!report.ToneLabels.ContainsKey(normalized))
-                    report.ToneLabels[normalized] = 0;
-                report.ToneLabels[normalized]++;
+                var duelLabel = $"{summary.DuelistA.Tone?.Label ?? "Unknown"} + {summary.DuelistB.Tone?.Label ?? "Unknown"}";
+                report.ToneLabels[duelLabel] = report.ToneLabels.TryGetValue(duelLabel, out var nCount) ? nCount + 1 : 1;
 
                 var intentName = summary.ResolvedVector.Tone?.BiasValue.ToString() ?? "Unknown";
-                if (!report.IntentCounts.ContainsKey(intentName))
-                    report.IntentCounts[intentName] = 0;
-                report.IntentCounts[intentName]++;
+                report.IntentCounts[intentName] = report.IntentCounts.TryGetValue(intentName, out var iCount) ? iCount + 1 : 1;
 
-                // Brilliance cuts
                 if (summary.Brilliance != null)
                 {
                     var primary = summary.Brilliance.Primary.ToString();
-                    if (!report.BrillianceCuts.ContainsKey(primary))
-                        report.BrillianceCuts[primary] = 0;
-                    report.BrillianceCuts[primary]++;
+                    report.BrillianceCuts[primary] = report.BrillianceCuts.TryGetValue(primary, out var bCount) ? bCount + 1 : 1;
                 }
 
-                // Bias summaries
-                if (summary.Bias != null)
+                if (summary.Bias?.Narrative != null)
                     report.BiasSummaries.Add(summary.Bias.Narrative);
             }
 
-            // Group crystals by facet signature
-            var grouped = _tracker.Crystals
-                .GroupBy(c => string.Join("+", c.Facets.Keys.OrderBy(k => k.ToString())))
+            // Crystals
+            var crystals = _inventory.GetCrystals()?.ToList() ?? new List<TraitCrystal>();
+
+            foreach (var crystal in crystals)
+            {
+                var rarity = crystal.RarityTier?.Tier ?? "Unknown";
+                report.RarityCounts[rarity] = report.RarityCounts.TryGetValue(rarity, out var count) ? count + 1 : 1;
+
+                report.CrystalNarratives.Add(
+                    $"{rarity} crystal forged at {crystal.Threshold}, " +
+                    $"facets: Resilient({crystal.Facets[ToneType.Resilient]}), " +
+                    $"Harmonious({crystal.Facets[ToneType.Harmonious]}), " +
+                    $"Conflict({crystal.Facets[ToneType.Conflict]}), " +
+                    $"Radiant({crystal.Facets[ToneType.Radiant]}), modifier: {crystal.ModifierValue}"
+                );
+            }
+
+            // Group crystals for analytic clarity
+            var grouped = crystals
+                .GroupBy(c =>
+                {
+                    var keys = c.Facets?.Keys?
+                        .OrderBy(k => k.ToString())
+                        .Select(k => k.ToString())
+                        .ToArray() ?? Array.Empty<string>();
+                    return string.Join("+", keys);
+                })
                 .Select(g =>
                 {
                     var sample = g.First();
 
-                    var maxFacetValues = new Dictionary<string,int>();
+                    var maxFacetValues = new Dictionary<string, int>();
                     foreach (var facetKey in sample.Facets.Keys)
                     {
                         maxFacetValues[facetKey.ToString()] = g.Max(c => c.Facets[facetKey]);
                     }
 
-                    // Rarity counts
-                    var rarity = sample.Rarity.ToString();
-                    if (!report.RarityCounts.ContainsKey(rarity))
-                        report.RarityCounts[rarity] = 0;
-                    report.RarityCounts[rarity]++;
-
-                    // Crystal narratives
-                    report.CrystalNarratives.Add(sample.GetDescription());
-
                     return new TraitCrystalGroup
                     {
-                        Signature     = g.Key,
-                        Count         = g.Count(),
-                        DominantTone  = g.Last().GetToneType().ToString(),
-                        Bias          = g.Last().GetBias().ToString(),
-                        MinModifier   = g.Min(c => c.ModifierValue),
-                        MaxModifier   = g.Max(c => c.ModifierValue),
+                        Signature      = g.Key,
+                        Count          = g.Count(),
+                        DominantTone   = g.Last().GetToneType().ToString() ?? "Unknown",
+                        Bias           = g.Last().GetBias().ToString() ?? "Unknown",
+                        MinModifier    = g.Min(c => c.ModifierValue),
+                        MaxModifier    = g.Max(c => c.ModifierValue),
                         MaxFacetValues = maxFacetValues,
-                        Crystals      = g.ToList()
+                        Crystals       = g.ToList()
                     };
                 })
                 .ToList();
 
             report.CrystalGroups = grouped;
-            report.Crystals      = _tracker.Crystals.ToList();
+            report.Crystals      = crystals;
 
             return report;
         }

@@ -8,6 +8,7 @@ using substrate_core.Engagements.Results;
 using substrate_core.Managers;
 using substrate_core.Summaries.Types;
 using substrate_shared;
+using substrate_shared.Managers;
 using substrate_shared.Mappers;
 using substrate_shared.structs;
 

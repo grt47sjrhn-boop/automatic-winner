@@ -38,7 +38,7 @@ namespace substrate_shared.Registries.Managers
 
             var header = $"Narrative Group: {group}";
             var lines = items.Select(v => $"- {v.GetDescription()} ({v.GetBias()})");
-            return header + Environment.NewLine + string.Join(Environment.NewLine, lines);
+            return header + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines);
         }
     }
 }

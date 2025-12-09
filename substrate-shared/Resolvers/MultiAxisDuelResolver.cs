@@ -10,8 +10,10 @@ using substrate_shared.Registries.enums;
 using substrate_shared.types;
 using substrate_shared.Mappers;
 using substrate_shared.Registries.Base;
+using substrate_shared.Registries.Extensions;
 using substrate_shared.Registries.Extensions.structs;
 using substrate_shared.Registries.Factories;
+using substrate_shared.Models; // for RarityTier
 
 namespace substrate_shared.Resolvers
 {
@@ -44,7 +46,9 @@ namespace substrate_shared.Resolvers
             _toneManager    = toneManager;
             _rarityManager  = rarityManager;
             _conflictBand   = conflictBand;
-            _magnitudeScaler = magnitudeScaler ?? (d => Math.Max(1, d));
+
+            // 🔹 Preserve negatives instead of flattening to ≥ 1
+            _magnitudeScaler = magnitudeScaler ?? (d => d);
         }
 
         public override ISummary Resolve()
@@ -66,20 +70,25 @@ namespace substrate_shared.Resolvers
             // 🔹 Compute rarity tier from resilience score
             var rarityTier = _rarityManager.AssignTier(_rarityManager.ComputeScore(collectiveShape));
 
-            // 🔹 Determine outcome heuristically
+            // 🔹 Map RarityTier → CrystalRarity
+            var resolvedRarity = MapToCrystalRarity(rarityTier);
+
+            // 🔹 Determine outcome heuristically (balanced positive/negative arcs)
             DuelOutcome outcome;
-            if (collectiveBias.Bias == Bias.Positive)
+            if (collectiveBias.Bias == Bias.Positive && collectiveBias.Value > 5)
                 outcome = DuelOutcome.Recovery;
-            else if (collectiveBias.Bias == Bias.Negative)
+            else if (collectiveBias.Bias == Bias.Negative && collectiveBias.Value < -5)
                 outcome = DuelOutcome.Collapse;
             else if (collectiveBias.Bias == Bias.Mixed)
                 outcome = DuelOutcome.MixedConflict;
+            else if (Math.Abs(collectiveBias.Value) <= 2)
+                outcome = DuelOutcome.Wound;
             else
                 outcome = DuelOutcome.Equilibrium;
 
             var description =
                 $"Multi-axis duel resolved with {_vectors.Count()} participants. " +
-                $"Outcome: {outcome}, Bias: {collectiveBias.Bias}, Rarity: {rarityTier}, " +
+                $"Outcome: {outcome}, Bias: {collectiveBias.Bias}, Rarity: {rarityTier.Tier}, " +
                 $"Brilliance: {brilliance.Primary}.";
 
             // 🔹 For now, pick first two vectors as 'duelists' for summary compatibility
@@ -101,6 +110,10 @@ namespace substrate_shared.Resolvers
                 collectiveShape.Values.Values.Sum()
             );
 
+            // 🔹 Enrich with Mood, Intent, Rarity
+            var resolvedMood   = ResolveMoodFromBias(collectiveBias.Value);
+            var resolvedIntent = ResolveIntentFromBias(collectiveBias.Value);
+
             return new DuelEventSummary(
                 "Multi-Axis Duel Resolution",
                 description,
@@ -111,9 +124,48 @@ namespace substrate_shared.Resolvers
                 outcome,
                 brilliance,
                 collectiveBias,
+                resolvedMood,
+                resolvedIntent,
+                resolvedRarity,
                 true
             );
         }
+
+        private static MoodType ResolveMoodFromBias(double biasValue)
+        {
+            var clamped = Math.Max(-11, Math.Min(11, (int)Math.Round(biasValue)));
+            var entries = Enum.GetValues(typeof(MoodType)).Cast<MoodType>();
+            return entries.FirstOrDefault(m => m.GetScaleValue() == clamped);
+        }
+
+        private static IntentAction ResolveIntentFromBias(double biasValue)
+        {
+            if (biasValue > 0) return IntentAction.Encourage;
+            if (biasValue < 0) return IntentAction.Criticize;
+            return IntentAction.Observe;
+        }
+
+        private static CrystalRarity MapToCrystalRarity(RarityTier tier)
+        {
+            return tier.Tier switch
+            {
+                // 🌞 Recovery path
+                "Common"    => CrystalRarity.Common,
+                "Rare"      => CrystalRarity.Rare,
+                "Epic"      => CrystalRarity.Epic,
+                "Mythic"    => CrystalRarity.Mythic,
+                "Legendary" => CrystalRarity.Legendary,
+                "UltraRare" => CrystalRarity.UltraRare,
+
+                // 🌑 Collapse path (new abyssal tiers)
+                "Fragile"   => CrystalRarity.Fragile,    // collapse with weak resonance
+                "Corrupted" => CrystalRarity.Corrupted,  // collapse with twisted resonance
+                "Doomed"    => CrystalRarity.Doomed,     // irreversible collapse
+
+                _           => CrystalRarity.Common
+            };
+        }
+
 
         public override void Describe()
         {

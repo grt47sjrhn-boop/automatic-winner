@@ -58,6 +58,16 @@ namespace substrate_shared.Registries.Extensions
                        .Cast<TEnum>()
                        .Where(v => v.GetGroup() == group);
         }
+        
+        public static int GetScaleValue<TEnum>(this TEnum value) where TEnum : Enum
+        {
+            var attr = value.GetAttribute();
+            return attr switch
+            {
+                RegistryNarrativeAttribute ra => ra.ScaleValue,
+                _ => 0
+            };
+        }
 
         public static string DescribeCluster<TEnum>(NarrativeGroup group) where TEnum : Enum
         {
@@ -67,7 +77,21 @@ namespace substrate_shared.Registries.Extensions
 
             var header = $"Narrative Group: {group}";
             var lines = items.Select(v => $"- {v}: {v.GetDescription()}");
-            return header + Environment.NewLine + string.Join(Environment.NewLine, lines);
+            return header + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines);
+        }
+        
+        public static TEnum ResolveByScale<TEnum>(float magnitude) where TEnum : Enum
+        {
+            // Normalize magnitude into registry’s scale range
+            // Example: bias magnitude 0–20 → -3 to +4 for ToneType
+            // Or directly use MoodType’s -11 → +11 values
+
+            var entries = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
+            var closest = entries
+                .OrderBy(e => Math.Abs(e.GetScaleValue() - magnitude))
+                .FirstOrDefault();
+
+            return closest;
         }
 
         // --- Axis helpers (for MoodType specifically) ---

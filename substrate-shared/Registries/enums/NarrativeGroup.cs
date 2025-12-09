@@ -53,6 +53,10 @@ namespace substrate_shared.Registries.enums
         Composite,
         
         [Narrative("Crystalline artifacts forged at resilience thresholds, embodying tone facets and rarity.", Bias.Neutral)]
-        Crystal
+        Crystal,
+        [Narrative(
+            "Duel engagements between bias vectors, resolving into resilience outcomes and collapse arcs.",
+            Bias.Neutral)]
+        Duel
     }
 }

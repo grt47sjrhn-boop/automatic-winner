@@ -4,7 +4,7 @@ using substrate_shared.structs;
 using substrate_shared.Summaries.Base;
 using substrate_shared.types;
 
-namespace substrate_core.Summaries.Types
+namespace substrate_shared.Summaries
 {
     public class DialogueEventSummary : EventSummary
     {

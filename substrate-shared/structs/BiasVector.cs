@@ -7,6 +7,9 @@ using substrate_shared.Registries.Extensions;
 
 namespace substrate_shared.structs
 {
+    /// <summary>
+    /// Represents a directional bias vector with a narrative tone and magnitude.
+    /// </summary>
     public readonly struct BiasVector
     {
         public NarrativeTone Tone { get; }
@@ -18,16 +21,35 @@ namespace substrate_shared.structs
             Magnitude = magnitude;
         }
 
-        public int SignedStrength => Tone.BiasMultiplier * Magnitude;
+        /// <summary>
+        /// Signed strength of this vector, factoring in bias polarity.
+        /// </summary>
+        public int SignedStrength
+        {
+            get
+            {
+                // Defensive guard: if Tone is null, treat as neutral
+                if (Tone == null) return 0;
+                return Tone.BiasMultiplier * Magnitude;
+            }
+        }
 
         /// <summary>
         /// The dominant tone type represented by this vector.
         /// </summary>
-        public ToneType DominantTone => Tone.Type;
+        public ToneType DominantTone => Tone?.Type ?? ToneType.Conflict;
 
-        public override string ToString() =>
-            $"{Tone.Label} (Bias: {Tone.BiasValue}, Magnitude: {Magnitude})";
+        public override string ToString()
+        {
+            if (Tone == null)
+                return $"[Null Tone] (Magnitude: {Magnitude})";
 
+            return $"{Tone.Label} (Bias: {Tone.BiasValue}, Magnitude: {Magnitude})";
+        }
+
+        /// <summary>
+        /// Generate a random bias vector with a random tone and magnitude.
+        /// </summary>
         public static BiasVector GenerateRandom()
         {
             var rng = new Random();
@@ -78,13 +100,12 @@ namespace substrate_shared.structs
                     values[FacetType.Radiance] = Magnitude;
                     break;
                 default:
-                    // Neutral or other tones can be mapped to Harmony by default
+                    // Neutral or other tones map to Harmony by default
                     values[FacetType.Harmony] = Magnitude;
                     break;
             }
 
             return new FacetDistribution(values);
         }
-
     }
 }
