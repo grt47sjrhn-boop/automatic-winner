@@ -1,31 +1,29 @@
 using System;
 using System.Collections.Generic;
 using substrate_shared.interfaces;
-using substrate_shared.Summaries;
-using substrate_shared.Traits.Base;
-using substrate_shared.Registries.enums;
-using substrate_core.Engagements.Results;
-using substrate_core.Managers;
-using substrate_core.Summaries.Types;
 using substrate_shared.Managers;
 using substrate_shared.Mappers;
+using substrate_shared.Registries.enums;
+using substrate_shared.Results;
 using substrate_shared.structs;
+using substrate_shared.Summaries.Types;
+using substrate_shared.Traits.Base;
 
-namespace substrate_core.runners
+namespace substrate_shared.Runners
 {
     /// <summary>
-    /// Runner responsible for executing duel engagements.
+    /// Runner responsible for executing ritual engagements.
     /// References IEngagement and produces ISummary outputs.
     /// </summary>
-    public class DuelRunner : IRunner
+    public class RitualRunner : IRunner
     {
         public IEngagement Engagement { get; }
         private readonly InventoryManager _inventory;
         private readonly CrystalForgeManager _forgeManager;
 
-        public DuelRunner(InventoryManager inventory, IEngagement duelEngagement)
+        public RitualRunner(InventoryManager inventory, IEngagement ritualEngagement)
         {
-            Engagement = duelEngagement;
+            Engagement = ritualEngagement; // 🔹 Always via IEngagement
             _inventory = inventory;
             _forgeManager = new CrystalForgeManager(inventory);
         }
@@ -34,8 +32,8 @@ namespace substrate_core.runners
         {
             Engagement.ResolveStep(ticks);
 
-            // 🔹 Finalize duel into ISummary
-            var duelSummary = Engagement.Finalize();
+            // 🔹 Finalize ritual into ISummary
+            var ritualSummary = Engagement.Finalize();
 
             // 🔹 Create EngagementResult for traceability
             var result = new EngagementResult
@@ -44,19 +42,18 @@ namespace substrate_core.runners
                 Threshold = Engagement.Shape.Values.Count, // Example threshold logic
                 Bias = new BiasDescriptor
                 {
-                    Bias = duelSummary.Outcome switch
+                    Bias = ritualSummary.Outcome switch
                     {
-                        DuelOutcome.Recovery   => Bias.Positive,
-                        DuelOutcome.Collapse   => Bias.Negative,
-                        DuelOutcome.Stalemate  => Bias.Neutral,
-                        DuelOutcome.Unresolved => Bias.Mixed,
-                        _                      => Bias.Mixed
+                        DuelOutcome.Recovery   => substrate_shared.Registries.enums.Bias.Positive,
+                        DuelOutcome.Collapse   => substrate_shared.Registries.enums.Bias.Negative,
+                        DuelOutcome.Stalemate  => substrate_shared.Registries.enums.Bias.Neutral,
+                        _                      => substrate_shared.Registries.enums.Bias.Mixed
                     },
-                    Narrative = duelSummary.Description
+                    Narrative = ritualSummary.Description
                 },
                 Shape = Engagement.Shape,
                 Tones = new Dictionary<ToneType,int>(FacetToneMapper.ToToneDictionary(Engagement.Shape)),
-                Narrative = duelSummary.Description
+                Narrative = ritualSummary.Description
             };
 
             // 🔹 Store result in inventory
@@ -68,7 +65,7 @@ namespace substrate_core.runners
                 {
                     (
                         result.Threshold,
-                        result.Bias.Bias == Bias.Positive,
+                        result.Bias.Bias == substrate_shared.Registries.enums.Bias.Positive,
                         result.Tones,
                         result.Narrative
                     )
@@ -82,8 +79,12 @@ namespace substrate_core.runners
             // 🔹 Generate inventory summary
             var inventorySummary = _forgeManager.SummarizeInventory(forgedCrystals);
 
-            // 🔹 Return composite summary (duel + inventory)
-            return new CompositeSummary(duelSummary, inventorySummary);
+            // 🔹 Build composite summary with both ritual + inventory
+            var composite = new CompositeSummary("Ritual Engagement Report", "Ritual + Inventory outcomes");
+            composite.AddSummary(ritualSummary);
+            composite.AddSummary(inventorySummary);
+
+            return composite;
         }
 
         public ISummary Finalize() => Engagement.Finalize();

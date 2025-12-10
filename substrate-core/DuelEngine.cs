@@ -1,8 +1,12 @@
-using substrate_core.Managers;
-using substrate_shared.Engagements.Types;
+using System;
+using System.Collections.Generic;
+using substrate_shared.Engagements.Enums;
+using substrate_shared.Factories;          // EngagementType enum
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
+using substrate_shared.Overlays;
 using substrate_shared.Profiles;
+using substrate_shared.Runners.Factories;
 using substrate_shared.structs;
 using EnvironmentMood = substrate_shared.Environment.EnvironmentMood;
 
@@ -13,6 +17,7 @@ namespace substrate_core
     /// </summary>
     public class DuelEngine
     {
+        private readonly double _difficulty;
         private readonly IResilienceTracker _tracker;
         private readonly Duelist _persistent;
         private readonly IBiasManager _biasManager;
@@ -28,7 +33,8 @@ namespace substrate_core
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
-            InventoryManager inventory)
+            InventoryManager inventory,
+            double difficulty = 1.0)
         {
             _tracker       = tracker;
             _persistent    = persistent;
@@ -37,6 +43,7 @@ namespace substrate_core
             _toneManager   = toneManager;
             _rarityManager = rarityManager;
             _inventory     = inventory;
+            _difficulty = difficulty;
         }
 
         /// <summary>
@@ -46,37 +53,58 @@ namespace substrate_core
         {
             for (int i = 0; i < count; i++)
             {
-                // 🔹 Instead of the simple generator:
-                // var opponent = _biasManager.GenerateOpponent();
-
-                // 🔹 Use tuned generator with profile + mood
-                var profile = OpponentProfiles.Challenge; // or StoryMode/Nightmare
-                var mood    = EnvironmentMood.Storm;      // or Sanctuary/Void/Carnival
-                BiasDescriptor? tilt = null;              // optional seed tilt
+                var profile = OpponentProfiles.Challenge;
+                var mood    = EnvironmentMood.Storm;
+                BiasDescriptor? tilt = null;
 
                 var opponent = _biasManager.GenerateOpponentWeighted(profile, mood, tilt);
 
-                // Continue duel as before
-                var duel = new DuelEngagement(
+                var runner = RunnerFactory.Create(
+                    EngagementType.Duel,
                     _inventory,
-                    _persistent.BiasVector,
-                    opponent,
                     _biasManager,
                     _facetManager,
                     _toneManager,
-                    _rarityManager
+                    _rarityManager,
+                    biasSeedId: null,
+                    participants: new[] { _persistent.BiasVector, opponent }
                 );
 
-                duel.Resolve();
-                var summary = duel.Finalize();
+                runner.Run();
 
+                var summary = runner.Engagement.Finalize();
                 _tracker.AddSummary(summary);
-                foreach (var crystal in _inventory.GetCrystals())
+
+                /*// 🔹 Add cumulative resilience so report index isn’t stuck at 0
+                _tracker.AddResilience(runner.Engagement.CumulativeResilience);*/
+
+                _tracker.AddResilience(summary.ResilienceIndex);
+                
+                // Geometry / trig metrics
+                var duelPair = new List<(BiasVector, BiasVector)>
+                {
+                    (_persistent.BiasVector, opponent)
+                };
+
+                var hypotenuse = GeometryOverlay.ComputeHypotenuse(_persistent.BiasVector, opponent);
+                var area       = GeometryOverlay.ComputeArea(_persistent.BiasVector, opponent);
+                var cos        = TrigOverlay.MeanCos(duelPair);
+                var sin        = TrigOverlay.MeanSin(duelPair);
+                var log        = TrigOverlay.LogScaledIndex((int)Math.Round(summary.ResilienceIndex));
+                var exp        = TrigOverlay.ExpScaledIndex((int)Math.Round(summary.ResilienceIndex));
+
+                _tracker.AddHypotenuse(hypotenuse);
+                _tracker.AddArea(area);
+                _tracker.AddTrig(cos, sin, log, exp);
+
+                // Only add crystals forged this tick
+                var newCrystals = runner.Engagement.ForgedCrystals;
+                foreach (var crystal in newCrystals)
                 {
                     _tracker.AddCrystal(crystal);
                 }
 
-                _persistent.ApplyOutcome(summary);
+                _persistent.ApplyOutcome(summary, _difficulty);
             }
         }
     }

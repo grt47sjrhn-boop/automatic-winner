@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using substrate_shared.interfaces;
 using substrate_shared.Models;
 using substrate_shared.structs;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared.Engagements.Base
 {
@@ -36,6 +38,8 @@ namespace substrate_shared.Engagements.Base
         public abstract void UpdateRarity();
 
         public abstract bool IsComplete { get; }
+        public IEnumerable<TraitCrystal> ForgedCrystals { get; }
+        public int CumulativeResilience { get; }
 
         // 🔹 Finalize returns ISummary, polymorph by subclass
         public abstract ISummary Finalize();

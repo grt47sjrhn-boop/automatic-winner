@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using substrate_shared.interfaces;
-using substrate_shared.Summaries;
-using substrate_shared.Traits.Base;
-using substrate_shared.Registries.enums;
-using substrate_core.Engagements.Results;
-using substrate_core.Managers;
-using substrate_core.Summaries.Types;
 using substrate_shared.Managers;
 using substrate_shared.Mappers;
+using substrate_shared.Registries.enums;
+using substrate_shared.Results;
 using substrate_shared.structs;
+using substrate_shared.Summaries.Types;
+using substrate_shared.Traits.Base;
 
-namespace substrate_core.runners
+namespace substrate_shared.Runners
 {
     /// <summary>
     /// Generic runner that can execute any engagement type.
@@ -44,11 +42,11 @@ namespace substrate_core.runners
                 {
                     Bias = engagementSummary.Outcome switch
                     {
-                        DuelOutcome.Recovery   => Bias.Positive,
-                        DuelOutcome.Collapse   => Bias.Negative,
-                        DuelOutcome.Stalemate  => Bias.Neutral,
-                        DuelOutcome.Unresolved => Bias.Mixed,
-                        _                      => Bias.Mixed
+                        DuelOutcome.Recovery   => substrate_shared.Registries.enums.Bias.Positive,
+                        DuelOutcome.Collapse   => substrate_shared.Registries.enums.Bias.Negative,
+                        DuelOutcome.Stalemate  => substrate_shared.Registries.enums.Bias.Neutral,
+                        DuelOutcome.Unresolved => substrate_shared.Registries.enums.Bias.Mixed,
+                        _                      => substrate_shared.Registries.enums.Bias.Mixed
                     },
                     Narrative = engagementSummary.Description
                 },
@@ -64,7 +62,7 @@ namespace substrate_core.runners
                 {
                     (
                         result.Threshold,
-                        result.Bias.Bias == Bias.Positive,
+                        result.Bias.Bias == substrate_shared.Registries.enums.Bias.Positive,
                         result.Tones,
                         result.Narrative
                     )
@@ -77,7 +75,12 @@ namespace substrate_core.runners
 
             var inventorySummary = _forgeManager.SummarizeInventory(forgedCrystals);
 
-            return new CompositeSummary(engagementSummary, inventorySummary);
+            // 🔹 Build composite summary with both engagement + inventory
+            var composite = new CompositeSummary("Engagement Report", "Engagement + Inventory outcomes");
+            composite.AddSummary(engagementSummary);
+            composite.AddSummary(inventorySummary);
+
+            return composite;
         }
 
         public ISummary Finalize() => Engagement.Finalize();

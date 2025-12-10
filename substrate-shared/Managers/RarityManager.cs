@@ -6,7 +6,7 @@ using substrate_shared.Registries.enums;
 using substrate_shared.Registries.enums.Attributes;
 using substrate_shared.structs;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     /// <summary>
     /// Manager responsible for computing, assigning, and narrating rarity tiers.

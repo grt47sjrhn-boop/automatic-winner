@@ -43,7 +43,8 @@ namespace substrate_shared.Summaries
 
             foreach (var duel in DuelSummaries)
             {
-                Console.WriteLine($"  Duel → {duel.Title}: {duel.Outcome}, Bias: {duel.ResolvedVector.Tone.Label}");
+                var biasLabel = duel.ResolvedVector.Tone?.Label ?? "[None]";
+                Console.WriteLine($"  Duel → {duel.Title}: {duel.Outcome}, Bias: {biasLabel}");
             }
         }
     }

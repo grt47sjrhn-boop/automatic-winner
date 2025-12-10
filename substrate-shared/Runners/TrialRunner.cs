@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
 using substrate_shared.interfaces;
-using substrate_shared.Summaries;
-using substrate_shared.Traits.Base;
-using substrate_core.Engagements.Results;
-using substrate_core.Managers;
-using substrate_core.Summaries.Types;
-using substrate_shared;
 using substrate_shared.Managers;
 using substrate_shared.Mappers;
 using substrate_shared.Registries.enums;
+using substrate_shared.Results;
 using substrate_shared.structs;
+using substrate_shared.Summaries.Types;
+using substrate_shared.Traits.Base;
 
-namespace substrate_core.runners
+namespace substrate_shared.Runners
 {
     /// <summary>
     /// Runner responsible for executing trial engagements.
@@ -47,10 +44,10 @@ namespace substrate_core.runners
                 {
                     Bias = trialSummary.Outcome switch
                     {
-                        DuelOutcome.Recovery => Bias.Positive,
-                        DuelOutcome.Collapse => Bias.Negative,
-                        DuelOutcome.Stalemate => Bias.Neutral,
-                        _ => Bias.Mixed
+                        DuelOutcome.Recovery   => substrate_shared.Registries.enums.Bias.Positive,
+                        DuelOutcome.Collapse   => substrate_shared.Registries.enums.Bias.Negative,
+                        DuelOutcome.Stalemate  => substrate_shared.Registries.enums.Bias.Neutral,
+                        _                      => substrate_shared.Registries.enums.Bias.Mixed
                     },
                     Narrative = trialSummary.Description
                 },
@@ -67,14 +64,13 @@ namespace substrate_core.runners
                 {
                     (
                         result.Threshold,
-                        result.Bias.Bias == Bias.Positive,
-                        FacetToneMapper.ToToneDictionary(result.Shape), // 🔹 conversion here
+                        result.Bias.Bias == substrate_shared.Registries.enums.Bias.Positive,
+                        FacetToneMapper.ToToneDictionary(result.Shape),
                         result.Narrative
                     )
                 },
                 new List<TraitCrystal>()
             );
-
 
             foreach (var crystal in forgedCrystals)
                 _inventory.AddCrystal(crystal);
@@ -82,8 +78,12 @@ namespace substrate_core.runners
             // 🔹 Generate inventory summary
             var inventorySummary = _forgeManager.SummarizeInventory(forgedCrystals);
 
-            // 🔹 Return composite summary (trial + inventory)
-            return new CompositeSummary(trialSummary, inventorySummary);
+            // 🔹 Build composite summary with both trial + inventory
+            var composite = new CompositeSummary("Trial Engagement Report", "Trial + Inventory outcomes");
+            composite.AddSummary(trialSummary);
+            composite.AddSummary(inventorySummary);
+
+            return composite;
         }
 
         public ISummary Finalize() => Engagement.Finalize();

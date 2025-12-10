@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using substrate_shared.interfaces;
-using substrate_shared.structs;
 using substrate_shared.Registries.enums;
+using substrate_shared.structs;
 
-namespace substrate_core.Engagements.Results
+namespace substrate_shared.Results
 {
     /// <summary>
     /// Structured output of an engagement step.

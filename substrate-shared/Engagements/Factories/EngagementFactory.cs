@@ -26,13 +26,10 @@ namespace substrate_shared.Engagements.Factories
             return type switch
             {
                 EngagementType.Duel => new DuelEngagement(
-                    inventory,
-                    duelistA ?? BiasVector.GenerateRandom(),
-                    duelistB ?? BiasVector.GenerateRandom(),
-                    biasManager,
-                    facetManager,
                     toneManager,
                     rarityManager,
+                    duelistA ?? BiasVector.GenerateRandom(),
+                    duelistB ?? BiasVector.GenerateRandom(),
                     biasSeedId
                 ),
 
@@ -50,13 +47,12 @@ namespace substrate_shared.Engagements.Factories
                     duels ?? new List<DuelEngagement>
                     {
                         new DuelEngagement(
-                            inventory,
-                            BiasVector.GenerateRandom(),
-                            BiasVector.GenerateRandom(),
-                            biasManager,
-                            facetManager,
                             toneManager,
-                            rarityManager
+                            rarityManager,
+                            BiasVector.GenerateRandom(),
+                            BiasVector.GenerateRandom(),
+                            biasSeedId
+                            
                         )
                     },
                     biasManager,

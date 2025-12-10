@@ -10,5 +10,7 @@ namespace substrate_shared.Facets.Enums
         Harmony,      // balance and cohesion across tones/moods
         Conflict,     // tension or opposition between biases
         Radiance      // brilliance or positive resonance
+        ,
+        Confidence
     }
 }

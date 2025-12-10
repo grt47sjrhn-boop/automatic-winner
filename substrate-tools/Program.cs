@@ -1,6 +1,6 @@
 using System;
 using substrate_core;
-using substrate_core.Managers;       // concrete manager implementations
+// concrete manager implementations
 using substrate_core.Resolvers;
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
@@ -22,7 +22,7 @@ namespace substrate_tools
             InventoryManager inventory     = new InventoryManager();
 
             // 🔹 Tracker (tone/rarity managers injected)
-            IResilienceTracker tracker     = new ResilienceTracker(toneManager, rarityManager);
+            IResilienceTracker tracker     = new ResilienceTracker();
 
             // Defaults
             var tickCount    = 5;
@@ -30,6 +30,7 @@ namespace substrate_tools
             var export       = false;
             var exportFormat = "json";
             double seedBias  = 0.0;
+            double difficulty = 1.0;
             ToneType? seedTone = null;
 
             // 🔹 Parse CLI args
@@ -38,6 +39,12 @@ namespace substrate_tools
                 if (int.TryParse(arg, out var parsed))
                 {
                     tickCount = parsed;
+                }
+                else if (arg.StartsWith("--difficulty=") || arg.StartsWith("--d=") || arg.StartsWith("-diff="))
+                {
+                    var val = arg.Split('=')[1];
+                    if (double.TryParse(val, out var parsedDiff))
+                        difficulty = parsedDiff;
                 }
                 else if (arg.Equals("--verbose", StringComparison.OrdinalIgnoreCase))
                 {
@@ -79,7 +86,8 @@ namespace substrate_tools
                 facetManager,
                 toneManager,
                 rarityManager,
-                inventory
+                inventory,
+                difficulty
             );
 
             Console.WriteLine(

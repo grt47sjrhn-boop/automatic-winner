@@ -24,6 +24,16 @@ namespace substrate_shared.Registries.Managers
         // --- Unified sweeps ---
         public static IEnumerable<IReadableRegistry> GetAll()
             => _allRegistries.Values.SelectMany(v => v);
+        
+        public static MoodType GetMoodByStrength(int signedStrength)
+        {
+            // Clamp to valid range of MoodType (-11 to +11)
+            if (signedStrength < -11) signedStrength = -11;
+            if (signedStrength > 11) signedStrength = 11;
+
+            // Direct cast works because MoodType enum values match scaleValue
+            return (MoodType)signedStrength;
+        }
 
         public static IEnumerable<IReadableRegistry> GetByBias(Bias bias)
             => GetAll().Where(v => v.GetBias() == bias);

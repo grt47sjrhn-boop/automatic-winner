@@ -1,8 +1,11 @@
 using System.Collections.Generic;
-using substrate_shared.Engagements.Types;
+// 🔹 bring in RunnerFactory
+using substrate_shared.Engagements.Enums;
+using substrate_shared.Factories; // 🔹 EngagementType enum
 using substrate_shared.Reports;
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
+using substrate_shared.Runners.Factories;
 using substrate_shared.structs;
 
 namespace substrate_shared.Orchestration
@@ -43,26 +46,25 @@ namespace substrate_shared.Orchestration
             // 🔹 Reset inventory and factory state
             _inventory.ResetSession();
 
-            // 🔹 Run duels
+            // 🔹 Run duels via RunnerFactory
             foreach (var (duelistA, duelistB) in duelPairs)
             {
-                var duel = new DuelEngagement(
+                var runner = RunnerFactory.Create(
+                    EngagementType.Duel,
                     _inventory,
-                    duelistA,
-                    duelistB,
                     _biasManager,
                     _facetManager,
                     _toneManager,
-                    _rarityManager
+                    _rarityManager,
+                    biasSeedId: null,
+                    participants: new[] { duelistA, duelistB }
                 );
 
-                duel.Resolve(); // run engagement
-                var summary = duel.Finalize();
+                runner.Run();
+                var summary = runner.Engagement.Finalize();
 
-                // 🔹 Use tracker’s AddSummary method
                 _tracker.AddSummary(summary);
 
-                // If you want to also push crystals into tracker explicitly:
                 foreach (var crystal in _inventory.GetCrystals())
                 {
                     _tracker.AddCrystal(crystal);

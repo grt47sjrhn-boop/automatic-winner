@@ -18,7 +18,7 @@ namespace substrate_shared.Resolvers
 {
     public class SimpleDuelResolver : Resolver
     {
-        public override string Name { get; } = "Simple Duel Resolver";
+        public override string Name { get; } = "Simple Duel Resolver (Unified)";
 
         private readonly BiasVector _a;
         private readonly BiasVector _b;
@@ -26,7 +26,7 @@ namespace substrate_shared.Resolvers
         private readonly Func<int, int> _magnitudeScaler;
         private readonly Random _rng = new Random();
 
-        // 🔹 Injected managers via IManager interfaces
+        // Managers
         private readonly IBiasManager _biasManager;
         private readonly IFacetManager _facetManager;
         private readonly IToneManager _toneManager;
@@ -39,7 +39,7 @@ namespace substrate_shared.Resolvers
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
-            int conflictBand = 1,
+            int conflictBand = 2,
             Func<int, int>? magnitudeScaler = null)
         {
             _a = a;
@@ -50,7 +50,6 @@ namespace substrate_shared.Resolvers
             _rarityManager = rarityManager;
             _conflictBand = conflictBand;
 
-            // 🔹 Preserve negatives instead of flattening to ≥ 1
             _magnitudeScaler = magnitudeScaler ?? (d => d);
         }
 
@@ -62,10 +61,7 @@ namespace substrate_shared.Resolvers
                                  .ToList();
 
             if (!candidates.Any())
-            {
-                var compositeTone = NarrativeToneFactory.FromRegistry(new RegistryValue<ToneType>(ToneType.Composite));
-                return compositeTone;
-            }
+                return NarrativeToneFactory.FromRegistry(new RegistryValue<ToneType>(ToneType.Composite));
 
             var chosen = candidates[_rng.Next(candidates.Count)];
             return NarrativeToneFactory.FromRegistry(new RegistryValue<ToneType>(chosen));
@@ -81,6 +77,7 @@ namespace substrate_shared.Resolvers
             NarrativeTone resolvedTone;
             int resolvedMagnitude;
 
+            // Equilibrium on exact tie
             if (aStrength == bStrength)
             {
                 resolvedTone = _a.Tone.MergeNeutral(_b.Tone);
@@ -90,30 +87,26 @@ namespace substrate_shared.Resolvers
             else
             {
                 var winner = aStrength > bStrength ? _a : _b;
-                var loser = aStrength > bStrength ? _b : _a;
+                var loser  = aStrength > bStrength ? _b : _a;
 
                 resolvedMagnitude = _magnitudeScaler(delta);
 
                 var sampledTone = PickToneByBias(winner.Tone.BiasValue);
                 resolvedTone = sampledTone.BlendAgainst(loser.Tone);
 
-                // 🔹 Outcome heuristics broadened
-                if (delta <= _conflictBand && Math.Sign(aStrength) != Math.Sign(bStrength))
+                // Recovery/Collapse require tone alignment AND sufficient magnitude
+                var strong = Math.Abs(resolvedMagnitude) > _conflictBand;
+
+                if (resolvedTone.BiasValue == Bias.Positive && strong)
+                    outcome = DuelOutcome.Recovery;
+                else if (resolvedTone.BiasValue == Bias.Negative && strong)
+                    outcome = DuelOutcome.Collapse;
+                else if (delta <= _conflictBand && Math.Sign(aStrength) != Math.Sign(bStrength))
                     outcome = DuelOutcome.MixedConflict;
-                else if ((delta <= _conflictBand && (Math.Abs(aStrength) > 5 || Math.Abs(bStrength) > 5))
-                         || Math.Abs(resolvedMagnitude) <= 2)
-                {
+                else if (Math.Abs(resolvedMagnitude) <= _conflictBand)
                     outcome = DuelOutcome.Wound;
-                }
                 else
-                {
-                    if (resolvedTone.BiasValue == Bias.Negative || winner.SignedStrength < -5)
-                        outcome = DuelOutcome.Collapse;
-                    else if (resolvedTone.BiasValue == Bias.Positive || winner.SignedStrength > 5)
-                        outcome = DuelOutcome.Recovery;
-                    else
-                        outcome = DuelOutcome.Equilibrium;
-                }
+                    outcome = DuelOutcome.Equilibrium;
             }
 
             var resolvedVector = new BiasVector(resolvedTone, resolvedMagnitude);
@@ -123,16 +116,15 @@ namespace substrate_shared.Resolvers
                 ? GeometryOverlay.DescribeOverlay(_a, _b)
                 : "Overlay → No opposing vectors for geometry.";
 
-            var description =
-                $"Outcome: {outcome}, Delta: {delta}, Resolved: {resolvedVector}. {overlay}";
+            var description = $"Outcome: {outcome}, Delta: {delta}, Resolved: {resolvedVector}. {overlay}";
 
-            // 🔹 Use injected managers to compute brilliance and bias
+            // Managers compute brilliance and bias
             var shape = _facetManager.Normalize(resolvedVector.ToFacetDistribution().Values);
             var toneDict = FacetToneMapper.ToToneDictionary(shape);
             var brilliance = _toneManager.Cut(toneDict);
             var bias = _biasManager.Summarize(shape);
 
-            // 🔹 Enrich with Mood, Intent, Rarity
+            // Enrich with Mood, Intent, Rarity
             var resolvedMood   = ResolveMoodFromBias(bias.Value);
             var resolvedIntent = ResolveIntentFromBias(bias.Value);
 
@@ -152,6 +144,9 @@ namespace substrate_shared.Resolvers
                 resolvedMood,
                 resolvedIntent,
                 resolvedRarity,
+                shape,
+                resilienceIndex: resolvedMagnitude,          // 🔹 per-duel resolved index
+                cumulativeResilience: Math.Abs(resolvedMagnitude), // 🔹 or another cumulative metric
                 true
             );
         }
@@ -165,16 +160,18 @@ namespace substrate_shared.Resolvers
 
         private static IntentAction ResolveIntentFromBias(double biasValue)
         {
-            if (biasValue > 0) return IntentAction.Encourage;
-            if (biasValue < 0) return IntentAction.Criticize;
-            return IntentAction.Observe;
+            return biasValue switch
+            {
+                > 0 => IntentAction.Encourage,
+                < 0 => IntentAction.Criticize,
+                _ => IntentAction.Observe
+            };
         }
 
         private static CrystalRarity MapToCrystalRarity(RarityTier tier)
         {
             return tier.Tier switch
             {
-                // 🌞 Recovery path
                 "Common"    => CrystalRarity.Common,
                 "Rare"      => CrystalRarity.Rare,
                 "Epic"      => CrystalRarity.Epic,
@@ -182,10 +179,9 @@ namespace substrate_shared.Resolvers
                 "Legendary" => CrystalRarity.Legendary,
                 "UltraRare" => CrystalRarity.UltraRare,
 
-                // 🌑 Collapse path (new abyssal tiers)
-                "Fragile"   => CrystalRarity.Fragile,    // collapse with weak resonance
-                "Corrupted" => CrystalRarity.Corrupted,  // collapse with twisted resonance
-                "Doomed"    => CrystalRarity.Doomed,     // irreversible collapse
+                "Fragile"   => CrystalRarity.Fragile,
+                "Corrupted" => CrystalRarity.Corrupted,
+                "Doomed"    => CrystalRarity.Doomed,
 
                 _           => CrystalRarity.Common
             };

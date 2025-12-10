@@ -4,12 +4,13 @@ using System.Linq;
 using substrate_shared.Environment;
 using substrate_shared.Facets.Enums;
 using substrate_shared.interfaces;
-using substrate_shared.Profiles;              // ✅ Correct import for OpponentProfile & OpponentProfiles
+using substrate_shared.Profiles;
 using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
+// ✅ Correct import for OpponentProfile & OpponentProfiles
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     public class BiasManager : IBiasManager
     {

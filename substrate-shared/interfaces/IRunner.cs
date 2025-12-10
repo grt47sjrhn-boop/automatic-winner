@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using substrate_shared.structs;
+
 namespace substrate_shared.interfaces
 {
     public interface IRunner

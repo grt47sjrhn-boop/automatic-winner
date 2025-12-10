@@ -37,6 +37,18 @@ namespace substrate_shared.Profiles
             Label                = "Duel",
             Category             = "Nightmare"
         };
+        
+        public static OpponentProfile Balanced => new()
+        {
+            CollapseBiasFactor   = 1.0,   // collapse outcomes equally weighted
+            RecoveryBiasFactor   = 1.0,   // recovery outcomes equally weighted
+            NeutralBiasFactor    = 0.2,   // neutral outcomes suppressed ("kick rocks")
+            MagnitudeVariance    = 1.2,   // moderate variance, keeps duels dynamic
+            DifficultyMultiplier = 1.0,   // baseline difficulty
+            AggressionNudge      = true,  // still allows conflict/aggression flavor
+            Label                = "Duel",
+            Category             = "Balanced"
+        };
     }
     public class OpponentProfile
     {

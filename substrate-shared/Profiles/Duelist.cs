@@ -19,37 +19,55 @@ namespace substrate_shared.Profiles
         public int Wounds { get; private set; }
         public int Recoveries { get; private set; }
         public BiasVector BiasVector { get; set; }
-
+        public double Difficulty { get; set; }
         // 🔹 Explicit seed tone override
         private ToneType? _seedTone;
 
-        public Duelist(string name, double initialBias = 0.0)
+        public Duelist(string name, double initialBias = 0.0, ToneType? seedTone = null, double difficulty = 1.0)
         {
+            
             Name = name;
             Bias = initialBias;
+            Difficulty = difficulty;
             Resilience = 1.0;
             Wounds = 0;
             Recoveries = 0;
+
+            if (seedTone.HasValue)
+            {
+                SeedTone(seedTone.Value);
+            }
+            else
+            {
+                // ✅ Build BiasVector immediately from initialBias and Resilience
+                var moodKey   = ResolveMoodFromBias(Bias);
+                var magnitude = MapResilienceToMagnitude(Resilience + Math.Abs(Bias));
+                var toneKey   = Bias > 0 ? ToneType.Joy
+                    : Bias < 0 ? ToneType.Despairing
+                    : ToneType.Neutral;
+
+                BiasVector = BiasVectorFactory.FromToneAndMood(toneKey, moodKey, magnitude);
+            }
         }
 
         // Apply duel outcome from EventSummary
-        // Apply duel outcome from EventSummary
-        public void ApplyOutcome(ISummary summary)
+        public void ApplyOutcome(ISummary summary, double difficulty)
         {
             if (summary is EventSummary eventSummary && eventSummary.Type == SummaryType.Duel)
             {
                 if (eventSummary.IsResolved)
                 {
-                    Bias += 0.1 * Resilience;
-                    Resilience += 0.05;
+                    Bias += (0.1 * Resilience) * difficulty;       // harder difficulty → bigger bias swings
+                    Resilience += 0.05 * difficulty;               // resilience grows faster/slower
                     Recoveries++;
                 }
                 else
                 {
-                    Bias -= 0.1 * (2.0 - Resilience);
-                    Resilience = Math.Max(0, Resilience - 0.05);
+                    Bias -= (0.1 * (2.0 - Resilience)) * difficulty;
+                    Resilience = Math.Max(0, Resilience - (0.05 * difficulty));
                     Wounds++;
                 }
+
 
                 // ✅ Refresh BiasVector after every outcome
                 var toneKey   = _seedTone.HasValue
@@ -59,7 +77,7 @@ namespace substrate_shared.Profiles
                             : ToneType.Neutral;
 
                 var moodKey   = ResolveMoodFromBias(Bias);
-                var magnitude = MapResilienceToMagnitude(Resilience);
+                var magnitude = MapResilienceToMagnitude(Resilience + Math.Abs(Bias));
 
                 BiasVector = BiasVectorFactory.FromToneAndMood(toneKey, moodKey, magnitude);
             }

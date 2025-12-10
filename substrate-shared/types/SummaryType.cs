@@ -12,6 +12,7 @@ namespace substrate_shared.types
         Positive,
         Negative,
         Neutral,
-        Mixed
+        Mixed,
+        Composite
     }
 }

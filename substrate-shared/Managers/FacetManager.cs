@@ -5,7 +5,7 @@ using substrate_shared.interfaces;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     /// <summary>
     /// Manager responsible for interpreting facet distributions into bias descriptors.

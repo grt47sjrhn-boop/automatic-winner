@@ -1,7 +1,7 @@
 using System;
 using substrate_shared.Summaries.Base;
 
-namespace substrate_core.Summaries.Types
+namespace substrate_shared.Summaries.Types
 {
     public class SystemSummary : SummaryBase
     {

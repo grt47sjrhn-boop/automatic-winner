@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using substrate_shared.Reports;
 using substrate_shared.structs;
 using substrate_shared.Traits.Base;
 
@@ -6,30 +7,40 @@ namespace substrate_shared.interfaces
 {
     public interface IResilienceTracker
     {
-        // Existing narrative-facing properties
+        // Narrative-facing properties
         IReadOnlyList<ISummary> DuelSummaries { get; }
-        int ResilienceIndex { get; }
-        
+        // ✅ Expose both cumulative and averaged resilience
+        double TotalResilience { get; }
+        double ResilienceIndex { get; }
+
+
         // Crystal inventory
         IReadOnlyList<TraitCrystal> Crystals { get; }
 
-
         // Existing methods
-        public ISummary Record(ISummary summary, BiasVector? a = null, BiasVector? b = null);
-        ISummary ComputeResilience();
+        ISummary Record(ISummary summary, BiasVector? a = null, BiasVector? b = null);
+        ResilienceReport ComputeResilience();
 
-        // 🔹 New math overlay properties
+        // 🔹 Math overlay properties
         double AverageHypotenuse { get; }
         double CumulativeArea { get; }
         double MeanCos { get; }
         double MeanSin { get; }
         double LogScaledIndex { get; }
         double ExpScaledIndex { get; }
-        
-        // 🔹 Add methods
+
+        void AddHypotenuse(double value);
+        void AddArea(double value);
+        void AddTrig(double cos, double sin, double log, double exp);
+
+        // 🔹 New methods
         void AddSummary(ISummary summary);
         void AddCrystal(TraitCrystal crystal);
 
-    }
+        List<ISummary> GetSummaries();
+        List<TraitCrystal> GetCrystals();
 
+        // 🔹 Explicit numeric type for resilience
+        void AddResilience(double engagementCumulativeResilience);
+    }
 }

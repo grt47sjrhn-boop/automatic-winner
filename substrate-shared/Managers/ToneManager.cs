@@ -7,7 +7,7 @@ using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     /// <summary>
     /// Manager responsible for interpreting and narrating tones.

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using substrate_shared.Registries.enums;
 
 namespace substrate_shared.Models
@@ -19,6 +21,12 @@ namespace substrate_shared.Models
         public Dictionary<ToneType,int> Distribution { get; set; } = new();
 
         public ToneCut() { }
+        
+        /// <summary>
+        /// Convenience property: just the tone keys as an array.
+        /// </summary>
+        public ToneType[] Tones => Distribution?.Keys.ToArray() ?? [];
+
 
         public ToneCut(ToneType primary, Dictionary<ToneType,int> distribution)
         {

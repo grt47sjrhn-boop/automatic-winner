@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.enums.Attributes;
 
@@ -50,6 +51,22 @@ namespace substrate_shared.Registries.Extensions
                 _ => NarrativeGroup.Equilibrium
             };
         }
+            /// <summary>
+            /// Returns the narrative label string from RegistryNarrativeAttribute.
+            /// </summary>
+            public static string GetLabel<TEnum>(this TEnum value) where TEnum : Enum
+            {
+                var member = typeof(TEnum).GetMember(value.ToString()).FirstOrDefault();
+                if (member != null)
+                {
+                    var attr = member.GetCustomAttribute<RegistryNarrativeAttribute>();
+                    if (attr != null)
+                    {
+                        return attr.Narrative; // the first string argument in your enum attribute
+                    }
+                }
+                return value.ToString(); // fallback to enum name
+            }
 
         // --- Cluster helpers ---
         public static IEnumerable<TEnum> GetByGroup<TEnum>(NarrativeGroup group) where TEnum : Enum

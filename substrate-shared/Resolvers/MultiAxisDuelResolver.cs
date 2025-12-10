@@ -37,7 +37,7 @@ namespace substrate_shared.Resolvers
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
-            int conflictBand = 1,
+            int conflictBand = 2, // widened default band for balance
             Func<int,int>? magnitudeScaler = null)
         {
             _vectors        = vectors;
@@ -47,7 +47,7 @@ namespace substrate_shared.Resolvers
             _rarityManager  = rarityManager;
             _conflictBand   = conflictBand;
 
-            // 🔹 Preserve negatives instead of flattening to ≥ 1
+            // 🔹 Preserve negatives but allow scaling
             _magnitudeScaler = magnitudeScaler ?? (d => d);
         }
 
@@ -63,35 +63,36 @@ namespace substrate_shared.Resolvers
             // 🔹 Summarize bias from collective shape
             var collectiveBias = _biasManager.Summarize(collectiveShape);
 
+            // 🔹 Apply magnitude scaling
+            var scaledMagnitude = _magnitudeScaler((int)Math.Round(collectiveBias.Value));
+
             // 🔹 Compute brilliance (ToneCut) from facets
             var toneDict = FacetToneMapper.ToToneDictionary(collectiveShape);
             var brilliance = _toneManager.Cut(toneDict);
 
             // 🔹 Compute rarity tier from resilience score
             var rarityTier = _rarityManager.AssignTier(_rarityManager.ComputeScore(collectiveShape));
-
-            // 🔹 Map RarityTier → CrystalRarity
             var resolvedRarity = MapToCrystalRarity(rarityTier);
 
-            // 🔹 Determine outcome heuristically (balanced positive/negative arcs)
+            // 🔹 Balanced outcome decision tree
             DuelOutcome outcome;
-            if (collectiveBias.Bias == Bias.Positive && collectiveBias.Value > 5)
+            if (collectiveBias.Bias == Bias.Positive && scaledMagnitude > _conflictBand)
                 outcome = DuelOutcome.Recovery;
-            else if (collectiveBias.Bias == Bias.Negative && collectiveBias.Value < -5)
+            else if (collectiveBias.Bias == Bias.Negative && scaledMagnitude < -_conflictBand)
                 outcome = DuelOutcome.Collapse;
             else if (collectiveBias.Bias == Bias.Mixed)
                 outcome = DuelOutcome.MixedConflict;
-            else if (Math.Abs(collectiveBias.Value) <= 2)
+            else if (Math.Abs(scaledMagnitude) <= _conflictBand)
                 outcome = DuelOutcome.Wound;
             else
                 outcome = DuelOutcome.Equilibrium;
 
             var description =
                 $"Multi-axis duel resolved with {_vectors.Count()} participants. " +
-                $"Outcome: {outcome}, Bias: {collectiveBias.Bias}, Rarity: {rarityTier.Tier}, " +
-                $"Brilliance: {brilliance.Primary}.";
+                $"Outcome: {outcome}, Bias: {collectiveBias.Bias} ({scaledMagnitude}), " +
+                $"Rarity: {rarityTier.Tier}, Brilliance: {brilliance.Primary}.";
 
-            // 🔹 For now, pick first two vectors as 'duelists' for summary compatibility
+            // 🔹 For summary compatibility, pick first two vectors as duelists
             var duelists = _vectors.Take(2).ToList();
             var duelistA = duelists.ElementAtOrDefault(0);
             var duelistB = duelists.ElementAtOrDefault(1);
@@ -107,7 +108,7 @@ namespace substrate_shared.Resolvers
 
             var resolvedVector = new BiasVector(
                 dominantTone,
-                collectiveShape.Values.Values.Sum()
+                _magnitudeScaler(collectiveShape.Values.Values.Sum())
             );
 
             // 🔹 Enrich with Mood, Intent, Rarity
@@ -127,6 +128,9 @@ namespace substrate_shared.Resolvers
                 resolvedMood,
                 resolvedIntent,
                 resolvedRarity,
+                collectiveShape,
+                resilienceIndex: scaledMagnitude,                  // 🔹 per-duel resilience index
+                cumulativeResilience: Math.Abs(scaledMagnitude),   // 🔹 or another cumulative metric
                 true
             );
         }
@@ -149,7 +153,6 @@ namespace substrate_shared.Resolvers
         {
             return tier.Tier switch
             {
-                // 🌞 Recovery path
                 "Common"    => CrystalRarity.Common,
                 "Rare"      => CrystalRarity.Rare,
                 "Epic"      => CrystalRarity.Epic,
@@ -157,15 +160,13 @@ namespace substrate_shared.Resolvers
                 "Legendary" => CrystalRarity.Legendary,
                 "UltraRare" => CrystalRarity.UltraRare,
 
-                // 🌑 Collapse path (new abyssal tiers)
-                "Fragile"   => CrystalRarity.Fragile,    // collapse with weak resonance
-                "Corrupted" => CrystalRarity.Corrupted,  // collapse with twisted resonance
-                "Doomed"    => CrystalRarity.Doomed,     // irreversible collapse
+                "Fragile"   => CrystalRarity.Fragile,
+                "Corrupted" => CrystalRarity.Corrupted,
+                "Doomed"    => CrystalRarity.Doomed,
 
                 _           => CrystalRarity.Common
             };
         }
-
 
         public override void Describe()
         {

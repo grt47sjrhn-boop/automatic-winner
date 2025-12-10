@@ -5,7 +5,7 @@ using substrate_shared.Registries.Managers;
 using substrate_shared.Summaries.Base;
 using substrate_shared.Traits.Base;
 
-namespace substrate_core.Summaries.Types
+namespace substrate_shared.Summaries.Types
 {
     public class TraitCrystalSummary : SummaryBase
     {

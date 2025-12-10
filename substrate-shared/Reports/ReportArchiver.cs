@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
-namespace substrate_core.Reporting
+namespace substrate_shared.Reports
 {
     public static class ReportArchiver
     {

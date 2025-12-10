@@ -20,6 +20,21 @@ namespace substrate_shared.Traits.Base
         public ToneCut ToneCut { get; set; }
         public RarityTier RarityTier { get; set; }
 
+        // ✅ New property: resolves effective rarity from RarityTier
+        public CrystalRarity ResolvedRarity
+        {
+            get
+            {
+                return RarityTier?.Tier switch
+                {
+                    "Rare"      => CrystalRarity.Rare,
+                    "Epic"      => CrystalRarity.Epic,
+                    "Mythic"    => CrystalRarity.Mythic,
+                    "UltraRare" => CrystalRarity.UltraRare,
+                    _           => CrystalRarity.Common
+                };
+            }
+        }
 
         protected TraitCrystal(CrystalType type, CrystalRarity rarity, int threshold,
             IReadOnlyDictionary<ToneType,int> facets, ToneCut toneCut, RarityTier rarityTier)
@@ -43,9 +58,9 @@ namespace substrate_shared.Traits.Base
             var sum = facets.Values.Sum();
             return rarity switch
             {
-                CrystalRarity.Rare => (int)(sum * 1.5),
+                CrystalRarity.Rare      => (int)(sum * 1.5),
                 CrystalRarity.UltraRare => sum * 2,
-                _ => sum
+                _                       => sum
             };
         }
 
@@ -54,7 +69,7 @@ namespace substrate_shared.Traits.Base
         {
             var facetSummary = string.Join(", ",
                 Facets.Select(f => $"{f.Key}({f.Value})"));
-            return $"{Rarity} {Type} Crystal forged at {Threshold}, facets: {facetSummary}, modifier: {ModifierValue}";
+            return $"{ResolvedRarity} {Type} Crystal forged at {Threshold}, facets: {facetSummary}, modifier: {ModifierValue}";
         }
 
         public Bias GetBias()
@@ -75,6 +90,7 @@ namespace substrate_shared.Traits.Base
         }
 
         public NarrativeGroup GetGroup() => NarrativeGroup.Crystal;
+
         public ToneType GetToneType()
         {
             // Return the dominant tone based on facet counts

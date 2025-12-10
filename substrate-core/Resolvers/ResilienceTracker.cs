@@ -1,211 +1,135 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Managers;
-using substrate_core.Summaries.Types;
 using substrate_shared.interfaces;
-using substrate_shared.types;
-using substrate_shared.Overlays;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.Summaries;
-using substrate_shared.Factories;
-using substrate_shared.Registries.Managers;
-using substrate_shared.Summaries.Base;
+using substrate_shared.Summaries.Types;
 using substrate_shared.Traits.Base;
+using substrate_shared.Reports;   // ✅ bring in ResilienceReport DTO
 
 namespace substrate_core.Resolvers
 {
     public class ResilienceTracker : IResilienceTracker
     {
-        private readonly List<ISummary> _duelSummaries = new();
-        private readonly List<(BiasVector, BiasVector)> _duelPairs = new();
-        private readonly List<TraitCrystal> _crystals = new();   // 🔹 Crystal inventory
-        private int _resilienceIndex = 0;
+        private readonly List<ISummary> _summaries = new();
+        private readonly List<TraitCrystal> _crystals = new();
 
-        // 🔹 Injected managers
-        private readonly IToneManager _toneManager;
-        private readonly IRarityManager _rarityManager;
+        private readonly List<double> _hypotenuse = new();
+        private readonly List<double> _areas = new();
+        private readonly List<(double cos, double sin, double log, double exp)> _trig = new();
 
-        public ResilienceTracker(
-            IToneManager toneManager,
-            IRarityManager rarityManager)
-        {
-            _toneManager = toneManager;
-            _rarityManager = rarityManager;
-        }
-
-        public IReadOnlyList<ISummary> DuelSummaries => _duelSummaries;
+        private double _totalResilience = 0.0;
+        
+        public IReadOnlyList<ISummary> DuelSummaries => _summaries;
         public IReadOnlyList<TraitCrystal> Crystals => _crystals;
-        public int ResilienceIndex => _resilienceIndex;
 
-        // 🔹 Math overlay properties exposed via interface
-        public double AverageHypotenuse => TrigOverlay.AverageHypotenuse(_duelPairs);
-        public double CumulativeArea => TrigOverlay.CumulativeArea(_duelPairs);
-        public double MeanCos => TrigOverlay.MeanCos(_duelPairs);
-        public double MeanSin => TrigOverlay.MeanSin(_duelPairs);
-        public double LogScaledIndex => TrigOverlay.LogScaledIndex(_resilienceIndex);
-        public double ExpScaledIndex => TrigOverlay.ExpScaledIndex(_resilienceIndex);
-        public void AddSummary(ISummary summary)
-        {
-            // Add to duel summaries
-            _duelSummaries.Add(summary);
+// ✅ Use double for precision
+        public double TotalResilience => _totalResilience;
 
-            // If it’s a duel event, update resilience index
-            if (summary is DuelEventSummary duelSummary)
-            {
-                switch (duelSummary.Outcome)
-                {
-                    case DuelOutcome.Recovery:    _resilienceIndex += 2; break;
-                    case DuelOutcome.Collapse:    _resilienceIndex -= 2; break;
-                    case DuelOutcome.Wound:       _resilienceIndex -= 1; break;
-                    case DuelOutcome.Conflict:    _resilienceIndex -= 1; break;
-                    case DuelOutcome.Equilibrium: _resilienceIndex += 1; break;
-                }
-            }
-        }
+// ✅ Divide as double to avoid integer truncation
+        public double ResilienceIndex => _summaries.Count > 0 
+            ? (double)_totalResilience / _summaries.Count 
+            : 0.0;
 
-        public void AddCrystal(TraitCrystal crystal)
-        {
-            // Attach metadata if needed
-            if (crystal.ToneCut == null)
-                crystal.ToneCut = _toneManager.Cut(crystal.Facets);
 
-            if (crystal.RarityTier == null)
-                crystal.RarityTier = _rarityManager.AssignTier(_resilienceIndex);
+        public double AverageHypotenuse => _hypotenuse.Count > 0 ? _hypotenuse.Average() : 0.0;
+        public double CumulativeArea => _areas.Sum();
+        public double MeanCos => _trig.Count > 0 ? _trig.Average(t => t.cos) : 0.0;
+        public double MeanSin => _trig.Count > 0 ? _trig.Average(t => t.sin) : 0.0;
+        public double LogScaledIndex => _trig.Count > 0 ? _trig.Average(t => t.log) : 0.0;
+        public double ExpScaledIndex => _trig.Count > 0 ? _trig.Average(t => t.exp) : 0.0;
 
-            _crystals.Add(crystal);
-        }
-
-        // Record duel summary and optional vector pair for math overlay
         public ISummary Record(ISummary summary, BiasVector? a = null, BiasVector? b = null)
         {
-            _duelSummaries.Add(summary);
-
-            if (summary is DuelEventSummary duelSummary)
-            {
-                // 🔹 Update resilience index based on outcome
-                switch (duelSummary.Outcome)
-                {
-                    case DuelOutcome.Recovery:    _resilienceIndex += 2; break;
-                    case DuelOutcome.Collapse:    _resilienceIndex -= 2; break;
-                    case DuelOutcome.Wound:       _resilienceIndex -= 1; break;
-                    case DuelOutcome.Conflict:    _resilienceIndex -= 1; break;
-                    case DuelOutcome.Equilibrium: _resilienceIndex += 1; break;
-                }
-
-                // 🔹 Crystal forging check (mod-6 rule, multiple crystals if needed)
-                while (Math.Abs(_resilienceIndex) >= 6)
-                {
-                    var facets = CollectFacets();
-                    var narrative = SuperRegistryManager.DescribeClusterWithScore(NarrativeGroup.Crystal);
-
-                    // 🔹 Build tone cut from facets
-                    var toneCut = _toneManager.Cut(facets);
-
-                    // 🔹 Assign rarity tier from resilience score
-                    var rarityTier = _rarityManager.AssignTier(_resilienceIndex);
-
-                    // 🔹 Create crystal with full parameter set
-                    var crystal = TraitCrystalFactory.CreateCrystal(
-                        threshold: _resilienceIndex > 0 ? 6 : -6,
-                        isPositive: _resilienceIndex > 0,
-                        facets: facets,
-                        narrative: narrative,
-                        existingCrystals: _crystals,
-                        toneCut: toneCut,
-                        rarityTier: rarityTier
-                    );
-
-                    _crystals.Add(crystal);
-
-                    // carry remainder by subtracting/adding 6 until back in range
-                    _resilienceIndex = _resilienceIndex > 0
-                        ? _resilienceIndex - 6
-                        : _resilienceIndex + 6;
-                }
-            }
-
-            if (a.HasValue && b.HasValue)
-                _duelPairs.Add((a.Value, b.Value));
-
-            return BuildOverlay();
+            AddSummary(summary);
+            return summary;
         }
 
-        // 🔹 Collect facets from duel summaries
-        private IReadOnlyDictionary<ToneType,int> CollectFacets()
+        /// <summary>
+        /// Build a full ResilienceReport DTO with aggregate metrics, distributions, and crystal data.
+        /// </summary>
+        public ResilienceReport ComputeResilience()
         {
-            var facetCounts = new Dictionary<ToneType,int>();
-
-            foreach (var summary in _duelSummaries.OfType<DuelEventSummary>())
+            var report = new ResilienceReport
             {
-                // Map duel outcome → tone facet
-                var tone = summary.Outcome switch
-                {
-                    DuelOutcome.Recovery    => ToneType.Joy,
-                    DuelOutcome.Collapse    => ToneType.Despairing,
-                    DuelOutcome.Wound       => ToneType.Wound,
-                    DuelOutcome.Conflict    => ToneType.Conflict,
-                    DuelOutcome.Equilibrium => ToneType.Equilibrium,
-                    _ => ToneType.Neutral
-                };
+                DuelCount = _summaries.Count,
+                ResilienceIndex = ResilienceIndex,
+                TotalResilience = TotalResilience,
 
-                facetCounts.TryAdd(tone, 0);
-                facetCounts[tone]++;
+                RecoveryCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery),
+                CollapseCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse),
+                WoundCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound),
+                ConflictCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict),
+                EquilibriumCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium),
+
+                AverageHypotenuse = AverageHypotenuse,
+                CumulativeArea = CumulativeArea,
+                MeanCos = MeanCos,
+                MeanSin = MeanSin,
+                LogScaledIndex = LogScaledIndex,
+                ExpScaledIndex = ExpScaledIndex,
+
+                CrystalCount = _crystals.Count,
+                Crystals = _crystals.ToList()
+            };
+
+            // 🔹 Tone distribution
+            foreach (var summary in _summaries.OfType<DuelEventSummary>())
+            {
+                var tone = summary.ResolvedVector.Tone?.Label ?? "Unknown";
+                if (!report.ToneLabels.ContainsKey(tone))
+                    report.ToneLabels[tone] = 0;
+                report.ToneLabels[tone]++;
             }
 
-            return facetCounts;
+            // 🔹 Intent distribution
+            foreach (var summary in _summaries.OfType<DuelEventSummary>())
+            {
+                var intent = summary.ResolvedIntent.ToString();
+                if (!report.IntentCounts.ContainsKey(intent))
+                    report.IntentCounts[intent] = 0;
+                report.IntentCounts[intent]++;
+            }
+
+            // 🔹 Crystal rarities + narratives
+            foreach (var crystal in _crystals)
+            {
+                var rarityKey = crystal.ResolvedRarity.ToString();
+                if (report.RarityCounts.ContainsKey(rarityKey))
+                    report.RarityCounts[rarityKey]++;
+                else
+                    report.RarityCounts[rarityKey] = 1;
+
+                report.CrystalNarratives.Add(crystal.GetDescription());
+            }
+
+            // 🔹 Bias summaries
+            foreach (var summary in _summaries.OfType<DuelEventSummary>())
+            {
+                var bias = $"{summary.Bias.Bias} ({summary.Bias.Value:F2}, {summary.ResolvedRarity})";
+                report.BiasSummaries.Add(bias);
+            }
+
+            return report;
         }
 
-        private ISummary BuildOverlay()
+        public void AddHypotenuse(double value) => _hypotenuse.Add(value);
+        public void AddArea(double value) => _areas.Add(value);
+        public void AddTrig(double cos, double sin, double log, double exp) => _trig.Add((cos, sin, log, exp));
+
+        public void AddSummary(ISummary summary) => _summaries.Add(summary);
+        public void AddCrystal(TraitCrystal crystal) => _crystals.Add(crystal);
+
+        public List<ISummary> GetSummaries() => new(_summaries);
+        public List<TraitCrystal> GetCrystals() => new(_crystals);
+
+        public void AddResilience(double engagementCumulativeResilience)
         {
-            var recoveries = _duelSummaries.Count(s => s.Description.Contains("Recovery"));
-            var collapses  = _duelSummaries.Count(s => s.Description.Contains("Collapse"));
-            var wounds     = _duelSummaries.Count(s => s.Description.Contains("Wound"));
-            var conflicts  = _duelSummaries.Count(s => s.Description.Contains("MixedConflict"));
-
-            var crystalSummary = _crystals.Any()
-                ? $"Crystals forged: {_crystals.Count} → " +
-                  string.Join(", ", _crystals.Select(c => $"{c.Rarity} {c.Type}"))
-                : "No crystals forged yet.";
-
-            var description =
-                $"Trajectory: {recoveries} recoveries, {collapses} collapses, {wounds} wounds, {conflicts} conflicts. " +
-                $"Resilience Index: {_resilienceIndex}. " +
-                $"Math Overlay → AvgHyp: {AverageHypotenuse:F2}, CumArea: {CumulativeArea:F2}, " +
-                $"MeanCos: {MeanCos:F2}, MeanSin: {MeanSin:F2}, " +
-                $"LogIndex: {LogScaledIndex:F2}, ExpIndex: {ExpScaledIndex:F2}. " +
-                crystalSummary;
-
-            return new EventSummary(
-                $"Resilience Overlay (after {_duelSummaries.Count} duel{(_duelSummaries.Count == 1 ? "" : "s")})",
-                description,
-                SummaryType.System,
-                false
-            );
+            _totalResilience += engagementCumulativeResilience;
+            Console.WriteLine($"[DEBUG] Added {engagementCumulativeResilience}, total now {_totalResilience}");
         }
 
-        public ISummary ComputeResilience()
-        {
-            if (!_duelSummaries.Any())
-                return new EventSummary("Resilience Report", "No duels recorded yet.", SummaryType.System, false);
-
-            string description;
-            var resolved = false;
-
-            if (Math.Abs(_resilienceIndex) >= 6)
-            {
-                description = _resilienceIndex > 0
-                    ? $"System crystallizes with resilience index {_resilienceIndex}."
-                    : $"System collapses into fragments with resilience index {_resilienceIndex}.";
-                resolved = true;
-            }
-            else
-            {
-                description = $"System remains oscillating with resilience index {_resilienceIndex}.";
-            }
-
-            return new EventSummary("Resilience Report", description, SummaryType.System, resolved);
-        }
     }
 }

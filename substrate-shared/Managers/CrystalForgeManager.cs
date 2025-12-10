@@ -1,13 +1,11 @@
 using System.Collections.Generic;
-using substrate_core.Summaries.Types;
 using substrate_shared.Factories;
 using substrate_shared.interfaces;
 using substrate_shared.Registries.enums;
+using substrate_shared.Summaries.Types;
 using substrate_shared.Traits.Base;
-using substrate_core.Engagements.Results;
-using substrate_shared.Managers;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Managers
 {
     /// <summary>
     /// Manager responsible for forging crystals from engagement results.

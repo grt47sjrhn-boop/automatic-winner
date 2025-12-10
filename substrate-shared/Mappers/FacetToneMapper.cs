@@ -10,17 +10,17 @@ namespace substrate_shared.Mappers
         /// <summary>
         /// Convert facet distribution into a tone distribution for forging.
         /// </summary>
-        public static IReadOnlyDictionary<ToneType,int> ToToneDictionary(FacetDistribution facets)
+        public static Dictionary<ToneType, int> ToToneDictionary(FacetDistribution facets)
         {
-            var tones = new Dictionary<ToneType,int>();
+            var dict = new Dictionary<ToneType, int>();
 
-            // Example mapping logic — adjust to your design
-            tones[ToneType.Resilient] = facets.Values[FacetType.Resilience];
-            tones[ToneType.Harmonious] = facets.Values[FacetType.Harmony];
-            tones[ToneType.Conflict]   = facets.Values[FacetType.Conflict];
-            tones[ToneType.Radiant]    = facets.Values[FacetType.Radiance];
+            dict[ToneType.Resilient] = facets.Values.TryGetValue(FacetType.Resilience, out var res) ? res : 0;
+            dict[ToneType.Harmonious] = facets.Values.TryGetValue(FacetType.Harmony, out var harm) ? harm : 0;
+            dict[ToneType.Conflict] = facets.Values.TryGetValue(FacetType.Conflict, out var conf) ? conf : 0;
+            dict[ToneType.Radiant] = facets.Values.TryGetValue(FacetType.Radiance, out var rad) ? rad : 0;
 
-            return tones;
+            return dict;
         }
+
     }
 }

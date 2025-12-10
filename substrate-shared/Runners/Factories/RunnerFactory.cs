@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
-using substrate_core.Managers;
-using substrate_core.runners;
+using System.Linq;
 using substrate_shared.Engagements.Enums;
 using substrate_shared.Engagements.Types;
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
 using substrate_shared.structs;
 
-namespace substrate_core.Runners.Factories
+namespace substrate_shared.Runners.Factories
 {
     public static class RunnerFactory
     {
@@ -25,19 +24,16 @@ namespace substrate_core.Runners.Factories
         {
             IEngagement engagement = type switch
             {
-                // Build a DuelEngagement from two BiasVectors (randomized if none provided)
+                // Duel: use provided participants or generate two randoms
                 EngagementType.Duel => new DuelEngagement(
-                    inventory,
-                    BiasVector.GenerateRandom(),
-                    BiasVector.GenerateRandom(),
-                    biasManager,
-                    facetManager,
                     toneManager,
                     rarityManager,
+                    participants?.ElementAtOrDefault(0) ?? BiasVector.GenerateRandom(),
+                    participants?.ElementAtOrDefault(1) ?? BiasVector.GenerateRandom(),
                     biasSeedId
                 ),
 
-                // Dialogue typically resolves around a seed; adapt as needed
+                // Dialogue: seed‑driven, no participants needed
                 EngagementType.Dialogue => new DialogueEngagement(
                     inventory,
                     biasManager,
@@ -47,39 +43,18 @@ namespace substrate_core.Runners.Factories
                     biasSeedId
                 ),
 
-                // Trial aggregates a series of duels; construct if none provided
+                // Trial: use provided duels or generate three random ones
                 EngagementType.Trial => new TrialEngagement(
                     inventory,
-                    duels ?? new[]
-                    {
+                    duels ?? Enumerable.Range(0, 3).Select(_ =>
                         new DuelEngagement(
-                            inventory,
-                            BiasVector.GenerateRandom(),
-                            BiasVector.GenerateRandom(),
-                            biasManager,
-                            facetManager,
                             toneManager,
-                            rarityManager
-                        ),
-                        new DuelEngagement(
-                            inventory,
+                            rarityManager,
                             BiasVector.GenerateRandom(),
                             BiasVector.GenerateRandom(),
-                            biasManager,
-                            facetManager,
-                            toneManager,
-                            rarityManager
-                        ),
-                        new DuelEngagement(
-                            inventory,
-                            BiasVector.GenerateRandom(),
-                            BiasVector.GenerateRandom(),
-                            biasManager,
-                            facetManager,
-                            toneManager,
-                            rarityManager
+                            biasSeedId
                         )
-                    },
+                    ),
                     biasManager,
                     facetManager,
                     toneManager,
@@ -87,7 +62,7 @@ namespace substrate_core.Runners.Factories
                     biasSeedId
                 ),
 
-                // Ritual aggregates participants (BiasVectors); construct if none provided
+                // Ritual: use provided participants or generate three randoms
                 EngagementType.Ritual => new RitualEngagement(
                     inventory,
                     participants ?? new[]
@@ -106,7 +81,7 @@ namespace substrate_core.Runners.Factories
                 _ => throw new ArgumentOutOfRangeException(nameof(type), "Unsupported engagement type")
             };
 
-            // Always run via the generic EngagementRunner to unify the pipeline
+            // Always wrap in EngagementRunner
             return new EngagementRunner(inventory, engagement);
         }
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using substrate_core.Reporting;
 
 namespace substrate_shared.Reports
 {

@@ -9,7 +9,8 @@ namespace substrate_shared.Reports
     {
         // Narrative layer
         public int DuelCount { get; set; }
-        public int ResilienceIndex { get; set; }
+        public double ResilienceIndex { get; set; }
+        public double TotalResilience { get; set; }
         public int RecoveryCount { get; set; }
         public int CollapseCount { get; set; }
         public int WoundCount { get; set; }
@@ -52,13 +53,17 @@ namespace substrate_shared.Reports
 
         public List<string> CrystalNarratives { get; set; } = new();
         public List<string> BiasSummaries { get; set; } = new();
-
-        // ✅ Put Print() here, inside the class
+        public Dictionary<string, int> ToneDistribution { get; set; }
+        public Dictionary<string, int> IntentDistribution { get; set; }
+        public Dictionary<string, int> CrystalRarity { get; set; }
+        public Dictionary<string, int> Outcomes { get; set; }
+        public int CrystalCount { get; set; }
+        
         public void Print()
         {
             Console.WriteLine("=== Resilience Report ===");
             Console.WriteLine("=== Report Summary ===");
-            Console.WriteLine($"Duels: {DuelCount} | Resilience Index: {ResilienceIndex}");
+            Console.WriteLine($"Duels: {DuelCount} | Total Resilience: {TotalResilience:F2} | Resilience Index: {ResilienceIndex:F2}");
             Console.WriteLine($"Outcomes → Recoveries: {RecoveryCount}, Collapses: {CollapseCount}, Wounds: {WoundCount}, Conflicts: {ConflictCount}, Equilibriums: {EquilibriumCount}");
 
             // 🔹 Math overlay values
