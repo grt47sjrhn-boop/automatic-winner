@@ -42,5 +42,6 @@ namespace substrate_shared.interfaces
 
         // 🔹 Explicit numeric type for resilience
         void AddResilience(double engagementCumulativeResilience);
+        void AddNarrative(string description);
     }
 }

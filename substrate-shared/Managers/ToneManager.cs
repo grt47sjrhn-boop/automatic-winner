@@ -88,9 +88,50 @@ namespace substrate_shared.Managers
         public bool CheckBalance(BiasVector a, BiasVector b)
         {
             var diff = Math.Abs(a.Magnitude - b.Magnitude);
-            return diff <= 2;
+            return diff <= 1;
         }
-        
+
+        public ToneCut ResolveToneCut(BiasVector persistentBiasVector, BiasVector opponent)
+        {
+            var cut = new ToneCut();
+
+            // If balanced, return an equilibrium cut
+            if (CheckBalance(persistentBiasVector, opponent))
+            {
+                cut.Primary = ToneType.Neutral;
+                cut.Distribution[persistentBiasVector.DominantTone] = persistentBiasVector.Magnitude;
+                cut.Distribution[opponent.DominantTone] = opponent.Magnitude;
+                return cut;
+            }
+
+            // Otherwise, determine dominant tone
+            var dominantTone = DetermineDominant(persistentBiasVector, opponent);
+            cut.Primary = dominantTone;
+
+            // Build distribution from both vectors
+            var combined = new Dictionary<ToneType,int>();
+
+            void addTone(ToneType tone, int magnitude)
+            {
+                if (combined.ContainsKey(tone))
+                    combined[tone] += magnitude;
+                else
+                    combined[tone] = magnitude;
+            }
+
+            addTone(persistentBiasVector.DominantTone, persistentBiasVector.Magnitude);
+            addTone(opponent.DominantTone, opponent.Magnitude);
+
+            // Normalize distribution into the cut
+            foreach (var kv in combined)
+            {
+                if (kv.Value > 0)
+                    cut.Distribution[kv.Key] = kv.Value;
+            }
+
+            return cut;
+        }
+
         /// <summary>
         /// Cut a normalized facet shape into a ToneCut (brilliance representation).
         /// </summary>

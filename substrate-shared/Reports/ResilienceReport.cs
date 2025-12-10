@@ -26,16 +26,12 @@ namespace substrate_shared.Reports
         public double ExpScaledIndex { get; set; }
 
         // Tone and Intent aggregation
-        public Dictionary<string,int> ToneCounts { get; set; } = new();
-        public Dictionary<string,int> IntentCounts { get; set; } = new();
-        public Dictionary<string,int> ToneLabels { get; set; } = new();
+        public Dictionary<string,int> ToneDistribution { get; set; } = new();
+        public Dictionary<string,int> IntentDistribution { get; set; } = new();
 
-        // Crystal inventory (grouped)
+        // Crystal inventory
         public List<TraitCrystalGroup> CrystalGroups { get; set; } = new();
         public List<TraitCrystal> Crystals { get; set; } = new();
-
-        // Enriched fields
-        public Dictionary<string,int> BrillianceCuts { get; set; } = new();
 
         // Collapse rarities
         public Dictionary<string,int> RarityCounts { get; set; } = new()
@@ -53,12 +49,23 @@ namespace substrate_shared.Reports
 
         public List<string> CrystalNarratives { get; set; } = new();
         public List<string> BiasSummaries { get; set; } = new();
-        public Dictionary<string, int> ToneDistribution { get; set; }
-        public Dictionary<string, int> IntentDistribution { get; set; }
-        public Dictionary<string, int> CrystalRarity { get; set; }
-        public Dictionary<string, int> Outcomes { get; set; }
         public int CrystalCount { get; set; }
-        
+        public Dictionary<string, int> Outcomes { get; set; }
+        public Dictionary<string, int> CrystalRarity { get; set; }
+        public Dictionary<string, int> BrillianceCuts { get; set; }
+
+        /// <summary>
+        /// Generate a narrative summary based on overlays and rarity distribution.
+        /// </summary>
+        public string GenerateNarrative()
+        {
+            if (AverageHypotenuse > 10 && CumulativeArea > 50)
+                return "Battles sprawled wide and expansive, forging rarer salvage.";
+            if (AverageHypotenuse < 5 && CumulativeArea < 20)
+                return "Duels collapsed inward, yielding only common scraps.";
+            return "Resilience oscillated across balanced duels, producing mixed salvage.";
+        }
+
         public void Print()
         {
             Console.WriteLine("=== Resilience Report ===");
@@ -66,7 +73,6 @@ namespace substrate_shared.Reports
             Console.WriteLine($"Duels: {DuelCount} | Total Resilience: {TotalResilience:F2} | Resilience Index: {ResilienceIndex:F2}");
             Console.WriteLine($"Outcomes → Recoveries: {RecoveryCount}, Collapses: {CollapseCount}, Wounds: {WoundCount}, Conflicts: {ConflictCount}, Equilibriums: {EquilibriumCount}");
 
-            // 🔹 Math overlay values
             Console.WriteLine();
             Console.WriteLine("Math Overlay Metrics:");
             Console.WriteLine($"  Average Hypotenuse: {AverageHypotenuse:F2}");
@@ -78,12 +84,12 @@ namespace substrate_shared.Reports
 
             Console.WriteLine();
             Console.WriteLine("Tone Distribution:");
-            foreach (var kvp in ToneLabels)
+            foreach (var kvp in ToneDistribution)
                 Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
 
             Console.WriteLine();
             Console.WriteLine("Intent Distribution:");
-            foreach (var kvp in IntentCounts)
+            foreach (var kvp in IntentDistribution)
                 Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
 
             Console.WriteLine();
@@ -100,6 +106,10 @@ namespace substrate_shared.Reports
             Console.WriteLine("Bias Summaries:");
             foreach (var bias in BiasSummaries)
                 Console.WriteLine($"  - {bias}");
+
+            Console.WriteLine();
+            Console.WriteLine("Narrative Summary:");
+            Console.WriteLine($"  {GenerateNarrative()}");
         }
     }
 
@@ -114,5 +124,10 @@ namespace substrate_shared.Reports
 
         public List<TraitCrystal> Crystals { get; set; } = new();
         public Dictionary<string, int> MaxFacetValues { get; set; } = new();
+
+        public string DescribeGroup()
+        {
+            return $"{Signature} ({Count} crystals) — Dominant Tone: {DominantTone}, Bias: {Bias}";
+        }
     }
 }

@@ -152,7 +152,7 @@ namespace substrate_shared.Managers
         private List<ToneType> BuildWeightedTones(OpponentProfile p, EnvironmentMood? env)
         {
             var pool = new List<ToneType>();
-            void add(ToneType t, int w) { for (int i = 0; i < w; i++) pool.Add(t); }
+            void add(ToneType t, int w) { for (var i = 0; i < w; i++) pool.Add(t); }
 
             foreach (var t in new[] { ToneType.Hostile, ToneType.Critical, ToneType.Despairing, ToneType.Wound, ToneType.Corrupted, ToneType.Doomed })
                 add(t, (int)Math.Round(4 * p.CollapseBiasFactor));
@@ -192,7 +192,7 @@ namespace substrate_shared.Managers
         private Bias PickWeightedBias(double collapseBiasFactor)
         {
             var weights = new List<Bias>();
-            void add(Bias b, int w) { for (int i = 0; i < w; i++) weights.Add(b); }
+            void add(Bias b, int w) { for (var i = 0; i < w; i++) weights.Add(b); }
 
             add(Bias.Negative, (int)Math.Round(3 * collapseBiasFactor));
             add(Bias.Mixed, 2);
@@ -205,10 +205,10 @@ namespace substrate_shared.Managers
         private int PickMagnitude(OpponentProfile p)
         {
             double u() => _rng.NextDouble() - 0.5;
-            double gaussianish = (u() + u() + u()) * 8.0;
-            double scaled = gaussianish * p.MagnitudeVariance * p.DifficultyMultiplier;
+            var gaussianish = (u() + u() + u()) * 8.0;
+            var scaled = gaussianish * p.MagnitudeVariance * p.DifficultyMultiplier;
 
-            int mag = (int)Math.Round(Math.Max(-10, Math.Min(10, scaled)));
+            var mag = (int)Math.Round(Math.Max(-10, Math.Min(10, scaled)));
             if (mag == 0 && p.AggressionNudge) mag = _rng.Next(0, 2) == 0 ? -1 : 1;
             return mag;
         }

@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using substrate_shared.Engagements.Enums;
 using substrate_shared.Factories;          // EngagementType enum
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
+using substrate_shared.Models;
 using substrate_shared.Overlays;
 using substrate_shared.Profiles;
+using substrate_shared.Registries.enums;
 using substrate_shared.Runners.Factories;
 using substrate_shared.structs;
+using substrate_shared.Traits.Base;
+using substrate_shared.Traits.Enums;
 using EnvironmentMood = substrate_shared.Environment.EnvironmentMood;
 
 namespace substrate_core
@@ -43,7 +48,7 @@ namespace substrate_core
             _toneManager   = toneManager;
             _rarityManager = rarityManager;
             _inventory     = inventory;
-            _difficulty = difficulty;
+            _difficulty    = difficulty;
         }
 
         /// <summary>
@@ -51,7 +56,7 @@ namespace substrate_core
         /// </summary>
         public void Tick(int count)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var profile = OpponentProfiles.Challenge;
                 var mood    = EnvironmentMood.Storm;
@@ -74,12 +79,8 @@ namespace substrate_core
 
                 var summary = runner.Engagement.Finalize();
                 _tracker.AddSummary(summary);
-
-                /*// 🔹 Add cumulative resilience so report index isn’t stuck at 0
-                _tracker.AddResilience(runner.Engagement.CumulativeResilience);*/
-
                 _tracker.AddResilience(summary.ResilienceIndex);
-                
+
                 // Geometry / trig metrics
                 var duelPair = new List<(BiasVector, BiasVector)>
                 {
@@ -97,12 +98,48 @@ namespace substrate_core
                 _tracker.AddArea(area);
                 _tracker.AddTrig(cos, sin, log, exp);
 
-                // Only add crystals forged this tick
-                var newCrystals = runner.Engagement.ForgedCrystals;
-                foreach (var crystal in newCrystals)
+                // --- Forge crystals based on outcome ---
+                var type = summary.Outcome switch
                 {
-                    _tracker.AddCrystal(crystal);
-                }
+                    DuelOutcome.Recovery    => CrystalType.Resilience,
+                    DuelOutcome.Collapse    => CrystalType.Collapse,
+                    DuelOutcome.Wound       => CrystalType.Wound,
+                    DuelOutcome.Conflict    => CrystalType.Conflict,
+                    DuelOutcome.Equilibrium => CrystalType.Equilibrium,
+                    _                       => CrystalType.Resilience
+                };
+
+                // Aggregate facets and resolve tone cut
+                var facets  = _facetManager.ResolveFacets(_persistent.BiasVector, opponent);
+                var toneCut = _toneManager.ResolveToneCut(_persistent.BiasVector, opponent);
+
+                // Assign rarity tier enriched with overlays
+                var rarityTier = _rarityManager.AssignTier(
+                    runner.Engagement,
+                    hypotenuse,
+                    area,
+                    cos,
+                    sin,
+                    _tracker.AverageHypotenuse,
+                    _tracker.CumulativeArea
+                );
+
+                // Factory call for the correct crystal type
+                var crystal = TraitCrystalFactory.CreateCrystal(
+                    threshold: (int)Math.Round(summary.ResilienceIndex),
+                    isPositive: summary.Outcome == DuelOutcome.Recovery,
+                    facets: facets,
+                    narrative: summary.ToString(),
+                    existingCrystals: _tracker.Crystals.ToList(),
+                    toneCut: toneCut,
+                    rarityTier: rarityTier,
+                    type: type
+                );
+
+                // Narrative + tracker update
+                var description = crystal.GetDescription(hypotenuse, area);
+                _tracker.AddCrystal(crystal);
+                _tracker.AddNarrative(description);
 
                 _persistent.ApplyOutcome(summary, _difficulty);
             }

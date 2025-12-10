@@ -5,22 +5,27 @@ using substrate_shared.structs;
 
 namespace substrate_shared.Mappers
 {
+    /// <summary>
+    /// Maps facet distributions into tone distributions for forging crystals and tone cuts.
+    /// </summary>
     public static class FacetToneMapper
     {
         /// <summary>
-        /// Convert facet distribution into a tone distribution for forging.
+        /// Convert facet distribution into a tone distribution.
         /// </summary>
-        public static Dictionary<ToneType, int> ToToneDictionary(FacetDistribution facets)
+        public static IReadOnlyDictionary<ToneType,int> ToToneDictionary(FacetDistribution facets)
         {
-            var dict = new Dictionary<ToneType, int>();
+            var dict = new Dictionary<ToneType,int>();
 
-            dict[ToneType.Resilient] = facets.Values.TryGetValue(FacetType.Resilience, out var res) ? res : 0;
-            dict[ToneType.Harmonious] = facets.Values.TryGetValue(FacetType.Harmony, out var harm) ? harm : 0;
-            dict[ToneType.Conflict] = facets.Values.TryGetValue(FacetType.Conflict, out var conf) ? conf : 0;
-            dict[ToneType.Radiant] = facets.Values.TryGetValue(FacetType.Radiance, out var rad) ? rad : 0;
+            if (facets?.Values == null)
+                return dict;
+
+            dict[ToneType.Resilient]  = facets.Values.GetValueOrDefault(FacetType.Resilience, 0);
+            dict[ToneType.Harmonious] = facets.Values.GetValueOrDefault(FacetType.Harmony, 0);
+            dict[ToneType.Conflict]   = facets.Values.GetValueOrDefault(FacetType.Conflict, 0);
+            dict[ToneType.Radiant]    = facets.Values.GetValueOrDefault(FacetType.Radiance, 0);
 
             return dict;
         }
-
     }
 }

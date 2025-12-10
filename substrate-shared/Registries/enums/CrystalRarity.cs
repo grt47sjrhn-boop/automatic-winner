@@ -45,8 +45,32 @@ namespace substrate_shared.Registries.enums
             NarrativeGroup.Crystal,
             scaleValue: 5)]
         UltraRare,
+
+        [RegistryNarrative(
+            "Fragile crystal: brittle resonance, shards that fracture under pressure yet whisper fleeting truths.",
+            Bias.Negative,
+            NarrativeGroup.Crystal,
+            scaleValue: -1)]
         Fragile,
+
+        [RegistryNarrative(
+            "Corrupted crystal: resonance twisted, facets darkened, a dangerous artifact echoing collapse.",
+            Bias.Negative,
+            NarrativeGroup.Crystal,
+            scaleValue: -2)]
         Corrupted,
-        Doomed
+
+        [RegistryNarrative(
+            "Doomed crystal: resonance extinguished, a shard of inevitable collapse, narrating the end of resilience.",
+            Bias.Negative,
+            NarrativeGroup.Crystal,
+            scaleValue: -3)]
+        Doomed,
+        [RegistryNarrative(
+            "Equilibrium crystal: forged in balance, steady resonance, a shard of perfect stasis.",
+            Bias.Neutral,
+            NarrativeGroup.Crystal,
+            scaleValue: 6)]
+        Equilibrium,
     }
 }

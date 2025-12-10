@@ -23,7 +23,8 @@ namespace substrate_shared.Overlays
             var values = duels.Select(d =>
             {
                 var hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
-                return hyp > 0 ? d.Item1.Magnitude / hyp : 0;
+                var ratio = hyp > 0 ? d.Item1.Magnitude / hyp : 0;
+                return Math.Clamp(ratio, -1.0, 1.0); // ✅ clamp to valid cos range
             });
             return values.Any() ? values.Average() : 0;
         }
@@ -33,7 +34,8 @@ namespace substrate_shared.Overlays
             var values = duels.Select(d =>
             {
                 var hyp = GeometryOverlay.ComputeHypotenuse(d.Item1, d.Item2);
-                return hyp > 0 ? d.Item2.Magnitude / hyp : 0;
+                var ratio = hyp > 0 ? d.Item2.Magnitude / hyp : 0;
+                return Math.Clamp(ratio, -1.0, 1.0); // ✅ clamp to valid sin range
             });
             return values.Any() ? values.Average() : 0;
         }

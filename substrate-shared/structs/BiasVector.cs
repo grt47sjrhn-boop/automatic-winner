@@ -37,7 +37,7 @@ namespace substrate_shared.structs
         /// <summary>
         /// The dominant tone type represented by this vector.
         /// </summary>
-        public ToneType DominantTone => Tone?.Type ?? ToneType.Conflict;
+        public ToneType DominantTone => Tone?.Type ?? ToneType.Neutral;
 
         public override string ToString()
         {

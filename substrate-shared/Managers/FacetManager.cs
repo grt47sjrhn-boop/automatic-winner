@@ -1,100 +1,76 @@
 using System.Collections.Generic;
-using System.Linq;
 using substrate_shared.Facets.Enums;
 using substrate_shared.interfaces;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
+using substrate_shared.Mappers;
 
 namespace substrate_shared.Managers
 {
-    /// <summary>
-    /// Manager responsible for interpreting facet distributions into bias descriptors.
-    /// Implements IFacetManager for orchestration consistency.
-    /// </summary>
     public class FacetManager : IFacetManager
     {
-        /// <summary>
-        /// Translate facet values into a BiasDescriptor with narrative notes.
-        /// </summary>
-        public BiasDescriptor Narrate(FacetDistribution shape)
+        public FacetDistribution Normalize(IReadOnlyDictionary<FacetType,int> values)
         {
-            var resilience = shape.Values[FacetType.Resilience];
-            var harmony    = shape.Values[FacetType.Harmony];
-            var conflict   = shape.Values[FacetType.Conflict];
-            var radiance   = shape.Values[FacetType.Radiance];
+            var distribution = new FacetDistribution();
 
-            Bias bias;
-            if (resilience > conflict) bias = Bias.Positive;
-            else if (conflict > resilience) bias = Bias.Negative;
-            else if (harmony > 0) bias = Bias.Neutral;
-            else bias = Bias.Mixed;
+            if (values == null) return distribution;
 
-            var notes = $"Resilience({resilience}), Harmony({harmony}), Conflict({conflict}), Radiance({radiance})";
+            // Simple normalization: scale values to 0–100 range
+            var max = 0;
+            foreach (var kv in values)
+                if (kv.Value > max) max = kv.Value;
 
-            return new BiasDescriptor
-            {
-                Bias = bias,
-                Narrative = $"Facet distribution → {notes}"
-            };
+            foreach (var kv in values)
+                distribution.Values[kv.Key] = max > 0 ? (int)((kv.Value / (double)max) * 100) : 0;
+
+            return distribution;
         }
 
-        /// <summary>
-        /// Static helper: normalize raw facet values into a FacetDistribution.
-        /// </summary>
-        private static FacetDistribution NormalizeInternal(IDictionary<FacetType,int> rawValues)
-        {
-            var normalized = new Dictionary<FacetType,int>();
-            foreach (var type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
-            {
-                normalized[type] = rawValues.TryGetValue(type, out var value) ? value : 0;
-            }
-
-            var max = normalized.Values.Max();
-            if (max > 0)
-            {
-                foreach (var key in normalized.Keys.ToList())
-                {
-                    normalized[key] = (int)System.Math.Round((normalized[key] / (double)max) * 10);
-                }
-            }
-
-            return new FacetDistribution(normalized);
-        }
-
-        /// <summary>
-        /// Instance implementation of Normalize for IFacetManager.
-        /// </summary>
-        public FacetDistribution Normalize(IReadOnlyDictionary<FacetType, int> values)
-        {
-            // Convert to mutable dictionary and delegate to internal helper
-            return NormalizeInternal(values.ToDictionary(kv => kv.Key, kv => kv.Value));
-        }
-
-        /// <summary>
-        /// Aggregate multiple facet distributions into one normalized distribution.
-        /// </summary>
         public FacetDistribution Aggregate(IEnumerable<FacetDistribution> distributions)
         {
-            if (distributions == null || !distributions.Any())
-            {
-                return NormalizeInternal(new Dictionary<FacetType,int>());
-            }
-
-            var aggregate = new Dictionary<FacetType,int>();
-            foreach (var type in (FacetType[])System.Enum.GetValues(typeof(FacetType)))
-            {
-                aggregate[type] = 0;
-            }
+            var result = new FacetDistribution();
 
             foreach (var dist in distributions)
             {
                 foreach (var kv in dist.Values)
                 {
-                    aggregate[kv.Key] += kv.Value;
+                    if (result.Values.ContainsKey(kv.Key))
+                        result.Values[kv.Key] += kv.Value;
+                    else
+                        result.Values[kv.Key] = kv.Value;
                 }
             }
 
-            return NormalizeInternal(aggregate);
+            return result;
+        }
+
+        /// <summary>
+        /// Resolve facets from two bias vectors into a tone dictionary for forging.
+        /// </summary>
+        public IReadOnlyDictionary<ToneType,int> ResolveFacets(BiasVector persistentBiasVector, BiasVector opponent)
+        {
+            var combined = new Dictionary<FacetType,int>();
+
+            void AddFacets(BiasVector vector)
+            {
+                var dist = vector.ToFacetDistribution();
+                foreach (var kv in dist.Values)
+                {
+                    if (combined.ContainsKey(kv.Key))
+                        combined[kv.Key] += kv.Value;
+                    else
+                        combined[kv.Key] = kv.Value;
+                }
+            }
+            
+            AddFacets(persistentBiasVector);
+            AddFacets(opponent);
+
+            // Normalize combined facets
+            var normalized = Normalize(combined);
+
+            // 🔹 Map normalized facets into tone dictionary
+            return FacetToneMapper.ToToneDictionary(normalized);
         }
     }
 }

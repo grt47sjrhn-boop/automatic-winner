@@ -94,7 +94,7 @@ namespace substrate_shared.Managers
         /// </summary>
         public EngagementResult? GetResult(Guid engagementId)
         {
-            return _results.TryGetValue(engagementId, out var result) ? result : null;
+            return _results.GetValueOrDefault(engagementId);
         }
 
         /// <summary>

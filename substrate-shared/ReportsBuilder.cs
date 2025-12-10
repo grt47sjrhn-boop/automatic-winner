@@ -4,8 +4,8 @@ using System.Linq;
 using substrate_shared.interfaces;
 using substrate_shared.Managers;
 using substrate_shared.Reports;
-using substrate_shared.Facets.Enums;
 using substrate_shared.Summaries;
+using substrate_shared.Traits.Base;
 
 namespace substrate_shared
 {
@@ -27,19 +27,17 @@ namespace substrate_shared
 
             var report = new ResilienceReport
             {
-                DuelCount       = summaries.Count,
-                CrystalCount    = crystals.Count,
-                AverageHypotenuse = _tracker.AverageHypotenuse,
-                CumulativeArea    = _tracker.CumulativeArea,
-                MeanCos           = _tracker.MeanCos,
-                MeanSin           = _tracker.MeanSin,
-                LogScaledIndex    = _tracker.LogScaledIndex,
-                ExpScaledIndex    = _tracker.ExpScaledIndex,
-                Crystals          = crystals,
-                // 🔹 Copy resilience values from tracker
-                TotalResilience   = _tracker.TotalResilience,
-                ResilienceIndex   = _tracker.ResilienceIndex
-
+                DuelCount        = summaries.Count,
+                CrystalCount     = crystals.Count,
+                AverageHypotenuse= _tracker.AverageHypotenuse,
+                CumulativeArea   = _tracker.CumulativeArea,
+                MeanCos          = _tracker.MeanCos,
+                MeanSin          = _tracker.MeanSin,
+                LogScaledIndex   = _tracker.LogScaledIndex,
+                ExpScaledIndex   = _tracker.ExpScaledIndex,
+                Crystals         = crystals,
+                TotalResilience  = _tracker.TotalResilience,
+                ResilienceIndex  = _tracker.ResilienceIndex
             };
 
             // --- Outcome counts ---
@@ -58,38 +56,46 @@ namespace substrate_shared
                 .GroupBy(s => s.Intent.ToString())
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            report.IntentCounts = report.IntentDistribution;
-
             // --- Tone distribution ---
             report.ToneDistribution = summaries
                 .GroupBy(s => s.Brilliance.Primary.ToString())
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            report.ToneLabels = report.ToneDistribution;
-            report.ToneCounts = report.ToneDistribution;
-
-            // --- Crystal rarity counts ---
+            // --- Crystal rarity counts + narratives ---
             foreach (var crystal in crystals)
             {
-                var rarity = crystal.Rarity.ToString();
-                if (report.RarityCounts.ContainsKey(rarity))
-                    report.RarityCounts[rarity]++;
+                // ✅ Always use ResolvedRarity consistently
+                var rarityKey = crystal.ResolvedRarity.ToString();
+
+                if (report.RarityCounts.ContainsKey(rarityKey))
+                    report.RarityCounts[rarityKey]++;
                 else
-                    report.RarityCounts[rarity] = 1;
+                    report.RarityCounts[rarityKey] = 1;
+
+                // ✅ Enrich narrative with overlay context
+                report.CrystalNarratives.Add(
+                    $"{rarityKey} crystal forged " +
+                    $"(Hypotenuse {_tracker.AverageHypotenuse:F1}, Area {_tracker.CumulativeArea:F1}) " +
+                    $"→ Facets: {string.Join(", ", crystal.Facets.Select(f => $"{f.Key}:{f.Value}"))}"
+                );
             }
 
-            report.CrystalRarity = report.RarityCounts;
+            // ✅ Mirror into CrystalRarity dictionary for export
+            report.CrystalRarity = new Dictionary<string,int>(report.RarityCounts);
+
 
             // --- Crystal narratives ---
-            report.CrystalNarratives = crystals.Select(c => c.GetGroup().ToString()).ToList();
+            report.CrystalNarratives = crystals
+                .Select(c => c.GetDescription())
+                .ToList();
 
             // --- Bias summaries ---
             report.BiasSummaries = summaries
                 .OfType<DuelEventSummary>()
-                .Select(s => $"{s.Bias.Bias} ({s.Bias.Value:F2}, {s.Bias.Severity})")
-
+                .GroupBy(s => s.Bias.Bias)
+                .Select(g => $"{g.Key}: {g.Count()} duels")
                 .ToList();
-            
+
             // --- Brilliance cuts ---
             report.BrillianceCuts = summaries
                 .GroupBy(s => s.Brilliance.Primary.ToString())

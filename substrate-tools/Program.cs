@@ -19,7 +19,7 @@ namespace substrate_tools
             IFacetManager facetManager     = new FacetManager();
             IToneManager toneManager       = new ToneManager();
             IRarityManager rarityManager   = new RarityManager();
-            InventoryManager inventory     = new InventoryManager();
+            var inventory     = new InventoryManager();
 
             // 🔹 Tracker (tone/rarity managers injected)
             IResilienceTracker tracker     = new ResilienceTracker();
@@ -29,8 +29,8 @@ namespace substrate_tools
             var verbose      = false;
             var export       = false;
             var exportFormat = "json";
-            double seedBias  = 0.0;
-            double difficulty = 1.0;
+            var seedBias  = 0.0;
+            var difficulty = 1.0;
             ToneType? seedTone = null;
 
             // 🔹 Parse CLI args

@@ -39,6 +39,37 @@ namespace substrate_shared.Managers
         }
 
         /// <summary>
+        /// Compute a rarity score from distribution + geometry overlays, normalized against averages.
+        /// </summary>
+        public int ComputeScore(
+            FacetDistribution distribution,
+            double hypotenuse,
+            double area,
+            double cos,
+            double sin,
+            double avgHypotenuse,
+            double avgArea)
+        {
+            var baseScore = ComputeScore(distribution);
+
+            // Normalize hypotenuse relative to average
+            var hypFactor = avgHypotenuse > 0 ? hypotenuse / avgHypotenuse : 1.0;
+            if (hypFactor > 1.5) baseScore += 2;        // wide battles
+            else if (hypFactor < 0.5) baseScore -= 1;   // cramped collapses
+
+            // Normalize area relative to average
+            var areaFactor = avgArea > 0 ? area / avgArea : 1.0;
+            if (areaFactor > 2.0) baseScore += 3;       // sprawling clashes
+            else if (areaFactor < 0.5) baseScore -= 1;  // tight footprint
+
+            // Angle influence
+            if (cos < 0.5) baseScore += 1;              // off‑angle runs
+            if (Math.Abs(sin) > 0.7) baseScore += 1;    // lateral drift
+
+            return baseScore;
+        }
+
+        /// <summary>
         /// Assign a descriptive rarity tier based on score thresholds.
         /// Wraps the CrystalRarity enum with a RarityTier model.
         /// </summary>
@@ -54,6 +85,22 @@ namespace substrate_shared.Managers
 
             var description = GetNarrative(rarity);
             return new RarityTier(rarity.ToString(), description);
+        }
+
+        /// <summary>
+        /// Assign a rarity tier using engagement + geometry overlays.
+        /// </summary>
+        public RarityTier AssignTier(
+            IEngagement engagement,
+            double hypotenuse,
+            double area,
+            double cos,
+            double sin,
+            double avgHypotenuse,
+            double avgArea)
+        {
+            var score = ComputeScore(engagement.Shape, hypotenuse, area, cos, sin, avgHypotenuse, avgArea);
+            return AssignTier(score);
         }
 
         /// <summary>

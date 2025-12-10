@@ -18,6 +18,7 @@ namespace substrate_shared.interfaces
     {
         FacetDistribution Normalize(IReadOnlyDictionary<FacetType,int> values);
         FacetDistribution Aggregate(IEnumerable<FacetDistribution> distributions);
+        IReadOnlyDictionary<ToneType, int> ResolveFacets(BiasVector persistentBiasVector, BiasVector opponent);
     }
 
     // 🔹 Bias manager contract
@@ -40,13 +41,16 @@ namespace substrate_shared.interfaces
         ToneCut Cut(IReadOnlyDictionary<ToneType,int> toneValues);
         ToneType DetermineDominant(BiasVector speakerA, BiasVector speakerB);
         bool CheckBalance(BiasVector speakerA, BiasVector speakerB);
+        ToneCut ResolveToneCut(BiasVector persistentBiasVector, BiasVector opponent);
     }
 
     // 🔹 Rarity manager contract
     public interface IRarityManager : IManager
     {
         RarityTier AssignTier(int score);
-        
+        // NEW overload
+        RarityTier AssignTier(IEngagement engagement, double hypotenuse, double area, double cos, double sin, double avgHypotenuse, double avgArea);
+
         // 🔹 New overload for facet distributions
         int ComputeScore(FacetDistribution distribution);
         

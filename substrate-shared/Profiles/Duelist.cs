@@ -53,24 +53,38 @@ namespace substrate_shared.Profiles
         // Apply duel outcome from EventSummary
         public void ApplyOutcome(ISummary summary, double difficulty)
         {
-            if (summary is EventSummary eventSummary && eventSummary.Type == SummaryType.Duel)
+            if (summary is DuelEventSummary duelSummary && duelSummary.Type == SummaryType.Duel)
             {
-                if (eventSummary.IsResolved)
+                switch (duelSummary.Outcome)
                 {
-                    Bias += (0.1 * Resilience) * difficulty;       // harder difficulty → bigger bias swings
-                    Resilience += 0.05 * difficulty;               // resilience grows faster/slower
-                    Recoveries++;
-                }
-                else
-                {
-                    Bias -= (0.1 * (2.0 - Resilience)) * difficulty;
-                    Resilience = Math.Max(0, Resilience - (0.05 * difficulty));
-                    Wounds++;
-                }
+                    case DuelOutcome.Recovery:
+                        Bias += (0.1 * Resilience) * difficulty;
+                        Resilience += 0.05 * difficulty;
+                        Recoveries++;
+                        break;
 
+                    case DuelOutcome.Collapse:
+                        Bias -= (0.1 * (2.0 - Resilience)) * difficulty;
+                        Resilience = Math.Max(0, Resilience - (0.05 * difficulty));
+                        Wounds++;
+                        break;
+
+                    case DuelOutcome.Wound:
+                        Bias -= (0.1 * (2.0 - Resilience)) * difficulty;
+                        Resilience = Math.Max(0, Resilience - (0.05 * difficulty));
+                        Wounds++;
+                        break;
+
+                    case DuelOutcome.Conflict:
+                    case DuelOutcome.Equilibrium:
+                        // Neutral adjustments
+                        Bias += 0.0;
+                        Resilience += 0.0;
+                        break;
+                }
 
                 // ✅ Refresh BiasVector after every outcome
-                var toneKey   = _seedTone.HasValue
+                var toneKey = _seedTone.HasValue
                     ? _seedTone.Value
                     : Bias > 0 ? ToneType.Joy
                         : Bias < 0 ? ToneType.Despairing
@@ -127,14 +141,12 @@ namespace substrate_shared.Profiles
                 case substrate_shared.Registries.enums.Bias.Positive:
                     Bias = 1.0;
                     Resilience = 1.5;
-                    Recoveries++;
                     break;
 
                 case substrate_shared.Registries.enums.Bias.Negative:
                     // Stronger collapse for abyssal tones
                     Bias = seedTone is ToneType.Forsaken or ToneType.Corrupted or ToneType.Doomed ? -2.0 : -1.0;
                     Resilience = 0.5;
-                    Wounds++;
                     break;
 
                 case substrate_shared.Registries.enums.Bias.Mixed:

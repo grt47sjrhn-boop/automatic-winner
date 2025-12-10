@@ -11,28 +11,30 @@ using substrate_shared.Reports;   // ✅ bring in ResilienceReport DTO
 
 namespace substrate_core.Resolvers
 {
+    /// <summary>
+    /// Tracks duel outcomes, overlays, and crystals, then builds ResilienceReport DTOs.
+    /// </summary>
     public class ResilienceTracker : IResilienceTracker
     {
         private readonly List<ISummary> _summaries = new();
         private readonly List<TraitCrystal> _crystals = new();
+        private readonly List<string> _narratives = new();   // ✅ store enriched narratives
 
         private readonly List<double> _hypotenuse = new();
         private readonly List<double> _areas = new();
         private readonly List<(double cos, double sin, double log, double exp)> _trig = new();
 
         private double _totalResilience = 0.0;
-        
+
+        // Public accessors
         public IReadOnlyList<ISummary> DuelSummaries => _summaries;
         public IReadOnlyList<TraitCrystal> Crystals => _crystals;
+        public IReadOnlyList<string> Narratives => _narratives;
 
-// ✅ Use double for precision
         public double TotalResilience => _totalResilience;
-
-// ✅ Divide as double to avoid integer truncation
-        public double ResilienceIndex => _summaries.Count > 0 
-            ? (double)_totalResilience / _summaries.Count 
+        public double ResilienceIndex => _summaries.Count > 0
+            ? _totalResilience / _summaries.Count
             : 0.0;
-
 
         public double AverageHypotenuse => _hypotenuse.Count > 0 ? _hypotenuse.Average() : 0.0;
         public double CumulativeArea => _areas.Sum();
@@ -54,46 +56,47 @@ namespace substrate_core.Resolvers
         {
             var report = new ResilienceReport
             {
-                DuelCount = _summaries.Count,
+                DuelCount       = _summaries.Count,
                 ResilienceIndex = ResilienceIndex,
                 TotalResilience = TotalResilience,
 
-                RecoveryCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery),
-                CollapseCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse),
-                WoundCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound),
-                ConflictCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict),
-                EquilibriumCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium),
+                RecoveryCount   = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery),
+                CollapseCount   = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse),
+                WoundCount      = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound),
+                ConflictCount   = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict),
+                EquilibriumCount= _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium),
 
                 AverageHypotenuse = AverageHypotenuse,
-                CumulativeArea = CumulativeArea,
-                MeanCos = MeanCos,
-                MeanSin = MeanSin,
-                LogScaledIndex = LogScaledIndex,
-                ExpScaledIndex = ExpScaledIndex,
+                CumulativeArea    = CumulativeArea,
+                MeanCos           = MeanCos,
+                MeanSin           = MeanSin,
+                LogScaledIndex    = LogScaledIndex,
+                ExpScaledIndex    = ExpScaledIndex,
 
-                CrystalCount = _crystals.Count,
-                Crystals = _crystals.ToList()
+                CrystalCount      = _crystals.Count,
+                Crystals          = _crystals.ToList(),
+                CrystalNarratives = _narratives.ToList()   // ✅ include stored narratives
             };
 
             // 🔹 Tone distribution
             foreach (var summary in _summaries.OfType<DuelEventSummary>())
             {
                 var tone = summary.ResolvedVector.Tone?.Label ?? "Unknown";
-                if (!report.ToneLabels.ContainsKey(tone))
-                    report.ToneLabels[tone] = 0;
-                report.ToneLabels[tone]++;
+                if (!report.ToneDistribution.ContainsKey(tone))
+                    report.ToneDistribution[tone] = 0;
+                report.ToneDistribution[tone]++;
             }
 
             // 🔹 Intent distribution
             foreach (var summary in _summaries.OfType<DuelEventSummary>())
             {
                 var intent = summary.ResolvedIntent.ToString();
-                if (!report.IntentCounts.ContainsKey(intent))
-                    report.IntentCounts[intent] = 0;
-                report.IntentCounts[intent]++;
+                if (!report.IntentDistribution.ContainsKey(intent))
+                    report.IntentDistribution[intent] = 0;
+                report.IntentDistribution[intent]++;
             }
 
-            // 🔹 Crystal rarities + narratives
+            // 🔹 Crystal rarities
             foreach (var crystal in _crystals)
             {
                 var rarityKey = crystal.ResolvedRarity.ToString();
@@ -101,9 +104,10 @@ namespace substrate_core.Resolvers
                     report.RarityCounts[rarityKey]++;
                 else
                     report.RarityCounts[rarityKey] = 1;
-
-                report.CrystalNarratives.Add(crystal.GetDescription());
             }
+
+            // ✅ Mirror into CrystalRarity dictionary for export
+            report.CrystalRarity = new Dictionary<string,int>(report.RarityCounts);
 
             // 🔹 Bias summaries
             foreach (var summary in _summaries.OfType<DuelEventSummary>())
@@ -115,10 +119,12 @@ namespace substrate_core.Resolvers
             return report;
         }
 
+        // Overlay accumulation
         public void AddHypotenuse(double value) => _hypotenuse.Add(value);
         public void AddArea(double value) => _areas.Add(value);
         public void AddTrig(double cos, double sin, double log, double exp) => _trig.Add((cos, sin, log, exp));
 
+        // Summary + crystal accumulation
         public void AddSummary(ISummary summary) => _summaries.Add(summary);
         public void AddCrystal(TraitCrystal crystal) => _crystals.Add(crystal);
 
@@ -128,8 +134,15 @@ namespace substrate_core.Resolvers
         public void AddResilience(double engagementCumulativeResilience)
         {
             _totalResilience += engagementCumulativeResilience;
-            Console.WriteLine($"[DEBUG] Added {engagementCumulativeResilience}, total now {_totalResilience}");
         }
 
+        /// <summary>
+        /// Add a narrative string to the tracker for later inclusion in reports.
+        /// </summary>
+        public void AddNarrative(string description)
+        {
+            if (!string.IsNullOrWhiteSpace(description))
+                _narratives.Add(description);
+        }
     }
 }
