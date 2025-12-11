@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using substrate_core.Factories;
 using substrate_core.Models;
+using substrate_core.Models.Results;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.Details;
 using substrate_shared.Registries.enums;
-using substrate_shared.Results;
 using substrate_shared.Traits.Base;
 
 namespace substrate_core.Managers

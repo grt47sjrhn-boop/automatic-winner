@@ -1,18 +1,24 @@
-# Registry architecture overview
-
-This README explains how the per‑type Registry Manager works and what the Super Registry Manager adds on top. It’s written for contributors and critics to understand both the modular design and the cross‑axis orchestration layer.
+Here’s an updated version of your **Registry architecture overview README**, expanded to reflect the current state of PRISMx — including the fact that profiles and overlays are now part of the shared substrate alongside registries. This version makes it clear to contributors why static classes live here, how managers orchestrate them, and how profiles fit into the bigger picture.
 
 ---
 
-## Core concepts
+# Registry Architecture Overview
 
-- **Enum as semantic anchors:** Each registry enum (ToneType, MoodType, IntentAction, etc.) defines discrete values decorated with attributes that carry narrative metadata (description, bias, narrative group).
-- **Interface-driven access:** Enum values are wrapped by a struct (`RegistryValue<TEnum>`) that implements `IReadableRegistry`. This exposes metadata uniformly via `GetDescription()`, `GetBias()`, and `GetGroup()` without leaking enum details.
+This README explains how the per‑type Registry Manager works, what the Super Registry Manager adds on top, and how profiles and overlays extend the registry substrate. It’s written for contributors and critics to understand both the modular design and the cross‑axis orchestration layer.
+
+---
+
+## Core Concepts
+
+- **Enum as semantic anchors:** Each registry enum (`ToneType`, `MoodType`, `IntentAction`, etc.) defines discrete values decorated with attributes that carry narrative metadata (description, bias, narrative group).
+- **Interface‑driven access:** Enum values are wrapped by a struct (`RegistryValue<TEnum>`) that implements `IReadableRegistry`. This exposes metadata uniformly via `GetDescription()`, `GetBias()`, and `GetGroup()` without leaking enum details.
 - **Separation of axes:** Each registry represents a distinct narrative axis. Keeping them separate preserves clarity, safety, and contributor extensibility.
+- **Profiles as presets:** Static profile containers (e.g., `OpponentProfiles`) define bias/difficulty presets. Each profile is a normal class implementing `IOpponentProfile`, but exposed through static accessors for convenience.
+- **Overlays as narratable math:** Geometry and trigonometric overlays translate bias vectors into narratable metrics (hypotenuse, area, cos/sin ratios). They live in `shared` because they are simulation primitives.
 
 ---
 
-## Basic registry manager (per‑type)
+## Basic Registry Manager (Per‑Type)
 
 The `RegistryManager<TEnum>` is a generic, per‑type manager. It initializes a static cache of all values in the given enum, each wrapped as `RegistryValue<TEnum>` so they can be accessed via `IReadableRegistry`.
 
@@ -32,20 +38,9 @@ The `RegistryManager<TEnum>` is a generic, per‑type manager. It initializes a 
 - **Extensibility:** Contributors add enum values with attributes; the manager automatically surfaces them with no extra wiring.
 - **Narratability:** Metadata (description, bias, group) is immediately accessible for diagnostics and overlays.
 
-### Example
-
-```csharp
-var joy = RegistryManager<ToneType>.Get(ToneType.Joy);
-Console.WriteLine(joy.GetDescription());
-// "Joy rings like bells in a haunted city, fragile yet defiant against the void."
-
-var coreJoy = RegistryManager<ToneType>.DescribeCluster(NarrativeGroup.CoreJoy);
-Console.WriteLine(coreJoy);
-```
-
 ---
 
-## Super registry manager (cross‑axis orchestration)
+## Super Registry Manager (Cross‑Axis Orchestration)
 
 The `SuperRegistryManager` sits above all per‑type managers. It does not merge registries; it overlays unified querying and orchestration while preserving the split. It’s the panoramic layer for contributors and critics.
 
@@ -59,72 +54,39 @@ The `SuperRegistryManager` sits above all per‑type managers. It does not merge
 - **Grouped breakdowns:** `GetGroupedByRegistry(NarrativeGroup group)` returns a dictionary keyed by type, preserving the per‑axis split in outputs.
 - **Triad overlays:** `DescribeTriad(ToneType tone, MoodType mood, IntentAction intent)` composes cross‑axis combinations (Tone + Mood + Intent) with a single formatted narrative block.
 - **Bias scoring:** Classifies entries as Positive, Negative, Neutral, Leaning Positive/Negative, or Mixed (Conflict).
-    - Used for triads and clusters to give instant analytic clarity.
 - **Cluster scoring:** `DescribeClusterWithScore(NarrativeGroup group)` returns group entries with an overall bias classification.
 - **Random sampling:** Helpers to select random entries or clusters for demos, quickstarts, and onboarding.
 - **Narrative overlays:** Concatenate descriptions to produce a single mythic string for presentations or logs.
 - **Critic report generator:** `GenerateCriticReport()` assembles a full multi‑section report with bias overview, group summaries (with scores), and a sample triad.
 
-### Why it matters
+---
 
-- **Panoramic clarity:** Critics and contributors can see the whole mythic palette at once without losing per‑axis identity.
-- **Reusable orchestration:** Centralized helpers prevent brittle, copy‑pasted LINQ across types.
-- **Narrative analytics:** Scoring makes combinations and clusters interpretable at a glance — no need to eyeball dozens of entries.
+## Profiles and Overlays
 
-### Example
-
-```csharp
-// Register registries once
-SuperRegistryManager.Register<ToneType>();
-SuperRegistryManager.Register<MoodType>();
-SuperRegistryManager.Register<IntentAction>();
-
-// Unified query
-var positives = SuperRegistryManager.GetByBias(Bias.Positive);
-
-// Grouped breakdown
-var groupedJoy = SuperRegistryManager.GetGroupedByRegistry(NarrativeGroup.CoreJoy);
-foreach (var kvp in groupedJoy)
-{
-    Console.WriteLine($"{kvp.Key.Name}:");
-    foreach (var entry in kvp.Value)
-        Console.WriteLine($"- {entry.GetDescription()} ({entry.GetBias()})");
-}
-
-// Triad overlay with scoring
-Console.WriteLine(SuperRegistryManager.DescribeTriad(ToneType.Joy, MoodType.Calm, IntentAction.Hostile));
-
-// Cluster with score
-Console.WriteLine(SuperRegistryManager.DescribeClusterWithScore(NarrativeGroup.Equilibrium));
-
-// Critic report
-Console.WriteLine(SuperRegistryManager.GenerateCriticReport());
-```
+- **Profiles (`OpponentProfiles`):** Static containers expose named presets (`StoryMode`, `Challenge`, `Nightmare`, `Balanced`). Each preset is a normal `OpponentProfile` class implementing `IOpponentProfile`. This keeps profiles injectable if needed, but convenient to access statically.
+- **Overlays (`GeometryOverlay`, `TrigOverlay`):** Instance‑based services implementing `IOverlay`. They compute narratable metrics (hypotenuse, area, cos/sin ratios, log/exp scaling) and are injected into resolvers and engines. They live in `shared` because they are simulation primitives, not adapter logic.
 
 ---
 
-## Design principles upheld
+## Design Principles Upheld
 
-- **Separation of concerns:** Per‑type managers handle registry internals; the super manager handles cross‑axis orchestration.
+- **Separation of concerns:** Per‑type managers handle registry internals; the super manager handles cross‑axis orchestration; overlays handle math; profiles handle presets.
 - **Type safety and clarity:** Each enum remains its own domain. The super layer never blurs axes; it overlays queries and compositions.
-- **Contributor empowerment:** Adding entries requires only defining enum members with attributes; everything else is automatic.
-- **Critic readiness:** Scored summaries and triads make the system interpretable and presentable without custom glue code.
+- **Contributor empowerment:** Adding entries requires only defining enum members with attributes; adding profiles requires only defining a preset; overlays are reusable services.
+- **Critic readiness:** Scored summaries, triads, and overlays make the system interpretable and presentable without custom glue code.
 
 ---
 
-## Common pitfalls and fixes
+## Common Pitfalls and Fixes
 
-- **Accessing the underlying enum value:** `RegistryManager<TEnum>.GetAll()` returns `IReadableRegistry`. If you need the raw enum, you must cast to `RegistryValue<TEnum>` because it’s a struct.
-  ```csharp
-  var toneEntry = RegistryManager<ToneType>.GetAll().First();
-  var tone = ((RegistryValue<ToneType>)toneEntry).Value; // direct cast, not 'as'
-  ```
+- **Accessing the underlying enum value:** `RegistryManager<TEnum>.GetAll()` returns `IReadableRegistry`. If you need the raw enum, cast to `RegistryValue<TEnum>`.
 - **Forgetting to register registries:** The super manager only knows about types you register. Call `Register<TEnum>()` for each axis you want in unified queries.
 - **Assuming global caches:** Each `RegistryManager<TEnum>` maintains a per‑type static cache. This is intentional for isolation; the super manager aggregates them when asked.
+- **Confusing static vs instance:** Profiles are static containers but normal classes underneath. Overlays are instance services and must be injected.
 
 ---
 
-## Contributor quickstart
+## Contributor Quickstart
 
 1. **Add a new enum value with attributes**
    ```csharp
@@ -134,10 +96,20 @@ Console.WriteLine(SuperRegistryManager.GenerateCriticReport());
        Radiant
    }
    ```
-2. **No extra wiring needed**
-    - The per‑type manager auto‑wraps it.
-    - The super manager includes it once the type is registered.
-
+2. **Add a new profile preset**
+   ```csharp
+   public static IOpponentProfile Heroic => new OpponentProfile
+   {
+       CollapseBiasFactor = 1.0,
+       RecoveryBiasFactor = 2.0,
+       NeutralBiasFactor  = 0.5,
+       MagnitudeVariance  = 1.1,
+       DifficultyMultiplier = 1.2,
+       AggressionNudge = false,
+       Label = "Duel",
+       Category = "Heroic"
+   };
+   ```
 3. **Explore your addition**
    ```csharp
    SuperRegistryManager.Register<ToneType>(); // usually done at startup
@@ -146,6 +118,6 @@ Console.WriteLine(SuperRegistryManager.GenerateCriticReport());
 
 ---
 
-## Final note
+## Final Note
 
-Keep per‑type registries clean and narratable. Let the super manager do the heavy lifting when you need cross‑axis clarity, orchestration, and analytics. This architecture keeps PRISMx resilient, extensible, and mythically coherent — every tick narratable, every overlay interpretable.
+Keep per‑type registries clean and narratable. Let the super manager do the heavy lifting when you need cross‑axis clarity, orchestration, and analytics. Profiles and overlays extend the substrate with presets and narratable math. This architecture keeps PRISMx resilient, extensible, and mythically coherent — every tick narratable, every overlay interpretable, every profile a mythic stance.

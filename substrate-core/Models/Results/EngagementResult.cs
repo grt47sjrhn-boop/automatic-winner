@@ -4,10 +4,10 @@ using substrate_shared.interfaces;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 
-namespace substrate_shared.Results
+namespace substrate_core.Models.Results
 {
     /// <summary>
-    /// Structured output of an engagement step.
+    /// Structured output of an engagement st
     /// Implements IResult for orchestration consistency.
     /// </summary>
     public class EngagementResult : IResult
