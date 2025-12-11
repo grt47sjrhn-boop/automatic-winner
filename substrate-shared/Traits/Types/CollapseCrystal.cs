@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using substrate_shared.Enums;
+using substrate_shared.interfaces.Details;
 using substrate_shared.Registries.enums;
 using substrate_shared.Traits.Base;
-using substrate_shared.Traits.Enums;
-using substrate_shared.Models;
 
 namespace substrate_shared.Traits.Types
 {
@@ -12,8 +12,8 @@ namespace substrate_shared.Traits.Types
             int threshold,
             IReadOnlyDictionary<ToneType,int> facets,
             CrystalRarity rarity,
-            ToneCut toneCut,
-            RarityTier rarityTier)
+            IToneCut toneCut,
+            IRarityTier rarityTier)
             : base(CrystalType.Collapse, rarity, threshold, facets, toneCut, rarityTier) { }
 
         public override int ModifyOutcome(DuelOutcome outcome, int baseValue)

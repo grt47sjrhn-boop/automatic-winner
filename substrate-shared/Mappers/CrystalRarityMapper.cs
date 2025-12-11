@@ -1,11 +1,12 @@
-using substrate_shared.Models;
+using substrate_shared.interfaces;
+using substrate_shared.interfaces.Details;
 using substrate_shared.Registries.enums;
 
 namespace substrate_shared.Mappers
 {
     public static class RarityMapper
     {
-        public static CrystalRarity ToCrystalRarity(RarityTier tier)
+        public static CrystalRarity ToCrystalRarity(IRarityTier tier)
         {
             return tier.Tier switch
             {

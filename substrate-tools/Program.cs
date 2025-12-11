@@ -1,9 +1,16 @@
 using System;
 using substrate_core;
+using substrate_core.Helpers;
+using substrate_core.Internal.Engines;
+using substrate_core.Internal.Resolvers;
+using substrate_core.Managers;
+using substrate_core.Models;
+using substrate_core.Overlays; // 🔹 for GeometryOverlay, TrigOverlay
 // concrete manager implementations
-using substrate_core.Resolvers;
 using substrate_shared.interfaces;
-using substrate_shared.Managers;
+using substrate_shared.interfaces.core;
+using substrate_shared.interfaces.Managers;
+using substrate_shared.interfaces.Overlays; // 🔹 for IGeometryOverlay, ITrigOverlay
 using substrate_shared.Profiles;
 using substrate_shared.Reports;      // ResilienceReportIo
 using substrate_shared.Registries.enums; // ToneType, Bias, etc.
@@ -21,16 +28,20 @@ namespace substrate_tools
             IRarityManager rarityManager   = new RarityManager();
             var inventory     = new InventoryManager();
 
-            // 🔹 Tracker (tone/rarity managers injected)
+            // 🔹 Tracker
             IResilienceTracker tracker     = new ResilienceTracker();
+
+            // 🔹 Overlays
+            IGeometryOverlay geometryOverlay = new GeometryOverlay();
+            ITrigOverlay trigOverlay         = new TrigOverlay(geometryOverlay);
 
             // Defaults
             var tickCount    = 5;
             var verbose      = false;
             var export       = false;
             var exportFormat = "json";
-            var seedBias  = 0.0;
-            var difficulty = 1.0;
+            var seedBias     = 0.0;
+            var difficulty   = 1.0;
             ToneType? seedTone = null;
 
             // 🔹 Parse CLI args
@@ -75,10 +86,10 @@ namespace substrate_tools
             var persistent = new Duelist("Persistent Hero", initialBias: seedBias);
             if (seedTone.HasValue)
             {
-                persistent.SeedTone(seedTone.Value); // implement SeedTone in Duelist
+                persistent.SeedTone(seedTone.Value);
             }
 
-            // 🔹 Engine
+            // 🔹 Engine (now requires overlays)
             var engine = new DuelEngine(
                 tracker,
                 persistent,
@@ -87,6 +98,8 @@ namespace substrate_tools
                 toneManager,
                 rarityManager,
                 inventory,
+                geometryOverlay,
+                trigOverlay,
                 difficulty
             );
 
@@ -135,18 +148,18 @@ namespace substrate_tools
                 Console.WriteLine("\n=== Duel Summaries ===");
                 foreach (var summary in tracker.DuelSummaries)
                 {
-                    summary.Print();
+                    ReportsIO.Print(summary);
                 }
             }
             else
             {
                 Console.WriteLine("\n=== Latest Duel Summary ===");
-                tracker.DuelSummaries[^1].Print();
+                ReportsIO.Print(tracker.DuelSummaries[^1]);
             }
 
             Console.WriteLine("\n=== Resilience Report ===");
-            var report = ResilienceReportIo.Build(tracker, inventory); // ✅ use same builder
-            report.Print();
+            var report = ReportsIO.Build(tracker, inventory);
+            ReportsIO.Print(report);
 
             Console.WriteLine("\n=== Persistent Duelist State ===");
             Console.WriteLine(persistent);
@@ -154,8 +167,8 @@ namespace substrate_tools
 
         private static void ExportReport(IResilienceTracker tracker, InventoryManager inventory, string format)
         {
-            var report   = ResilienceReportIo.Build(tracker, inventory);
-            var filePath = ResilienceReportIo.SaveWithTimestamp(report, "report", format);
+            var report   = ReportsIO.Build(tracker, inventory);
+            var filePath = ReportsIO.SaveWithTimestamp(report, "report", format);
             Console.WriteLine($"Report exported to {filePath}");
         }
     }

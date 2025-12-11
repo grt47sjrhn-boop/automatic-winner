@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using substrate_shared.Facets.Enums;
+using substrate_shared.Enums;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 

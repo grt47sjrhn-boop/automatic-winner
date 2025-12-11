@@ -1,62 +1,88 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using substrate_shared.interfaces.core;
 using substrate_shared.Traits.Base;
+using substrate_shared.Traits.Types;
 
 namespace substrate_shared.Reports
 {
-    public class ResilienceReport
+    public class ResilienceReport : IResilienceReport
     {
-        // Narrative layer
-        public int DuelCount { get; set; }
-        public double ResilienceIndex { get; set; }
-        public double TotalResilience { get; set; }
-        public int RecoveryCount { get; set; }
-        public int CollapseCount { get; set; }
-        public int WoundCount { get; set; }
-        public int ConflictCount { get; set; }
-        public int EquilibriumCount { get; set; }
+        // Properties (readonly to consumers)
+        public int DuelCount { get; private set; }
+        public double ResilienceIndex { get; private set; }
+        public double TotalResilience { get; private set; }
+        public int RecoveryCount { get; private set; }
+        public int CollapseCount { get; private set; }
+        public int WoundCount { get; private set; }
+        public int ConflictCount { get; private set; }
+        public int EquilibriumCount { get; private set; }
 
-        // Math overlay layer
-        public double AverageHypotenuse { get; set; }
-        public double CumulativeArea { get; set; }
-        public double MeanCos { get; set; }
-        public double MeanSin { get; set; }
-        public double LogScaledIndex { get; set; }
-        public double ExpScaledIndex { get; set; }
+        public double AverageHypotenuse { get; private set; }
+        public double CumulativeArea { get; private set; }
+        public double MeanCos { get; private set; }
+        public double MeanSin { get; private set; }
+        public double LogScaledIndex { get; private set; }
+        public double ExpScaledIndex { get; private set; }
 
-        // Tone and Intent aggregation
-        public Dictionary<string,int> ToneDistribution { get; set; } = new();
-        public Dictionary<string,int> IntentDistribution { get; set; } = new();
+        public IReadOnlyDictionary<string,int> ToneDistribution { get; private set; } = new Dictionary<string,int>();
+        public IReadOnlyDictionary<string,int> IntentDistribution { get; private set; } = new Dictionary<string,int>();
+        public IReadOnlyDictionary<string,int> RarityCounts { get; private set; } = new Dictionary<string,int>();
 
-        // Crystal inventory
-        public List<TraitCrystalGroup> CrystalGroups { get; set; } = new();
-        public List<TraitCrystal> Crystals { get; set; } = new();
-
-        // Collapse rarities
-        public Dictionary<string,int> RarityCounts { get; set; } = new()
-        {
-            { "Common", 0 },
-            { "Rare", 0 },
-            { "Epic", 0 },
-            { "Mythic", 0 },
-            { "Legendary", 0 },
-            { "UltraRare", 0 },
-            { "Fragile", 0 },
-            { "Corrupted", 0 },
-            { "Doomed", 0 }
-        };
-
-        public List<string> CrystalNarratives { get; set; } = new();
-        public List<string> BiasSummaries { get; set; } = new();
-        public int CrystalCount { get; set; }
-        public Dictionary<string, int> Outcomes { get; set; }
-        public Dictionary<string, int> CrystalRarity { get; set; }
-        public Dictionary<string, int> BrillianceCuts { get; set; }
+        public IReadOnlyList<string> CrystalNarratives { get; private set; } = new List<string>();
+        public IReadOnlyList<string> BiasSummaries { get; private set; } = new List<string>();
+        public int CrystalCount { get; private set; }
+        public IReadOnlyDictionary<string,int> Outcomes { get; private set; } = new Dictionary<string,int>();
+        public IReadOnlyDictionary<string,int> CrystalRarity { get; private set; } = new Dictionary<string,int>();
+        public IReadOnlyDictionary<string,int> BrillianceCuts { get; private set; } = new Dictionary<string,int>();
 
         /// <summary>
-        /// Generate a narrative summary based on overlays and rarity distribution.
+        /// Public method to populate all readonly properties.
         /// </summary>
+        public void SetMetrics(
+            int duelCount, double resilienceIndex, double totalResilience,
+            int recoveryCount, int collapseCount, int woundCount, int conflictCount, int equilibriumCount,
+            double avgHypotenuse, double cumulativeArea, double meanCos, double meanSin,
+            double logScaledIndex, double expScaledIndex,
+            Dictionary<string,int> toneDistribution,
+            Dictionary<string,int> intentDistribution,
+            List<TraitCrystalGroup> crystalGroups,
+            List<TraitCrystal> crystals,
+            Dictionary<string,int> rarityCounts,
+            List<string> crystalNarratives,
+            List<string> biasSummaries,
+            int crystalCount,
+            Dictionary<string,int> outcomes,
+            Dictionary<string,int> crystalRarity,
+            Dictionary<string,int> brillianceCuts)
+        {
+            DuelCount = duelCount;
+            ResilienceIndex = resilienceIndex;
+            TotalResilience = totalResilience;
+            RecoveryCount = recoveryCount;
+            CollapseCount = collapseCount;
+            WoundCount = woundCount;
+            ConflictCount = conflictCount;
+            EquilibriumCount = equilibriumCount;
+
+            AverageHypotenuse = avgHypotenuse;
+            CumulativeArea = cumulativeArea;
+            MeanCos = meanCos;
+            MeanSin = meanSin;
+            LogScaledIndex = logScaledIndex;
+            ExpScaledIndex = expScaledIndex;
+
+            ToneDistribution = toneDistribution;
+            IntentDistribution = intentDistribution;
+            RarityCounts = rarityCounts;
+            CrystalNarratives = crystalNarratives;
+            BiasSummaries = biasSummaries;
+            CrystalCount = crystalCount;
+            Outcomes = outcomes;
+            CrystalRarity = crystalRarity;
+            BrillianceCuts = brillianceCuts;
+        }
+
         public string GenerateNarrative()
         {
             if (AverageHypotenuse > 10 && CumulativeArea > 50)
@@ -64,70 +90,6 @@ namespace substrate_shared.Reports
             if (AverageHypotenuse < 5 && CumulativeArea < 20)
                 return "Duels collapsed inward, yielding only common scraps.";
             return "Resilience oscillated across balanced duels, producing mixed salvage.";
-        }
-
-        public void Print()
-        {
-            Console.WriteLine("=== Resilience Report ===");
-            Console.WriteLine("=== Report Summary ===");
-            Console.WriteLine($"Duels: {DuelCount} | Total Resilience: {TotalResilience:F2} | Resilience Index: {ResilienceIndex:F2}");
-            Console.WriteLine($"Outcomes → Recoveries: {RecoveryCount}, Collapses: {CollapseCount}, Wounds: {WoundCount}, Conflicts: {ConflictCount}, Equilibriums: {EquilibriumCount}");
-
-            Console.WriteLine();
-            Console.WriteLine("Math Overlay Metrics:");
-            Console.WriteLine($"  Average Hypotenuse: {AverageHypotenuse:F2}");
-            Console.WriteLine($"  Cumulative Area:    {CumulativeArea:F2}");
-            Console.WriteLine($"  Mean Cos:           {MeanCos:F4}");
-            Console.WriteLine($"  Mean Sin:           {MeanSin:F4}");
-            Console.WriteLine($"  LogScaled Index:    {LogScaledIndex:F2}");
-            Console.WriteLine($"  ExpScaled Index:    {ExpScaledIndex:F2}");
-
-            Console.WriteLine();
-            Console.WriteLine("Tone Distribution:");
-            foreach (var kvp in ToneDistribution)
-                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
-
-            Console.WriteLine();
-            Console.WriteLine("Intent Distribution:");
-            foreach (var kvp in IntentDistribution)
-                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
-
-            Console.WriteLine();
-            Console.WriteLine("Crystal Rarity:");
-            foreach (var kvp in RarityCounts)
-                Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
-
-            Console.WriteLine();
-            Console.WriteLine("Crystal Narratives:");
-            foreach (var narrative in CrystalNarratives)
-                Console.WriteLine($"  - {narrative}");
-
-            Console.WriteLine();
-            Console.WriteLine("Bias Summaries:");
-            foreach (var bias in BiasSummaries)
-                Console.WriteLine($"  - {bias}");
-
-            Console.WriteLine();
-            Console.WriteLine("Narrative Summary:");
-            Console.WriteLine($"  {GenerateNarrative()}");
-        }
-    }
-
-    public class TraitCrystalGroup
-    {
-        public string Signature { get; set; } = string.Empty;
-        public int Count { get; set; }
-        public string DominantTone { get; set; } = string.Empty;
-        public string Bias { get; set; } = string.Empty;
-        public int MinModifier { get; set; }
-        public int MaxModifier { get; set; }
-
-        public List<TraitCrystal> Crystals { get; set; } = new();
-        public Dictionary<string, int> MaxFacetValues { get; set; } = new();
-
-        public string DescribeGroup()
-        {
-            return $"{Signature} ({Count} crystals) — Dominant Tone: {DominantTone}, Bias: {Bias}";
         }
     }
 }

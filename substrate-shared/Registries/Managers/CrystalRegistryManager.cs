@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using substrate_shared.Enums;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Extensions.structs;
 using substrate_shared.Registries.interfaces;
 using substrate_shared.Traits;
 using substrate_shared.Traits.Base;
-using substrate_shared.Traits.Enums;
 
 namespace substrate_shared.Registries.Managers
 {

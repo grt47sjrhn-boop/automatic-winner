@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using substrate_shared.interfaces.core;
+using substrate_shared.Traits.Base;
+using substrate_shared.Traits.Types;
 
 namespace substrate_shared.Reports
 {
     public static class ReportExporter
     {
-        public static string ToJson(ResilienceReport report, bool indented = true)
+        public static string ToJson(IResilienceReport report, bool indented = true)
         {
             var options = new JsonSerializerOptions
             {
@@ -17,14 +20,14 @@ namespace substrate_shared.Reports
             return JsonSerializer.Serialize(report, options);
         }
 
-        public static ResilienceReport FromJson(string json)
+        public static IResilienceReport FromJson(string json)
         {
-            return JsonSerializer.Deserialize<ResilienceReport>(json)!;
+            return JsonSerializer.Deserialize<IResilienceReport>(json)!;
         }
 
         public static class ReportExporterCsv
         {
-            public static string ToCsv(ResilienceReport report, bool includeHeader = true)
+            public static string ToCsv(IResilienceReport report, bool includeHeader = true)
             {
                 var sb = new StringBuilder();
 
@@ -57,7 +60,7 @@ namespace substrate_shared.Reports
 
         public static class ReportExporterCsvBatch
         {
-            public static string ToCsv(IEnumerable<ResilienceReport> reports, bool includeHeader = true)
+            public static string ToCsv(IEnumerable<IResilienceReport> reports, bool includeHeader = true)
             {
                 var sb = new StringBuilder();
 
@@ -93,9 +96,9 @@ namespace substrate_shared.Reports
 
         public static class ReportImporterCsv
         {
-            public static List<ResilienceReport> FromCsv(string csv, bool hasHeader = true)
+            public static List<IResilienceReport> FromCsv(string csv, bool hasHeader = true)
             {
-                var reports = new List<ResilienceReport>();
+                var reports = new List<IResilienceReport>();
                 var lines = csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                 var startIndex = hasHeader ? 1 : 0;
@@ -106,34 +109,47 @@ namespace substrate_shared.Reports
 
                     if (parts.Length < 13) continue; // ensure all fields are present
 
-                    var report = new ResilienceReport
-                    {
-                        DuelCount = int.Parse(parts[0]),
-                        ResilienceIndex = int.Parse(parts[1]),
-                        RecoveryCount = int.Parse(parts[2]),
-                        CollapseCount = int.Parse(parts[3]),
-                        WoundCount = int.Parse(parts[4]),
-                        ConflictCount = int.Parse(parts[5]),
-                        EquilibriumCount = int.Parse(parts[6]),
-                        AverageHypotenuse = double.Parse(parts[7]),
-                        CumulativeArea = double.Parse(parts[8]),
-                        MeanCos = double.Parse(parts[9]),
-                        MeanSin = double.Parse(parts[10]),
-                        LogScaledIndex = double.Parse(parts[11]),
-                        ExpScaledIndex = double.Parse(parts[12])
-                    };
+                    // Construct concrete report, expose as interface
+                    var report = new ResilienceReport();
+                    report.SetMetrics(
+                        duelCount: int.Parse(parts[0]),
+                        resilienceIndex: double.Parse(parts[1]),
+                        totalResilience: 0, // placeholder if not in CSV
+                        recoveryCount: int.Parse(parts[2]),
+                        collapseCount: int.Parse(parts[3]),
+                        woundCount: int.Parse(parts[4]),
+                        conflictCount: int.Parse(parts[5]),
+                        equilibriumCount: int.Parse(parts[6]),
+                        avgHypotenuse: double.Parse(parts[7]),
+                        cumulativeArea: double.Parse(parts[8]),
+                        meanCos: double.Parse(parts[9]),
+                        meanSin: double.Parse(parts[10]),
+                        logScaledIndex: double.Parse(parts[11]),
+                        expScaledIndex: double.Parse(parts[12]),
+                        toneDistribution: new Dictionary<string,int>(),
+                        intentDistribution: new Dictionary<string,int>(),
+                        crystalGroups: new List<TraitCrystalGroup>(),
+                        crystals: new List<TraitCrystal>(),
+                        rarityCounts: new Dictionary<string,int>(),
+                        crystalNarratives: new List<string>(),
+                        biasSummaries: new List<string>(),
+                        crystalCount: 0,
+                        outcomes: new Dictionary<string,int>(),
+                        crystalRarity: new Dictionary<string,int>(),
+                        brillianceCuts: new Dictionary<string,int>()
+                    );
 
-                    reports.Add(report);
+                    reports.Add(report); // stored as IResilienceReport
                 }
 
                 return reports;
             }
         }
-
+        
         public static class ReportIO
         {
             // Export to JSON or CSV
-            public static string Export(ResilienceReport report, string format = "json", bool indented = true,
+            public static string Export(IResilienceReport report, string format = "json", bool indented = true,
                 bool includeHeader = true)
             {
                 format = format.ToLowerInvariant();
@@ -153,7 +169,7 @@ namespace substrate_shared.Reports
                 }
             }
 
-            public static string ExportBatch(IEnumerable<ResilienceReport> reports, string format = "json",
+            public static string ExportBatch(IEnumerable<IResilienceReport> reports, string format = "json",
                 bool indented = true, bool includeHeader = true)
             {
                 format = format.ToLowerInvariant();
@@ -174,7 +190,7 @@ namespace substrate_shared.Reports
             }
 
             // Import from JSON or CSV
-            public static List<ResilienceReport> Import(string data, string format = "")
+            public static List<IResilienceReport> Import(string data, string format = "")
             {
                 // Auto-detect if format not specified
                 if (string.IsNullOrWhiteSpace(format))
@@ -190,9 +206,9 @@ namespace substrate_shared.Reports
                 if (format == "json")
                 {
                     if (data.TrimStart().StartsWith("["))
-                        return JsonSerializer.Deserialize<List<ResilienceReport>>(data)!;
+                        return JsonSerializer.Deserialize<List<IResilienceReport>>(data)!;
                     else
-                        return new List<ResilienceReport> { JsonSerializer.Deserialize<ResilienceReport>(data)! };
+                        return new List<IResilienceReport> { JsonSerializer.Deserialize<IResilienceReport>(data)! };
                 }
                 else if (format == "csv")
                 {
@@ -208,21 +224,21 @@ namespace substrate_shared.Reports
         public static class ReportFileIO
         {
             // Save single report
-            public static void Save(ResilienceReport report, string filePath, string format = "json")
+            public static void Save(IResilienceReport report, string filePath, string format = "json")
             {
                 var data = ReportIO.Export(report, format);
                 File.WriteAllText(filePath, data);
             }
 
             // Save batch of reports
-            public static void SaveBatch(IEnumerable<ResilienceReport> reports, string filePath, string format = "json")
+            public static void SaveBatch(IEnumerable<IResilienceReport> reports, string filePath, string format = "json")
             {
                 var data = ReportIO.ExportBatch(reports, format);
                 File.WriteAllText(filePath, data);
             }
 
             // Load reports (auto-detect format if not specified)
-            public static List<ResilienceReport> Load(string filePath, string format = "")
+            public static List<IResilienceReport> Load(string filePath, string format = "")
             {
                 var data = File.ReadAllText(filePath);
                 return ReportIO.Import(data, format);
@@ -238,7 +254,7 @@ namespace substrate_shared.Reports
             }
 
             // Save single report with timestamped filename
-            public static string SaveWithTimestamp(ResilienceReport report, string baseFileName, string format = "json")
+            public static string SaveWithTimestamp(IResilienceReport report, string baseFileName, string format = "json")
             {
                 var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
                 var fileName = AddTimestamp(baseFileName, extension);
@@ -250,7 +266,7 @@ namespace substrate_shared.Reports
             }
 
             // Save batch of reports with timestamped filename
-            public static string SaveBatchWithTimestamp(IEnumerable<ResilienceReport> reports, string baseFileName, string format = "json")
+            public static string SaveBatchWithTimestamp(IEnumerable<IResilienceReport> reports, string baseFileName, string format = "json")
             {
                 var extension = format.ToLowerInvariant() == "csv" ? ".csv" : ".json";
                 var fileName = AddTimestamp(baseFileName, extension);

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using substrate_shared.Facets.Enums;
+using substrate_shared.Enums;
 
 namespace substrate_shared.structs
 {

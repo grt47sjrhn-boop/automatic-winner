@@ -1,4 +1,4 @@
-using substrate_shared.Models;
+using substrate_shared.interfaces.Details;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 using substrate_shared.types;
@@ -9,7 +9,6 @@ namespace substrate_shared.interfaces
     {
         string Title { get; }
         string Description { get; }
-        void Print();
         string ToString();
 
         // New structured fields
@@ -21,7 +20,7 @@ namespace substrate_shared.interfaces
         /// </summary>
         SummaryType SummaryType { get; }
 
-        ToneCut Brilliance { get; }
+        IToneCut Brilliance { get; }
         IntentAction Intent { get; set; }
         FacetDistribution Shape { get; }
         bool IsResolved { get; }

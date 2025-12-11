@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_shared.Models;
+using substrate_shared.Enums;
+using substrate_shared.interfaces.Details;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.interfaces;
 using substrate_shared.Registries.Managers;
-using substrate_shared.Traits.Enums;
 
 namespace substrate_shared.Traits.Base
 {
@@ -19,8 +19,8 @@ namespace substrate_shared.Traits.Base
         public int Threshold { get; }
         public IReadOnlyDictionary<ToneType,int> Facets { get; }
         public Guid EngagementId { get; set; }
-        public ToneCut ToneCut { get; set; }
-        public RarityTier RarityTier { get; set; }
+        public IToneCut ToneCut { get; set; }
+        public IRarityTier RarityTier { get; set; }
 
         /// <summary>
         /// Effective rarity resolved from RarityTier.
@@ -56,8 +56,8 @@ namespace substrate_shared.Traits.Base
             CrystalRarity rarity,
             int threshold,
             IReadOnlyDictionary<ToneType,int> facets,
-            ToneCut toneCut,
-            RarityTier rarityTier)
+            IToneCut toneCut,
+            IRarityTier rarityTier)
         {
             Type = type;
             Rarity = rarity;

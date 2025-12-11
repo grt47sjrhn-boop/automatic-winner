@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using substrate_shared.Models;
+using substrate_shared.interfaces.Details;
 using substrate_shared.structs;
 using substrate_shared.Traits.Base;
 
@@ -13,8 +13,8 @@ namespace substrate_shared.interfaces
 
         FacetDistribution Shape { get; }
         BiasDescriptor Bias { get; }
-        ToneCut Brilliance { get; }
-        RarityTier Rarity { get; }
+        IToneCut Brilliance { get; }
+        IRarityTier Rarity { get; }
 
         void ResolveStep(int ticks = 1);
         void UpdateFacets();
