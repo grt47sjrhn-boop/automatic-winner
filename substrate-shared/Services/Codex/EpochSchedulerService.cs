@@ -10,24 +10,23 @@ using substrate_shared.structs;
 
 namespace substrate_shared.Services.Codex
 {
+    /// <summary>
+    /// Schedules epochs from duel summaries, aggregates bias/facet data,
+    /// and emits both runtime events and loggable CodexEntries.
+    /// </summary>
     public sealed class EpochSchedulerService : IService
     {
         private int _chapterIndex = 0;
 
         public event Action<CodexEpoch> OnEpochStarted;
         public event Action<CodexEpoch> OnEpochCompleted;
+        public event Action<CodexEntry> OnEpochLogged;
 
         public void Initialize() { }
 
-        public void Reset()
-        {
-            _chapterIndex = 0;
-        }
+        public void Reset() => _chapterIndex = 0;
 
-        public void Dispose()
-        {
-            _chapterIndex = 0;
-        }
+        public void Dispose() => _chapterIndex = 0;
 
         public void Shutdown() { }
 
@@ -84,6 +83,10 @@ namespace substrate_shared.Services.Codex
             );
 
             OnEpochStarted?.Invoke(epoch);
+
+            // 🔹 Log CodexEntry for persistence/audit
+            OnEpochLogged?.Invoke(new CodexEntry(Guid.NewGuid().ToString(), epoch));
+
             return epoch;
         }
 
@@ -100,11 +103,15 @@ namespace substrate_shared.Services.Codex
                 epoch.NeutralCount,
                 epoch.MixedCount,
                 epoch.AverageValue,
-                resolvedBias, // override dominant severity with resolved bias string
+                resolvedBias,
                 epoch.FacetTotals
             );
 
             OnEpochCompleted?.Invoke(completed);
+
+            // 🔹 Log CodexEntry for persistence/audit
+            OnEpochLogged?.Invoke(new CodexEntry(Guid.NewGuid().ToString(), completed));
+
             return completed;
         }
     }
