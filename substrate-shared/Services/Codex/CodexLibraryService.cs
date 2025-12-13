@@ -28,5 +28,10 @@ namespace substrate_shared.Services.Codex
                 NarrativeFlavorRegistryManager.RegisterFlavor((NarrativeGroup)flavor);
             }
         }
+
+        public void Shutdown()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

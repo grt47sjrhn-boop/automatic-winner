@@ -1,4 +1,3 @@
-// substrate_core/Codex/Core/CodexSpine.cs
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.Codex;
 using substrate_shared.interfaces.core;
@@ -26,17 +25,21 @@ namespace substrate_core.Codex.Core
         public Services.CodexEntryGeneratorService EntryGenerator { get; private set; }
         public Services.ResilienceReporterService ResilienceReporter { get; private set; }
 
+        // 🔹 New: Profile Registry
+        public ProfileRegistryService ProfileRegistry { get; private set; }
+
         public void Initialize()
         {
             Context.Initialize();
 
-            Library = new Services.CodexLibraryService();
-            EpochScheduler = new Services.EpochSchedulerService();
+            Library = new CodexLibraryService();
+            EpochScheduler = new EpochSchedulerService();
             IntentBroker = new Services.IntentBrokerService();
             OverlayManager = new Services.OverlayManagerService();
             MetricTranslator = new Services.MetricTranslatorService();
             EntryGenerator = new Services.CodexEntryGeneratorService();
             ResilienceReporter = new Services.ResilienceReporterService();
+            ProfileRegistry = new ProfileRegistryService(); // 🔹 instantiate
 
             Library.Initialize();
             EpochScheduler.Initialize();
@@ -45,6 +48,7 @@ namespace substrate_core.Codex.Core
             MetricTranslator.Initialize();
             EntryGenerator.Initialize();
             ResilienceReporter.Initialize();
+            ProfileRegistry.Initialize(); // 🔹 initialize
         }
 
         public void Shutdown()
@@ -57,6 +61,7 @@ namespace substrate_core.Codex.Core
             OverlayManager.Shutdown();
             IntentBroker.Shutdown();
             Library.Shutdown();
+            ProfileRegistry.Shutdown(); // 🔹 shutdown
         }
 
         /// <summary>
