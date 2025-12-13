@@ -10,8 +10,8 @@ using substrate_shared.Enums;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.core;
 using substrate_shared.interfaces.Managers;
-using substrate_shared.interfaces.Overlays; // 🔹 for IGeometryOverlay, ITrigOverlay
-using substrate_shared.Profiles;
+using substrate_shared.interfaces.Overlays;
+using substrate_shared.interfaces.Profiles.Types; // 🔹 for IGeometryOverlay, ITrigOverlay
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 // EngagementType enum

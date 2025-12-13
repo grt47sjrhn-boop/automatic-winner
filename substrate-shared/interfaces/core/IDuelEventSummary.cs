@@ -21,5 +21,7 @@ namespace substrate_shared.interfaces.core
 
         double ResilienceIndex { get; }
         double CumulativeResilience { get; }
+        
+        int Tick { get; }
     }
 }

@@ -1,6 +1,4 @@
-using substrate_core.Models.Profiles;
-
-namespace substrate_shared.Profiles
+namespace substrate_shared.interfaces.Profiles
 {
     public interface IOpponentProfile : IProfile
     {

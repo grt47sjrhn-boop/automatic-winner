@@ -16,6 +16,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Codex\Core\Adapters\" />
+      <Folder Include="Codex\Core\Engines\" />
+      <Folder Include="Codex\Core\Models\" />
+      <Folder Include="Codex\Core\Registries\" />
       <Folder Include="Models\Exports\" />
       <Folder Include="Models\Profiles\" />
     </ItemGroup>

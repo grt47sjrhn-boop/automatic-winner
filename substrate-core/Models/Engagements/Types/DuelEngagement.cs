@@ -24,6 +24,8 @@ namespace substrate_core.Models.Engagements.Types
         // Track cumulative resilience across ticks/duels
         private int _cumulativeResilience;
 
+        private int _currentTick;
+
         public DuelEngagement(
             IToneManager toneManager,
             IRarityManager rarityManager,
@@ -63,8 +65,15 @@ namespace substrate_core.Models.Engagements.Types
         public IEnumerable<TraitCrystal> ForgedCrystals => _forgedCrystals;
         public int CumulativeResilience => _cumulativeResilience;
 
+        public int CurrentTick
+        {
+            get => _currentTick;
+            set => _currentTick = value;
+        }
+
         public void ResolveStep(int ticks = 1)
         {
+            CurrentTick = ticks;
             UpdateFacets();
 
             var avgMagnitude = (DuelistA.Magnitude + DuelistB.Magnitude) / 2;
@@ -217,7 +226,9 @@ namespace substrate_core.Models.Engagements.Types
                 Shape,
                 resilienceIndex: delta,                  // 🔹 per-duel resilience index
                 cumulativeResilience: _cumulativeResilience, // 🔹 running total across ticks
+                tick: _currentTick,
                 isResolved: IsComplete
+                
             );
         }
 

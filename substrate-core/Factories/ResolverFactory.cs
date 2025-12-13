@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using substrate_core.Models.Resolvers;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.Managers;
-using substrate_shared.interfaces.Overlays; // 🔹 for IGeometryOverlay
+using substrate_shared.interfaces.Overlays; 
 using substrate_shared.structs;
 
 namespace substrate_core.Factories
@@ -23,13 +23,13 @@ namespace substrate_core.Factories
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
-            IGeometryOverlay geometryOverlay,   // 🔹 new dependency
+            IGeometryOverlay geometryOverlay,
+            int tick = 1,          // 🔹 default tick is now 1
             int conflictBand = 1)
         {
             switch (type)
             {
                 case ResolverType.Simple:
-                    // Expect exactly two vectors for SimpleDuelResolver
                     var list = new List<BiasVector>(vectors);
                     if (list.Count != 2)
                         throw new System.ArgumentException("SimpleDuelResolver requires exactly two vectors.");
@@ -41,7 +41,8 @@ namespace substrate_core.Factories
                         facetManager,
                         toneManager,
                         rarityManager,
-                        geometryOverlay,   // 🔹 now passed in
+                        geometryOverlay,
+                        tick,          // 🔹 pass tick here
                         conflictBand
                     );
 
@@ -52,6 +53,7 @@ namespace substrate_core.Factories
                         facetManager,
                         toneManager,
                         rarityManager,
+                        tick,          // 🔹 pass tick here
                         conflictBand
                     );
 

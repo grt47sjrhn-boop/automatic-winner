@@ -1,8 +1,7 @@
-using substrate_core.Models.Profiles;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.core;
+using substrate_shared.interfaces.Profiles;
 using substrate_shared.Reports;
-using substrate_shared.Profiles;
 
 namespace substrate_core.Adapters
 {

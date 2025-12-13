@@ -1,4 +1,4 @@
-namespace substrate_core.Models.Profiles
+namespace substrate_shared.interfaces.Profiles
 {
     public interface IProfile
     {

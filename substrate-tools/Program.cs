@@ -11,7 +11,6 @@ using substrate_shared.interfaces;
 using substrate_shared.interfaces.core;
 using substrate_shared.interfaces.Managers;
 using substrate_shared.interfaces.Overlays; // 🔹 for IGeometryOverlay, ITrigOverlay
-using substrate_shared.Profiles;
 using substrate_shared.Reports;      // ResilienceReportIo
 using substrate_shared.Registries.enums; // ToneType, Bias, etc.
 

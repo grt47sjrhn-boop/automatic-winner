@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using substrate_shared.interfaces.core;
 using substrate_shared.structs;
 
-namespace substrate_shared.Orchestration
+namespace substrate_shared.interfaces.Orchestration
 {
     /// <summary>
     /// Contract for orchestrating a full session: reset, run duels, and build report.

@@ -1,5 +1,4 @@
-using substrate_core.Models.Profiles;
-using substrate_shared.Profiles;
+using substrate_shared.interfaces.Profiles;
 
 namespace substrate_shared.interfaces.core
 {

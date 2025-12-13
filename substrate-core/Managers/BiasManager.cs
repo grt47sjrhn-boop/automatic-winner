@@ -4,7 +4,7 @@ using System.Linq;
 using substrate_shared.Enums;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.Managers;
-using substrate_shared.Profiles;
+using substrate_shared.interfaces.Profiles;
 using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;

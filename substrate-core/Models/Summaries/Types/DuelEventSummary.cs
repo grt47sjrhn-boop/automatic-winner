@@ -24,7 +24,8 @@ namespace substrate_core.Models.Summaries.Types
     
         // 🔹 New resilience fields
         public double CumulativeResilience { get; set; }
-    
+        public int Tick { get; }
+
         public DuelEventSummary(
             string title,
             string description,
@@ -41,6 +42,7 @@ namespace substrate_core.Models.Summaries.Types
             FacetDistribution shape,
             double resilienceIndex,
             double cumulativeResilience,
+            int tick,
             bool isResolved = false)
             : base(title, description, type, isResolved)
         {
@@ -57,6 +59,7 @@ namespace substrate_core.Models.Summaries.Types
             // 🔹 Assign resilience values
             ResilienceIndex = resilienceIndex;
             CumulativeResilience = cumulativeResilience;
+            Tick = tick;
 
         }
     }

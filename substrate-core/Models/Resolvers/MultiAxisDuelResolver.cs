@@ -25,6 +25,8 @@ namespace substrate_core.Models.Resolvers
     {
         public override string Name { get; } = "Multi-Axis Duel Resolver";
 
+        private readonly int _currentTick;
+        
         private readonly IEnumerable<BiasVector> _vectors;
         private readonly int _conflictBand;
         private readonly Func<int,int> _magnitudeScaler;
@@ -41,8 +43,10 @@ namespace substrate_core.Models.Resolvers
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
+            int currentTick,
             int conflictBand = 2, // widened default band for balance
-            Func<int,int>? magnitudeScaler = null)
+            Func<int,int>? magnitudeScaler = null
+            )
         {
             _vectors        = vectors;
             _biasManager    = biasManager;
@@ -50,6 +54,7 @@ namespace substrate_core.Models.Resolvers
             _toneManager    = toneManager;
             _rarityManager  = rarityManager;
             _conflictBand   = conflictBand;
+            _currentTick    = currentTick;
 
             // 🔹 Preserve negatives but allow scaling
             _magnitudeScaler = magnitudeScaler ?? (d => d);
@@ -135,6 +140,7 @@ namespace substrate_core.Models.Resolvers
                 collectiveShape,
                 resilienceIndex: scaledMagnitude,                  // 🔹 per-duel resilience index
                 cumulativeResilience: Math.Abs(scaledMagnitude),   // 🔹 or another cumulative metric
+                _currentTick,
                 true
             );
         }

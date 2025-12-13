@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Models.Profiles;
 using substrate_core.Models.Summaries;
 using substrate_core.Models.Summaries.Types;
 using substrate_shared.interfaces;
-using substrate_shared.Profiles;
+using substrate_shared.interfaces.Profiles;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Extensions;
 using substrate_shared.Registries.Factories;
@@ -104,6 +104,16 @@ namespace substrate_core.Models
         public override string ToString()
         {
             return $"{Name} | Bias={Bias:F2}, Resilience={Resilience:F2}, Wounds={Wounds}, Recoveries={Recoveries}";
+        }
+
+        public void AddDuel(ISummary duel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<ISummary> GetAllDuels()
+        {
+            throw new NotImplementedException();
         }
 
         // 🔹 Convert Duelist state to a BiasVector

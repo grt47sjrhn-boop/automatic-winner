@@ -1,8 +1,8 @@
-using substrate_shared.interfaces;
+using System.Collections.Generic;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 
-namespace substrate_core.Models.Profiles
+namespace substrate_shared.interfaces.Profiles
 {
     public interface IDuelist
     {
@@ -33,5 +33,9 @@ namespace substrate_core.Models.Profiles
         /// String representation of duelist state.
         /// </summary>
         string ToString();
+        
+        void AddDuel(ISummary duel);
+        IEnumerable<ISummary> GetAllDuels();
+
     }
 }

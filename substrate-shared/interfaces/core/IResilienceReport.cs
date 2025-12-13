@@ -4,6 +4,7 @@ namespace substrate_shared.interfaces.core
 {
     public interface IResilienceReport
     {
+        // --- Existing properties ---
         int DuelCount { get; }
         double ResilienceIndex { get; }
         double TotalResilience { get; }
@@ -32,5 +33,23 @@ namespace substrate_shared.interfaces.core
         IReadOnlyDictionary<string,int> BrillianceCuts { get; }
 
         string GenerateNarrative();
+
+        // --- Codex Extensions ---
+
+        // Catalyst: meta-state overlays
+        IReadOnlyDictionary<string,double> MetaStateWeights { get; }
+        IReadOnlyList<string> MetaStateNarratives { get; }
+
+        // Crucible: Intent cluster (renamed from WheelCluster)
+        IReadOnlyList<string> IntentCluster { get; }
+        IReadOnlyDictionary<string,double> ClusterWeights { get; }
+
+        // Oracle: arcs, epochs, rarity modulation
+        IReadOnlyList<string> Epochs { get; }
+        IReadOnlyList<string> ArcTriggers { get; }
+        IReadOnlyDictionary<string,double> RarityModulation { get; }
+
+        // Codex entry generator
+        string GenerateCodexEntry();
     }
 }

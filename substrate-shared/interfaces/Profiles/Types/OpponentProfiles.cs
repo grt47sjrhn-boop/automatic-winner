@@ -1,4 +1,4 @@
-namespace substrate_shared.Profiles
+namespace substrate_shared.interfaces.Profiles.Types
 {
     /// <summary>
     /// Static registry of predefined opponent profiles.

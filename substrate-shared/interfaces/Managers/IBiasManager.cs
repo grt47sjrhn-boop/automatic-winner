@@ -1,5 +1,5 @@
 using substrate_shared.Enums;
-using substrate_shared.Profiles;
+using substrate_shared.interfaces.Profiles;
 using substrate_shared.structs;
 
 namespace substrate_shared.interfaces.Managers

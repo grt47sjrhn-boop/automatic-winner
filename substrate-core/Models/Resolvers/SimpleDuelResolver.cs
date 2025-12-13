@@ -22,6 +22,7 @@ namespace substrate_core.Models.Resolvers
     {
         public override string Name { get; } = "Simple Duel Resolver (Unified)";
 
+        private readonly int _currentTick;
         private readonly BiasVector _a;
         private readonly BiasVector _b;
         private readonly int _conflictBand;
@@ -37,14 +38,14 @@ namespace substrate_core.Models.Resolvers
         // Overlays
         private readonly IGeometryOverlay _geometryOverlay;
 
-        public SimpleDuelResolver(
-            BiasVector a,
+        public SimpleDuelResolver(BiasVector a,
             BiasVector b,
             IBiasManager biasManager,
             IFacetManager facetManager,
             IToneManager toneManager,
             IRarityManager rarityManager,
             IGeometryOverlay geometryOverlay,
+            int currentTick,
             int conflictBand = 2,
             Func<int, int>? magnitudeScaler = null)
         {
@@ -56,7 +57,7 @@ namespace substrate_core.Models.Resolvers
             _rarityManager = rarityManager;
             _geometryOverlay = geometryOverlay;
             _conflictBand = conflictBand;
-
+            _currentTick = currentTick;
             _magnitudeScaler = magnitudeScaler ?? (d => d);
         }
 
@@ -153,6 +154,7 @@ namespace substrate_core.Models.Resolvers
                 shape,
                 resilienceIndex: resolvedMagnitude,
                 cumulativeResilience: Math.Abs(resolvedMagnitude),
+                _currentTick,
                 true
             );
         }

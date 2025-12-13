@@ -8,7 +8,7 @@ namespace substrate_shared.Reports
 {
     public class ResilienceReport : IResilienceReport
     {
-        // Properties (readonly to consumers)
+        // --- Existing properties ---
         public int DuelCount { get; private set; }
         public double ResilienceIndex { get; private set; }
         public double TotalResilience { get; private set; }
@@ -36,9 +36,18 @@ namespace substrate_shared.Reports
         public IReadOnlyDictionary<string,int> CrystalRarity { get; private set; } = new Dictionary<string,int>();
         public IReadOnlyDictionary<string,int> BrillianceCuts { get; private set; } = new Dictionary<string,int>();
 
-        /// <summary>
-        /// Public method to populate all readonly properties.
-        /// </summary>
+        // --- Codex Extensions ---
+        public IReadOnlyDictionary<string,double> MetaStateWeights { get; private set; } = new Dictionary<string,double>();
+        public IReadOnlyList<string> MetaStateNarratives { get; private set; } = new List<string>();
+
+        public IReadOnlyList<string> IntentCluster { get; private set; } = new List<string>();
+        public IReadOnlyDictionary<string,double> ClusterWeights { get; private set; } = new Dictionary<string,double>();
+
+        public IReadOnlyList<string> Epochs { get; private set; } = new List<string>();
+        public IReadOnlyList<string> ArcTriggers { get; private set; } = new List<string>();
+        public IReadOnlyDictionary<string,double> RarityModulation { get; private set; } = new Dictionary<string,double>();
+
+        // --- Existing methods ---
         public void SetMetrics(
             int duelCount, double resilienceIndex, double totalResilience,
             int recoveryCount, int collapseCount, int woundCount, int conflictCount, int equilibriumCount,
@@ -83,6 +92,27 @@ namespace substrate_shared.Reports
             BrillianceCuts = brillianceCuts;
         }
 
+        // --- Codex setters ---
+        public void SetMetaStates(Dictionary<string,double> weights, List<string> narratives)
+        {
+            MetaStateWeights = weights;
+            MetaStateNarratives = narratives;
+        }
+
+        public void SetIntentCluster(List<string> cluster, Dictionary<string,double> weights)
+        {
+            IntentCluster = cluster;
+            ClusterWeights = weights;
+        }
+
+        public void SetEpochs(List<string> epochs, List<string> triggers, Dictionary<string,double> rarityModulation)
+        {
+            Epochs = epochs;
+            ArcTriggers = triggers;
+            RarityModulation = rarityModulation;
+        }
+
+        // --- Narrative methods ---
         public string GenerateNarrative()
         {
             if (AverageHypotenuse > 10 && CumulativeArea > 50)
@@ -90,6 +120,14 @@ namespace substrate_shared.Reports
             if (AverageHypotenuse < 5 && CumulativeArea < 20)
                 return "Duels collapsed inward, yielding only common scraps.";
             return "Resilience oscillated across balanced duels, producing mixed salvage.";
+        }
+
+        public string GenerateCodexEntry()
+        {
+            var baseNarrative = GenerateNarrative();
+            var metaOverlay = MetaStateNarratives.Count > 0 ? string.Join(" ", MetaStateNarratives) : "";
+            var epochSummary = Epochs.Count > 0 ? $"Epochs unfolding: {string.Join(", ", Epochs)}." : "";
+            return $"{baseNarrative} {metaOverlay} {epochSummary}".Trim();
         }
     }
 }
