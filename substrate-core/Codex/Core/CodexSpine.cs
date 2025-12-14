@@ -1,3 +1,4 @@
+using substrate_core.Internal.Engines;
 using substrate_shared.interfaces;
 using substrate_shared.interfaces.Codex;
 using substrate_shared.interfaces.core;
@@ -16,31 +17,38 @@ namespace substrate_core.Codex.Core
         // Context service reference
         public CodexContextService Context => CodexContextService.Instance;
 
-        // Other services (Library, EpochScheduler, etc.)
+        // Services
         public CodexLibraryService Library { get; private set; }
         public EpochSchedulerService EpochScheduler { get; private set; }
-        public Services.IntentBrokerService IntentBroker { get; private set; }
-        public Services.OverlayManagerService OverlayManager { get; private set; }
-        public Services.MetricTranslatorService MetricTranslator { get; private set; }
-        public Services.CodexEntryGeneratorService EntryGenerator { get; private set; }
-        public Services.ResilienceReporterService ResilienceReporter { get; private set; }
-
-        // 🔹 New: Profile Registry
+        public IntentBrokerService IntentBroker { get; private set; }
+        public OverlayManagerService OverlayManager { get; private set; }
+        public MetricTranslatorService MetricTranslator { get; private set; }
+        public CodexEntryGeneratorService EntryGenerator { get; private set; }
+        public ResilienceReporterService ResilienceReporter { get; private set; }
         public ProfileRegistryService ProfileRegistry { get; private set; }
+
+        // Catalyst Engine
+        public CatalystEngine Catalyst { get; private set; }
 
         public void Initialize()
         {
+            // Initialize context service
             Context.Initialize();
 
+            // Spin up services
             Library = new CodexLibraryService();
             EpochScheduler = new EpochSchedulerService();
-            IntentBroker = new Services.IntentBrokerService();
-            OverlayManager = new Services.OverlayManagerService();
-            MetricTranslator = new Services.MetricTranslatorService();
-            EntryGenerator = new Services.CodexEntryGeneratorService();
-            ResilienceReporter = new Services.ResilienceReporterService();
-            ProfileRegistry = new ProfileRegistryService(); // 🔹 instantiate
+            IntentBroker = new IntentBrokerService();
+            OverlayManager = new OverlayManagerService();
+            MetricTranslator = new MetricTranslatorService();
+            EntryGenerator = new CodexEntryGeneratorService();
+            ResilienceReporter = new ResilienceReporterService();
+            ProfileRegistry = new ProfileRegistryService();
 
+            // Catalyst starts enabled
+            Catalyst = new CatalystEngine(enabled: true);
+
+            // Initialize services
             Library.Initialize();
             EpochScheduler.Initialize();
             IntentBroker.Initialize();
@@ -48,7 +56,7 @@ namespace substrate_core.Codex.Core
             MetricTranslator.Initialize();
             EntryGenerator.Initialize();
             ResilienceReporter.Initialize();
-            ProfileRegistry.Initialize(); // 🔹 initialize
+            ProfileRegistry.Initialize();
         }
 
         public void Shutdown()
@@ -61,11 +69,13 @@ namespace substrate_core.Codex.Core
             OverlayManager.Shutdown();
             IntentBroker.Shutdown();
             Library.Shutdown();
-            ProfileRegistry.Shutdown(); // 🔹 shutdown
+            ProfileRegistry.Shutdown();
+
+            Catalyst.Toggle(false);
         }
 
         /// <summary>
-        /// Populate Codex context once with the active report, summary, duelist, and inventory.
+        /// Populate Codex context with the active report, summary, duelist, and inventory.
         /// </summary>
         public void PopulateContext(
             IResilienceReport report,
@@ -77,6 +87,14 @@ namespace substrate_core.Codex.Core
             Context.SetSummary(summary);
             Context.SetDuelist(duelist);
             Context.SetInventory(inventory);
+        }
+
+        /// <summary>
+        /// End-of-cycle evaluation: prompt Catalyst to enrich overlays.
+        /// </summary>
+        public void FinalizeCycle()
+        {
+            Catalyst.Apply();
         }
     }
 }

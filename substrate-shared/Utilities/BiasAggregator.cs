@@ -17,13 +17,13 @@ namespace substrate_shared.Utilities
             var list = descriptors.ToList();
             if (!list.Any()) return "No duels in epoch";
 
-            int positive = list.Count(d => d.Bias == Bias.Positive);
-            int negative = list.Count(d => d.Bias == Bias.Negative);
-            int neutral  = list.Count(d => d.Bias == Bias.Neutral);
-            int mixed    = list.Count(d => d.Bias == Bias.Mixed);
+            var positive = list.Count(d => d.Bias == Bias.Positive);
+            var negative = list.Count(d => d.Bias == Bias.Negative);
+            var neutral  = list.Count(d => d.Bias == Bias.Neutral);
+            var mixed    = list.Count(d => d.Bias == Bias.Mixed);
 
-            double avgValue = list.Average(d => d.Value);
-            string dominantSeverity = list
+            var avgValue = list.Average(d => d.Value);
+            var dominantSeverity = list
                 .GroupBy(d => d.Severity)
                 .OrderByDescending(g => g.Count())
                 .First().Key;
@@ -40,7 +40,7 @@ namespace substrate_shared.Utilities
                 }
             }
 
-            string facetSummary = facetTotals.Any()
+            var facetSummary = facetTotals.Any()
                 ? string.Join(", ", facetTotals.Select(f => $"{f.Key}={f.Value}"))
                 : "none";
 

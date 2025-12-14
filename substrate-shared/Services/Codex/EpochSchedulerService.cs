@@ -41,16 +41,16 @@ namespace substrate_shared.Services.Codex
             var descriptors = windowDuels.Select(d => d.Bias).ToList();
 
             // 🔹 Aggregate bias counts
-            int positive = descriptors.Count(d => d.Bias == Bias.Positive);
-            int negative = descriptors.Count(d => d.Bias == Bias.Negative);
-            int neutral  = descriptors.Count(d => d.Bias == Bias.Neutral);
-            int mixed    = descriptors.Count(d => d.Bias == Bias.Mixed);
+            var positive = descriptors.Count(d => d.Bias == Bias.Positive);
+            var negative = descriptors.Count(d => d.Bias == Bias.Negative);
+            var neutral  = descriptors.Count(d => d.Bias == Bias.Neutral);
+            var mixed    = descriptors.Count(d => d.Bias == Bias.Mixed);
 
             // 🔹 Average scalar value
-            double avgValue = descriptors.Any() ? descriptors.Average(d => d.Value) : 0.0;
+            var avgValue = descriptors.Any() ? descriptors.Average(d => d.Value) : 0.0;
 
             // 🔹 Dominant severity
-            string dominantSeverity = descriptors
+            var dominantSeverity = descriptors
                 .GroupBy(d => d.Severity)
                 .OrderByDescending(g => g.Count())
                 .FirstOrDefault()?.Key ?? "None";

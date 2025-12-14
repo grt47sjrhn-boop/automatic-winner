@@ -39,7 +39,11 @@ namespace substrate_shared.interfaces.core
         // Catalyst: meta-state overlays
         IReadOnlyDictionary<string,double> MetaStateWeights { get; }
         IReadOnlyList<string> MetaStateNarratives { get; }
-
+        
+        // Builder methods
+        void AddMetaStateWeight(string key, double value);
+        void AddMetaStateNarrative(string narrative);
+        
         // Crucible: Intent cluster (renamed from WheelCluster)
         IReadOnlyList<string> IntentCluster { get; }
         IReadOnlyDictionary<string,double> ClusterWeights { get; }

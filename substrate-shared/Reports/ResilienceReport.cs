@@ -36,16 +36,26 @@ namespace substrate_shared.Reports
         public IReadOnlyDictionary<string,int> CrystalRarity { get; private set; } = new Dictionary<string,int>();
         public IReadOnlyDictionary<string,int> BrillianceCuts { get; private set; } = new Dictionary<string,int>();
 
-        // --- Codex Extensions ---
-        public IReadOnlyDictionary<string,double> MetaStateWeights { get; private set; } = new Dictionary<string,double>();
-        public IReadOnlyList<string> MetaStateNarratives { get; private set; } = new List<string>();
+        // --- Codex Extensions (backed by mutable collections) ---
+        private readonly Dictionary<string,double> _metaStateWeights = new();
+        private readonly List<string> _metaStateNarratives = new();
+        public IReadOnlyDictionary<string,double> MetaStateWeights => _metaStateWeights;
+        public IReadOnlyList<string> MetaStateNarratives => _metaStateNarratives;
 
-        public IReadOnlyList<string> IntentCluster { get; private set; } = new List<string>();
-        public IReadOnlyDictionary<string,double> ClusterWeights { get; private set; } = new Dictionary<string,double>();
+        public void AddMetaStateWeight(string key, double value) => _metaStateWeights[key] = value;
+        public void AddMetaStateNarrative(string narrative) => _metaStateNarratives.Add(narrative);
 
-        public IReadOnlyList<string> Epochs { get; private set; } = new List<string>();
-        public IReadOnlyList<string> ArcTriggers { get; private set; } = new List<string>();
-        public IReadOnlyDictionary<string,double> RarityModulation { get; private set; } = new Dictionary<string,double>();
+        private readonly List<string> _intentCluster = new();
+        private readonly Dictionary<string,double> _clusterWeights = new();
+        public IReadOnlyList<string> IntentCluster => _intentCluster;
+        public IReadOnlyDictionary<string,double> ClusterWeights => _clusterWeights;
+
+        private readonly List<string> _epochs = new();
+        private readonly List<string> _arcTriggers = new();
+        private readonly Dictionary<string,double> _rarityModulation = new();
+        public IReadOnlyList<string> Epochs => _epochs;
+        public IReadOnlyList<string> ArcTriggers => _arcTriggers;
+        public IReadOnlyDictionary<string,double> RarityModulation => _rarityModulation;
 
         // --- Existing methods ---
         public void SetMetrics(
@@ -95,31 +105,46 @@ namespace substrate_shared.Reports
         // --- Codex setters ---
         public void SetMetaStates(Dictionary<string,double> weights, List<string> narratives)
         {
-            MetaStateWeights = weights;
-            MetaStateNarratives = narratives;
+            _metaStateWeights.Clear();
+            foreach (var kvp in weights)
+                _metaStateWeights[kvp.Key] = kvp.Value;
+
+            _metaStateNarratives.Clear();
+            _metaStateNarratives.AddRange(narratives);
         }
 
         public void SetIntentCluster(List<string> cluster, Dictionary<string,double> weights)
         {
-            IntentCluster = cluster;
-            ClusterWeights = weights;
+            _intentCluster.Clear();
+            _intentCluster.AddRange(cluster);
+
+            _clusterWeights.Clear();
+            foreach (var kvp in weights)
+                _clusterWeights[kvp.Key] = kvp.Value;
         }
 
         public void SetEpochs(List<string> epochs, List<string> triggers, Dictionary<string,double> rarityModulation)
         {
-            Epochs = epochs;
-            ArcTriggers = triggers;
-            RarityModulation = rarityModulation;
+            _epochs.Clear();
+            _epochs.AddRange(epochs);
+
+            _arcTriggers.Clear();
+            _arcTriggers.AddRange(triggers);
+
+            _rarityModulation.Clear();
+            foreach (var kvp in rarityModulation)
+                _rarityModulation[kvp.Key] = kvp.Value;
         }
 
         // --- Narrative methods ---
         public string GenerateNarrative()
         {
-            if (AverageHypotenuse > 10 && CumulativeArea > 50)
-                return "Battles sprawled wide and expansive, forging rarer salvage.";
-            if (AverageHypotenuse < 5 && CumulativeArea < 20)
-                return "Duels collapsed inward, yielding only common scraps.";
-            return "Resilience oscillated across balanced duels, producing mixed salvage.";
+            return AverageHypotenuse switch
+            {
+                > 10 when CumulativeArea > 50 => "Battles sprawled wide and expansive, forging rarer salvage.",
+                < 5 when CumulativeArea < 20 => "Duels collapsed inward, yielding only common scraps.",
+                _ => "Resilience oscillated across balanced duels, producing mixed salvage."
+            };
         }
 
         public string GenerateCodexEntry()

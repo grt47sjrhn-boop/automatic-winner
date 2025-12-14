@@ -56,23 +56,23 @@ namespace substrate_core.Internal.Resolvers
         public IResilienceReport ComputeResilience()
         {
             // Aggregate counts
-            int duelCount = _summaries.Count;
-            double resilienceIndex = ResilienceIndex;
-            double totalResilience = TotalResilience;
+            var duelCount = _summaries.Count;
+            var resilienceIndex = ResilienceIndex;
+            var totalResilience = TotalResilience;
 
-            int recoveryCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery);
-            int collapseCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse);
-            int woundCount       = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound);
-            int conflictCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict);
-            int equilibriumCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium);
+            var recoveryCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Recovery);
+            var collapseCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Collapse);
+            var woundCount       = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Wound);
+            var conflictCount    = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Conflict);
+            var equilibriumCount = _summaries.OfType<DuelEventSummary>().Count(s => s.Outcome == DuelOutcome.Equilibrium);
 
             // Math overlays
-            double avgHypotenuse = AverageHypotenuse;
-            double cumulativeArea = CumulativeArea;
-            double meanCos = MeanCos;
-            double meanSin = MeanSin;
-            double logScaledIndex = LogScaledIndex;
-            double expScaledIndex = ExpScaledIndex;
+            var avgHypotenuse = AverageHypotenuse;
+            var cumulativeArea = CumulativeArea;
+            var meanCos = MeanCos;
+            var meanSin = MeanSin;
+            var logScaledIndex = LogScaledIndex;
+            var expScaledIndex = ExpScaledIndex;
 
             // Tone distribution
             var toneDistribution = new Dictionary<string,int>();
