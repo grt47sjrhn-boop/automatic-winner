@@ -122,5 +122,15 @@ namespace substrate_shared.Registries.Extensions
 
             return (TEnum)(object)0; // fallback to Neutral
         }
+        
+        public static RegistryNarrativeAttribute? GetRegistryNarrative<TEnum>(this TEnum value) where TEnum : Enum
+        {
+            var member = typeof(TEnum).GetMember(value.ToString()).FirstOrDefault();
+            if (member != null)
+            {
+                return member.GetCustomAttribute<RegistryNarrativeAttribute>();
+            }
+            return null;
+        }
     }
 }

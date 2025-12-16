@@ -24,14 +24,25 @@ namespace substrate_shared.Registries.Managers
         // --- Unified sweeps ---
         public static IEnumerable<IReadableRegistry> GetAll()
             => _allRegistries.Values.SelectMany(v => v);
-        
+
+        // --- Parameterized façade methods for IntentAction ---
+        public static int GetScaleValue(IntentAction action)
+            => RegistryManager<IntentAction>.Get(action).GetScaleValue();
+
+        public static string GetDescription(IntentAction action)
+            => RegistryManager<IntentAction>.Get(action).GetDescription();
+
+        public static Bias GetBias(IntentAction action)
+            => RegistryManager<IntentAction>.Get(action).GetBias();
+
+        public static NarrativeGroup GetGroup(IntentAction action)
+            => RegistryManager<IntentAction>.Get(action).GetGroup();
+
+        // --- Mood helpers ---
         public static MoodType GetMoodByStrength(int signedStrength)
         {
-            // Clamp to valid range of MoodType (-11 to +11)
             if (signedStrength < -11) signedStrength = -11;
             if (signedStrength > 11) signedStrength = 11;
-
-            // Direct cast works because MoodType enum values match scaleValue
             return (MoodType)signedStrength;
         }
 
@@ -84,7 +95,7 @@ namespace substrate_shared.Registries.Managers
 
             var header = $"Narrative Group: {group} (Overall Bias: {score})";
             var lines = items.Select(v => $"- {v.GetDescription()} ({v.GetBias()})");
-            return header + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines);
+            return header + Environment.NewLine + string.Join(Environment.NewLine, lines);
         }
 
         // --- Bias scoring ---
@@ -94,16 +105,11 @@ namespace substrate_shared.Registries.Managers
             var negative = entries.Count(e => e.GetBias() == Bias.Negative);
             var neutral  = entries.Count(e => e.GetBias() == Bias.Neutral);
 
-            if (positive > 0 && negative > 0)
-                return "Mixed (Conflict)";
-            if (positive > 0 && neutral > 0 && negative == 0)
-                return "Leaning Positive";
-            if (negative > 0 && neutral > 0 && positive == 0)
-                return "Leaning Negative";
-            if (positive > 0 && negative == 0 && neutral == 0)
-                return "Positive";
-            if (negative > 0 && positive == 0 && neutral == 0)
-                return "Negative";
+            if (positive > 0 && negative > 0) return "Mixed (Conflict)";
+            if (positive > 0 && neutral > 0 && negative == 0) return "Leaning Positive";
+            if (negative > 0 && neutral > 0 && positive == 0) return "Leaning Negative";
+            if (positive > 0 && negative == 0 && neutral == 0) return "Positive";
+            if (negative > 0 && positive == 0 && neutral == 0) return "Negative";
             return "Neutral";
         }
 
@@ -138,7 +144,7 @@ namespace substrate_shared.Registries.Managers
                 ""
             };
 
-            // Section: Bias overview
+            // Bias overview
             report.Add("Bias Overview:");
             foreach (Bias bias in Enum.GetValues(typeof(Bias)))
             {
@@ -147,7 +153,7 @@ namespace substrate_shared.Registries.Managers
             }
             report.Add("");
 
-            // Section: Group summaries
+            // Group summaries
             report.Add("Group Summaries:");
             foreach (NarrativeGroup group in Enum.GetValues(typeof(NarrativeGroup)))
             {
@@ -156,12 +162,11 @@ namespace substrate_shared.Registries.Managers
                 report.Add("");
             }
 
-            // Section: Random triad sample
+            // Random triad sample
             var toneEntry = RegistryManager<ToneType>.GetAll().OrderBy(_ => _rng.Next()).First();
             var moodEntry = RegistryManager<MoodType>.GetAll().OrderBy(_ => _rng.Next()).First();
             var intentEntry = RegistryManager<IntentAction>.GetAll().OrderBy(_ => _rng.Next()).First();
 
-            // Direct cast because RegistryValue<TEnum> is a struct
             var tone = ((RegistryValue<ToneType>)toneEntry).Value;
             var mood = ((RegistryValue<MoodType>)moodEntry).Value;
             var intent = ((RegistryValue<IntentAction>)intentEntry).Value;
@@ -169,18 +174,14 @@ namespace substrate_shared.Registries.Managers
             report.Add("Sample Triad:");
             report.Add(DescribeTriad(tone, mood, intent));
 
-            return string.Join(System.Environment.NewLine, report);
-
+            return string.Join(Environment.NewLine, report);
         }
-        
+
+        // --- Crystal scoring ---
         public static string DescribeCrystalWithScore(TraitCrystal crystal)
         {
             var facets = crystal.Facets;
-            var biasEntries = facets.Select(f =>
-            {
-                var toneEntry = RegistryManager<ToneType>.Get(f.Key);
-                return toneEntry;
-            }).ToList();
+            var biasEntries = facets.Select(f => RegistryManager<ToneType>.Get(f.Key)).ToList();
 
             var score = ClassifyBias(biasEntries);
 
@@ -188,12 +189,11 @@ namespace substrate_shared.Registries.Managers
             var lines = facets.Select(f =>
                 $"- {RegistryManager<ToneType>.Get(f.Key).GetDescription()} x{f.Value} ({RegistryManager<ToneType>.Get(f.Key).GetBias()})");
 
-            return header + System.Environment.NewLine +
-                   string.Join(System.Environment.NewLine, lines) +
-                   System.Environment.NewLine +
+            return header + Environment.NewLine +
+                   string.Join(Environment.NewLine, lines) + Environment.NewLine +
                    $"Overall Bias: {score}, Modifier: {crystal.ModifierValue}";
         }
-        
+
         public static string DescribeCrystalCluster(IEnumerable<TraitCrystal> crystals)
         {
             var traitCrystals = crystals.ToList();
@@ -207,7 +207,6 @@ namespace substrate_shared.Registries.Managers
 
             foreach (var crystal in traitCrystals)
             {
-                // Bias scoring from facets
                 var facetEntries = crystal.Facets.Select(f => RegistryManager<ToneType>.Get(f.Key));
                 var score = ClassifyBias(facetEntries);
 
@@ -221,7 +220,7 @@ namespace substrate_shared.Registries.Managers
                 report.Add("");
             }
 
-            return string.Join(System.Environment.NewLine, report);
+            return string.Join(Environment.NewLine, report);
         }
     }
 }

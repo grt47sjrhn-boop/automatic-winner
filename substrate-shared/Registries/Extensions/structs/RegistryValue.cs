@@ -49,6 +49,12 @@ namespace substrate_shared.Registries.Extensions.structs
             );
         }
 
+        public int GetScaleValue()
+        {
+            var attr = Value.GetRegistryNarrative();
+            return attr?.ScaleValue ?? 0;
+        }
+        
         public override string ToString() => GetDescription();
     }
 }

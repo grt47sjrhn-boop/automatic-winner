@@ -20,6 +20,7 @@
       <Folder Include="Codex\Core\Engines\" />
       <Folder Include="Codex\Core\Models\" />
       <Folder Include="Codex\Core\Registries\" />
+      <Folder Include="Commands\" />
       <Folder Include="Models\Exports\" />
       <Folder Include="Models\Profiles\" />
       <Folder Include="Providers\Types\" />

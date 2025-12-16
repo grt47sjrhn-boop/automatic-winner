@@ -10,5 +10,6 @@ namespace substrate_shared.Registries.interfaces
         // New: expose the compact enum identifier
         ToneType GetToneType();
 
+        int GetScaleValue();
     }
 }

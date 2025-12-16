@@ -24,11 +24,18 @@ namespace substrate_shared.Registries.Managers
 
         public static IEnumerable<IReadableRegistry> GetAll() => _cache.Values;
 
+        // --- Unified façade methods ---
+        public static int GetScaleValue(TEnum value) => _cache[value].GetScaleValue();
+
+        public static string GetDescription(TEnum value) => _cache[value].GetDescription();
+
+        public static Bias GetBias(TEnum value) => _cache[value].GetBias();
+
+        public static NarrativeGroup GetGroup(TEnum value) => _cache[value].GetGroup();
+
         // --- Cluster helpers ---
         public static IEnumerable<IReadableRegistry> GetByGroup(NarrativeGroup group)
-        {
-            return _cache.Values.Where(v => v.GetGroup() == group);
-        }
+            => _cache.Values.Where(v => v.GetGroup() == group);
 
         public static string DescribeCluster(NarrativeGroup group)
         {
@@ -38,7 +45,7 @@ namespace substrate_shared.Registries.Managers
 
             var header = $"Narrative Group: {group}";
             var lines = items.Select(v => $"- {v.GetDescription()} ({v.GetBias()})");
-            return header + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines);
+            return header + Environment.NewLine + string.Join(Environment.NewLine, lines);
         }
     }
 }
