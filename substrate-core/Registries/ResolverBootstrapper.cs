@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using substrate_shared.Resolvers.Contract;
+using substrate_shared.Resolvers.Contract.Interfaces;
 
 namespace substrate_core.Registries
 {

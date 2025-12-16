@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using substrate_shared.interfaces.Commands;
 using substrate_shared.Registries.enums;
-using substrate_shared.Registries.Extensions;
 using substrate_shared.Registries.Managers;
 
-namespace substrate_core.Commands;
+namespace substrate_shared.Commands;
 
 public class IntentCommand : ICommand
 {

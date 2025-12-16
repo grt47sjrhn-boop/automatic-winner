@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using substrate_shared.DescriptorTypes.Base;
-using substrate_shared.DescriptorTypes.Payloads;
-using substrate_shared.DescriptorTypes.Types;
+using substrate_shared.Descriptors.Base;
+using substrate_shared.Descriptors.Payloads;
+using substrate_shared.Descriptors.Types;
 
 namespace substrate_shared.Providers.Base
 {

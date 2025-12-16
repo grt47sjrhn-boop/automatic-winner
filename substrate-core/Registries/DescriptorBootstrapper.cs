@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using substrate_shared.DescriptorTypes.Base;
+using substrate_shared.Descriptors.Base;
 
 namespace substrate_core.Registries
 {

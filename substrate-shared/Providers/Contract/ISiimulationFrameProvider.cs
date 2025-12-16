@@ -1,5 +1,5 @@
 using System;
-using substrate_shared.DescriptorTypes.Frames;
+using substrate_shared.Descriptors.Frames;
 
 namespace substrate_shared.Providers.Contract
 {

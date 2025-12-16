@@ -1,7 +1,7 @@
-using substrate_shared.DescriptorTypes.Frames;
+using substrate_shared.Descriptors.Frames;
 using substrate_shared.interfaces.Reports;
 
-namespace substrate_shared.Resolvers.Contract
+namespace substrate_shared.Resolvers.Contract.Interfaces
 {
     public interface IFrameResolver
     {

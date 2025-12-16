@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using substrate_shared.Registries.Contract.Base;
 using substrate_shared.Registries.Manager;
 using substrate_shared.Resolvers.Contract;
+using substrate_shared.Resolvers.Contract.Interfaces;
 
 namespace substrate_core.Registries
 {

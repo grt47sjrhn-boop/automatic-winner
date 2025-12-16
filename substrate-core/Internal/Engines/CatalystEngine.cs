@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using substrate_core.Registries;
-using substrate_shared.DescriptorTypes.Frames;
-using substrate_shared.DescriptorTypes.Validators;
+using substrate_shared.Descriptors.Frames;
+using substrate_shared.Descriptors.Validators;
 using substrate_shared.Errors;
 using substrate_shared.interfaces.Reports;
 using substrate_shared.Providers.Contract;

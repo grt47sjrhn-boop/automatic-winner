@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using substrate_shared.DescriptorTypes.Base;
+using substrate_shared.Descriptors.Base;
 using substrate_shared.Registries.Contract.Base;
 using substrate_shared.Registries.Manager;
 

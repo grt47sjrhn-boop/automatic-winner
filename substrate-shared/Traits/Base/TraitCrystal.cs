@@ -133,5 +133,10 @@ namespace substrate_shared.Traits.Base
                 .OrderByDescending(f => f.Value)
                 .First().Key;
         }
+
+        public int GetScaleValue()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

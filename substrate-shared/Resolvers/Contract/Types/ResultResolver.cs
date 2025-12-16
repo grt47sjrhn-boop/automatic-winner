@@ -1,5 +1,6 @@
-using substrate_shared.DescriptorTypes.Frames;
+using substrate_shared.Descriptors.Frames;
 using substrate_shared.interfaces.Reports;
+using substrate_shared.Resolvers.Contract.Interfaces;
 
 namespace substrate_shared.Resolvers.Contract.Types;
 

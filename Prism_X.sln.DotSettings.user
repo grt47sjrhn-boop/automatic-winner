@@ -9,4 +9,5 @@
     &lt;TestId&gt;NUnit3x::2E113D0F-A7BA-4CA4-AF42-8DBD5B95618F::net8.0::substrate_tests.SubstrateTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:Boolean x:Key="/Default/UserDictionary/Words/=edgecases/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=edgecases/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=prismx/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

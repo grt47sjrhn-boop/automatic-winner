@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_core.Commands;
 using substrate_shared.Registries.enums;
-using substrate_shared.Registries.Managers;
 
-namespace substrate_core.Factories
+namespace substrate_shared.Commands
 {
     public static class IntentCommandFactory
     {

@@ -1,6 +1,7 @@
-using substrate_core.Factories;
-using substrate_shared.DescriptorTypes.Frames;
+using substrate_shared.Commands;
+using substrate_shared.Descriptors.Frames;
 using substrate_shared.interfaces.Reports;
+using substrate_shared.Resolvers.Contract.Interfaces;
 
 namespace substrate_shared.Resolvers.Contract.Types
 {
@@ -19,15 +20,8 @@ namespace substrate_shared.Resolvers.Contract.Types
                 return;
             }
 
-            // Build command directly from descriptor
-            var command = IntentCommandFactory.Create(intent.IntentType);
-
-            // Use factory’s DescribeAsText for enriched metadata logging
-            report.LogInfo($"{Name}: Resolved intent '{intent.Id}' → " +
-                           IntentCommandFactory.DescribeAsText(intent.IntentType));
-
-            // Attach command into frame output payload for downstream consumers
-            frame.OutputPayload.Add("intentCommand", command);
+            // Delegate to façade for full resolution (descriptor, command, logging, payload)
+            IntentFacade.ResolveIntent(intent.IntentType, frame, report);
         }
     }
 }
