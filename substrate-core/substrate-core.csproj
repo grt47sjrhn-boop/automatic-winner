@@ -22,6 +22,7 @@
       <Folder Include="Codex\Core\Registries\" />
       <Folder Include="Models\Exports\" />
       <Folder Include="Models\Profiles\" />
+      <Folder Include="Providers\Types\" />
     </ItemGroup>
 
 </Project>

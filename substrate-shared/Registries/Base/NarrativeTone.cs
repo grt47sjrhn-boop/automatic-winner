@@ -1,14 +1,14 @@
+using System.Text.Json;
 using substrate_shared.Registries.enums;
 
 namespace substrate_shared.Registries.Base
 {
     public class NarrativeTone
     {
-        public ToneType Type { get; }       // Compact enum identifier
-        public string Label { get; }        // Full atmospheric prose
-        public string Category { get; }
+        public ToneType Type { get; }
+        public string Label { get; }
+        public NarrativeGroup Group { get; }
         public Bias BiasValue { get; }
-        public string? Group { get; }
 
         public int BiasMultiplier => BiasValue switch
         {
@@ -18,52 +18,49 @@ namespace substrate_shared.Registries.Base
             _             => 0
         };
 
-        // Full constructor
-        public NarrativeTone(ToneType type, string label, string category, Bias biasValue, string? group = null)
+        public NarrativeTone(ToneType type, string label, NarrativeGroup group, Bias bias)
         {
             Type = type;
             Label = label;
-            Category = category;
-            BiasValue = biasValue;
             Group = group;
+            BiasValue = bias;
         }
 
-        // Parameterless constructor with safe defaults
-        public NarrativeTone()
-        {
-            Type = ToneType.Neutral;
-            Label = "Tone";
-            Category = "Uncategorized";
-            BiasValue = Bias.Neutral;
-            Group = null;
-        }
+        public NarrativeTone() : this(ToneType.Neutral, "Neutral", NarrativeGroup.Equilibrium, Bias.Neutral) { }
 
-        // Blend winner against opponent
         public NarrativeTone BlendAgainst(NarrativeTone opponent)
         {
             var label = BiasValue switch
             {
-                Bias.Positive => $"{Label} tempered by {opponent.Label}",
-                Bias.Negative => $"{Label} deepened by {opponent.Label}",
+                Bias.Positive => $"{Label} amplified by {opponent.Label}",
+                Bias.Negative => $"{Label} softened by {opponent.Label}",
                 Bias.Neutral  => $"{Label} balanced by {opponent.Label}",
                 _             => $"{Label} with {opponent.Label}"
             };
-            return new NarrativeTone(Type, label, Category, BiasValue, Group);
+            return new NarrativeTone(Type, label, Group, BiasValue);
         }
 
-        // Merge two tones into a neutral equilibrium
         public NarrativeTone MergeNeutral(NarrativeTone other)
         {
             return new NarrativeTone(
                 ToneType.Neutral,
                 $"Equilibrium of {Label} and {other.Label}",
-                Category,
-                Bias.Neutral,
-                Group ?? other.Group
+                Group,
+                Bias.Neutral
             );
         }
 
+        public string ToJson() =>
+            JsonSerializer.Serialize(new
+            {
+                type = Type.ToString(),
+                label = Label,
+                group = Group.ToString(),
+                bias = BiasValue.ToString(),
+                multiplier = BiasMultiplier
+            }, new JsonSerializerOptions { WriteIndented = true });
+
         public override string ToString() =>
-            $"{Type} → {Label} (Category: {Category}, Bias: {BiasValue}, Multiplier: {BiasMultiplier}, Group: {Group})";
+            $"{Type} → {Label} (Group: {Group}, Bias: {BiasValue}, Multiplier: {BiasMultiplier})";
     }
 }

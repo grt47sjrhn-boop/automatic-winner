@@ -7,13 +7,6 @@ using substrate_shared.structs;
 
 namespace substrate_core.Factories
 {
-    public enum ResolverType
-    {
-        Simple,
-        MultiAxis
-        // Future: Cluster, Trajectory, etc.
-    }
-
     public static class ResolverFactory
     {
         public static IResolver CreateResolver(

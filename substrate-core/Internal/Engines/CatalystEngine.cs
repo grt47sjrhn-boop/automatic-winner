@@ -1,112 +1,92 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using substrate_shared.interfaces;
-using substrate_shared.interfaces.core;
-using substrate_shared.interfaces.Profiles;
-using substrate_shared.Registries.enums;
-using substrate_shared.Services.Codex;
+using substrate_core.Registries;
+using substrate_shared.DescriptorTypes.Frames;
+using substrate_shared.DescriptorTypes.Validators;
+using substrate_shared.Errors;
+using substrate_shared.interfaces.Reports;
+using substrate_shared.Providers.Contract;
+using substrate_shared.Providers.Base;
+using substrate_shared.Resolvers.Contract;
 
 namespace substrate_core.Internal.Engines
 {
-    /// <summary>
-    /// Catalyst Engine applies grouping modifiers (Panic, Dread, Resolve, Composure)
-    /// to the active Codex context (Report, Summary, Duelist, Inventory).
-    /// </summary>
     public sealed class CatalystEngine
     {
         private bool _enabled;
+        private readonly IServiceProviderRegistry _services;
+        private readonly ResolverRegistry _resolverRegistry;
 
-        public CatalystEngine(bool enabled = true)
+        private readonly DescriptorRegistry _descriptorRegistry;
+
+        public CatalystEngine(IServiceProviderRegistry services, bool enabled = true)
         {
+            _services = services;
             _enabled = enabled;
-        }
 
-        public void Apply()
-        {
-            if (!_enabled) return;
+            if (!_services.Has<ResolverRegistry>())
+                throw new InvalidOperationException("ResolverRegistry not registered.");
 
-            var context = CodexContextService.Instance;
+            if (!_services.Has<DescriptorRegistry>())
+                throw new InvalidOperationException("DescriptorRegistry not registered.");
 
-            var report = context.Report;
-            var summary = context.Summary;
-            var duelist = context.Duelist;
-            var inventory = context.Inventory;
+            _resolverRegistry = _services.Get<ResolverRegistry>();
+            _descriptorRegistry = _services.Get<DescriptorRegistry>();
 
-            if (report == null || summary == null || duelist == null || inventory == null)
+            Console.WriteLine($"[CatalystEngine] Initialized with registry: {_resolverRegistry.Name}");
+            foreach (var resolver in _resolverRegistry.GetAll())
             {
-                // Context not fully populated, skip safely
-                return;
+                Console.WriteLine($"[CatalystEngine] Registered resolver: {resolver.Name}");
             }
 
-            // Deterministic modifier application
-            ApplyModifiers(report, summary, duelist);
+            Console.WriteLine($"[CatalystEngine] Descriptor registry: {_descriptorRegistry.Name}");
+            foreach (var descriptor in _descriptorRegistry.GetAll())
+            {
+                Console.WriteLine($"[CatalystEngine] Registered descriptor: {descriptor.Type} ({descriptor.GetType().Name})");
+            }
         }
 
-        private void ApplyModifiers(IResilienceReport report, ISummary summary, IDuelist duelist)
+        
+        public bool Execute(IReportSummary report)
         {
-            var duels = duelist.GetAllDuels().ToList();
-            if (duels.Count == 0) return;
+            if (!_enabled) return true;
 
-            var bias = summary.Bias;
-
-            // Moving average over last 5 duels
-            double woundTrend = MovingAverageWounds(duels, 5);
-
-            // Streak detection
-            int woundStreak = LongestStreak(duels, DuelOutcome.Wound);
-            int recoveryStreak = LongestStreak(duels, DuelOutcome.Recovery);
-
-            // Narrative overlays
-            if (woundTrend > 0.6 || woundStreak >= 3)
+            if (!_services.Has<ISimulationFrameProvider>())
             {
-                if (bias.Value < 0)
-                {
-                    report.AddMetaStateWeight("Dread", woundTrend);
-                    report.AddMetaStateNarrative(
-                        $"Recent wounds trending high ({woundTrend:P0}) with streak {woundStreak} under {bias.Severity} negative bias — dread rising."
-                    );
-                }
-                else if (bias.Value > 0)
-                {
-                    report.AddMetaStateWeight("Composure", woundTrend);
-                    report.AddMetaStateNarrative(
-                        $"Recent wounds trending high ({woundTrend:P0}) but recoveries streak {recoveryStreak} under {bias.Severity} positive bias — composure stabilizing."
-                    );
-                }
-                else
-                {
-                    report.AddMetaStateWeight("Equilibrium", woundTrend);
-                    report.AddMetaStateNarrative(
-                        $"Recent wounds trending high ({woundTrend:P0}) under neutral bias — state remains balanced."
-                    );
-                }
+                report.LogError("No ISimulationFrameProvider registered.");
+                return false;
             }
+
+            var frameProvider = _services.Get<ISimulationFrameProvider>();
+            var frame = frameProvider.GetFrame();
+
+            if (!ValidateFrame(frame, report)) return false;
+
+            foreach (var resolver in _resolverRegistry.GetAll())
+            {
+                Console.WriteLine($"[CatalystEngine] Executing resolver: {resolver.Name}");
+                resolver.Resolve(frame, report);
+            }
+
+            return true;
+        }
+
+        public bool ValidateFrame(SimulationFrame frame, IReportSummary report)
+        {
+            List<string> errors;
+
+            if (DescriptorValidatorDispatcher.Validate(frame, out errors))
+                return true;
+
+            foreach (var error in errors)
+            {
+                var validationError = new ValidationError(error, source: "CatalystEngine");
+                report.LogValidationError(validationError);
+            }
+
+            return false;
         }
 
         public void Toggle(bool enabled) => _enabled = enabled;
-
-        private int LongestStreak(IEnumerable<ISummary> duels, DuelOutcome target)
-        {
-            int current = 0, longest = 0;
-            foreach (var duel in duels)
-            {
-                if (duel.Outcome == target)
-                {
-                    current++;
-                    longest = Math.Max(longest, current);
-                }
-                else current = 0;
-            }
-            return longest;
-        }
-
-        private double MovingAverageWounds(IEnumerable<ISummary> duels, int windowSize)
-        {
-            var recent = duels.TakeLast(windowSize).ToList();
-            if (recent.Count == 0) return 0.0;
-            int wounds = recent.Count(d => d.Outcome == DuelOutcome.Wound);
-            return (double)wounds / recent.Count;
-        }
     }
 }

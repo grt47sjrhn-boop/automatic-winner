@@ -79,8 +79,8 @@ namespace substrate_core.Models.Engagements.Types
             var avgMagnitude = (DuelistA.Magnitude + DuelistB.Magnitude) / 2;
             var dominantTone =
                 DuelistA.Tone ?? DuelistB.Tone ??
-                new NarrativeTone(ToneType.Harmonious, "Neutral", "Equilibrium",
-                    substrate_shared.Registries.enums.Bias.Neutral, "Equilibrium");
+                new NarrativeTone(ToneType.Harmonious, "Neutral", NarrativeGroup.Equilibrium,
+                    substrate_shared.Registries.enums.Bias.Neutral);
 
             ResolvedVector = new BiasVector(dominantTone, avgMagnitude);
 

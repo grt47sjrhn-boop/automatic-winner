@@ -59,9 +59,8 @@ namespace substrate_shared.structs
             var tone = new NarrativeTone(
                 type: randomToneType,
                 label: randomToneType.GetDescription(),
-                category: randomToneType.GetGroup().ToString(),
-                biasValue: randomToneType.GetBias(),
-                group: randomToneType.GetGroup().ToString()
+                group: randomToneType.GetGroup(),
+                randomToneType.GetBias()
             );
 
             var magnitude = rng.Next(1, 11);

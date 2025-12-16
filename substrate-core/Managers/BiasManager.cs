@@ -67,9 +67,8 @@ namespace substrate_core.Managers
             var tiltedTone = new NarrativeTone(
                 resolved.Tone.Type,
                 resolved.Tone.Label,
-                resolved.Tone.Category,
-                bias.Bias,
-                resolved.Tone.Group
+                resolved.Tone.Group,
+                bias.Bias
             );
 
             return new BiasVector(tiltedTone, resolved.Magnitude);
@@ -106,9 +105,8 @@ namespace substrate_core.Managers
             var tone = new NarrativeTone(
                 randomTone,
                 NarrativeGroup.Duel.ToString(),
-                "Opponent",
-                bias,
-                NarrativeGroup.Duel.ToString() // ✅ fixed: pass enum, not string
+                NarrativeGroup.Composite,
+                bias
             );
 
             var magnitude = (int)Math.Round(_rng.NextDouble() * 20 - 10);
@@ -126,9 +124,8 @@ namespace substrate_core.Managers
             var tone = new NarrativeTone(
                 toneType,
                 profile.Label ?? NarrativeGroup.Duel.ToString(),
-                profile.Category ?? "Opponent",
-                bias,
-                NarrativeGroup.Duel.ToString()
+                NarrativeGroup.FracturedActions,
+                bias
             );
 
             var vector = new BiasVector(tone, magnitude);
@@ -138,9 +135,8 @@ namespace substrate_core.Managers
                 var tiltedTone = new NarrativeTone(
                     tone.Type,
                     tone.Label,
-                    tone.Category,
-                    tilt.Bias,
-                    tone.Group
+                    tone.Group,
+                    tilt.Bias
                 );
                 vector = new BiasVector(tiltedTone, vector.Magnitude);
             }

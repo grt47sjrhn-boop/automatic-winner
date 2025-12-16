@@ -1,5 +1,6 @@
 using System;
 using substrate_shared.Registries.Base;
+using substrate_shared.Registries.enums;
 using substrate_shared.Registries.interfaces;
 
 namespace substrate_shared.Registries.Factories
@@ -12,9 +13,8 @@ namespace substrate_shared.Registries.Factories
             return new NarrativeTone(
                 type: entry.GetToneType(),
                 label: entry.GetDescription(),
-                category: entry.GetGroup().ToString(),   // or derive differently if you prefer
-                biasValue: entry.GetBias(),
-                group: entry.GetGroup().ToString()
+                group: entry.GetGroup(),
+                Bias.Neutral// or derive differently if you prefer
             );
         }
     }

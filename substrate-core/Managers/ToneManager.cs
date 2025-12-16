@@ -24,7 +24,7 @@ namespace substrate_core.Managers
             return new BiasDescriptor
             {
                 Bias = tone.BiasValue,
-                Narrative = $"Tone summary → {tone.Label} (Category: {tone.Category}, Bias: {tone.BiasValue}, Group: {tone.Group})"
+                Narrative = $"Tone summary → {tone.Label} (Category: {tone.Type}, Bias: {tone.BiasValue}, Group: {tone.Group})"
             };
         }
 

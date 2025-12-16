@@ -82,7 +82,7 @@ namespace substrate_core.Internal.Engines
                     _toneManager,
                     _rarityManager,
                     biasSeedId: null,
-                    participants: new[] { _persistent.BiasVector, opponent }
+                    participants: [_persistent.BiasVector, opponent]
                 );
 
                 runner.Run();

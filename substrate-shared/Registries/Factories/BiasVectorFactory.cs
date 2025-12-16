@@ -16,9 +16,8 @@ namespace substrate_shared.Registries.Factories
             var narrativeTone = new NarrativeTone(
                 type: entry.GetToneType(),
                 label: entry.GetDescription(),
-                category: entry.GetGroup().ToString(),
-                biasValue: entry.GetBias(),
-                group: entry.GetGroup().ToString()
+                group: entry.GetGroup(),
+                entry.GetBias()
             );
 
             return new BiasVector(narrativeTone, magnitude);
@@ -58,9 +57,8 @@ namespace substrate_shared.Registries.Factories
             var enrichedTone = new NarrativeTone(
                 type: tone.Type,
                 label: $"{tone.Label} + {moodLabel}",
-                category: tone.Category,
-                biasValue: tone.BiasValue,
-                group: tone.Group
+                group: tone.Group,
+                tone.BiasValue
             );
 
             return new BiasVector(enrichedTone, magnitude);
@@ -89,9 +87,8 @@ namespace substrate_shared.Registries.Factories
             var enrichedTone = new NarrativeTone(
                 type: tone.Type,
                 label: compositeLabel,
-                category: tone.Category,
-                biasValue: tone.BiasValue,
-                group: tone.Group
+                group: tone.Group,
+                tone.BiasValue
             );
 
             return new BiasVector(enrichedTone, magnitude);
