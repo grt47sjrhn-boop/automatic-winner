@@ -38,20 +38,20 @@ namespace substrate_shared.Reports
 
         // --- Codex Extensions (backed by mutable collections) ---
         private readonly Dictionary<string,double> _metaStateWeights = new();
-        private readonly List<string> _metaStateNarratives = new();
+        private readonly List<string> _metaStateNarratives = [];
         public IReadOnlyDictionary<string,double> MetaStateWeights => _metaStateWeights;
         public IReadOnlyList<string> MetaStateNarratives => _metaStateNarratives;
 
         public void AddMetaStateWeight(string key, double value) => _metaStateWeights[key] = value;
         public void AddMetaStateNarrative(string narrative) => _metaStateNarratives.Add(narrative);
 
-        private readonly List<string> _intentCluster = new();
+        private readonly List<string> _intentCluster = [];
         private readonly Dictionary<string,double> _clusterWeights = new();
         public IReadOnlyList<string> IntentCluster => _intentCluster;
         public IReadOnlyDictionary<string,double> ClusterWeights => _clusterWeights;
 
-        private readonly List<string> _epochs = new();
-        private readonly List<string> _arcTriggers = new();
+        private readonly List<string> _epochs = [];
+        private readonly List<string> _arcTriggers = [];
         private readonly Dictionary<string,double> _rarityModulation = new();
         public IReadOnlyList<string> Epochs => _epochs;
         public IReadOnlyList<string> ArcTriggers => _arcTriggers;

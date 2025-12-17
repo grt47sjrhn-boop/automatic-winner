@@ -11,6 +11,7 @@ using substrate_shared.interfaces.Managers;
 using substrate_shared.interfaces.Overlays; // 🔹 for IGeometryOverlay, ITrigOverlay
 using substrate_shared.Reports;
 using substrate_shared.Registries.enums;
+using substrate_shared.Registries.Managers;
 
 namespace substrate_core.Adapters
 {

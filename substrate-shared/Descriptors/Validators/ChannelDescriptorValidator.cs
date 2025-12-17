@@ -1,19 +1,20 @@
 using substrate_shared.Descriptors.Interfaces;
 using substrate_shared.Descriptors.Types;
 
-namespace substrate_shared.Descriptors.Validators;
-
-public class ChannelDescriptorValidator : IDescriptorValidator<ChannelDescriptor>
+namespace substrate_shared.Descriptors.Validators
 {
-    public bool IsValid(ChannelDescriptor descriptor, out string? error)
+    public class ChannelDescriptorValidator : IDescriptorValidator<ChannelDescriptor>
     {
-        if (string.IsNullOrWhiteSpace(descriptor.Medium))
+        public bool IsValid(ChannelDescriptor descriptor, out string? error)
         {
-            error = "Channel must specify a Medium.";
-            return false;
-        }
+            if (string.IsNullOrWhiteSpace(descriptor.Medium))
+            {
+                error = "Channel must specify a Medium.";
+                return false;
+            }
 
-        error = null;
-        return true;
+            error = null;
+            return true;
+        }
     }
 }

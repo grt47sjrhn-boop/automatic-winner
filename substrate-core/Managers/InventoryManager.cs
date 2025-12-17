@@ -17,7 +17,7 @@ namespace substrate_core.Managers
     /// </summary>
     public class InventoryManager : IManager
     {
-        private readonly List<TraitCrystal> _crystals = new();
+        private readonly List<TraitCrystal> _crystals = [];
         private readonly Dictionary<Guid, EngagementResult> _results = new();
 
         /// <summary>

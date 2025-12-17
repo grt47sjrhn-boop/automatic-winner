@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Providers\Contract\Types\" />
       <Folder Include="Providers\Registries\" />
       <Folder Include="Registries\Contract\Types\" />
       <Folder Include="Traits\Enums\" />

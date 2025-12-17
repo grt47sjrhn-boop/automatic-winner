@@ -10,9 +10,9 @@ namespace substrate_shared.Resolvers.Contract.Types
         public string Category => "Trigger Evaluation";
         public string Description => "Resolves trigger descriptors that initiate actions.";
 
-        public void Resolve(SimulationFrame frame, IReportSummary report)
+        public void Resolve(SimulationFrame input, IReportSummary report)
         {
-            foreach (var trigger in frame.Triggers)
+            foreach (var trigger in input.Triggers)
             {
                 // TODO: Evaluate trigger logic here
                 report.LogInfo($"TriggerResolver: Evaluated trigger '{trigger.Id}'.");

@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using substrate_shared.Registries.enums;
 
@@ -26,7 +27,8 @@ namespace substrate_shared.Registries.Base
             BiasValue = bias;
         }
 
-        public NarrativeTone() : this(ToneType.Neutral, "Neutral", NarrativeGroup.Equilibrium, Bias.Neutral) { }
+        public static NarrativeTone Neutral() =>
+            new NarrativeTone(ToneType.Neutral, "Neutral", NarrativeGroup.Equilibrium, Bias.Neutral);
 
         public NarrativeTone BlendAgainst(NarrativeTone opponent)
         {
@@ -37,18 +39,20 @@ namespace substrate_shared.Registries.Base
                 Bias.Neutral  => $"{Label} balanced by {opponent.Label}",
                 _             => $"{Label} with {opponent.Label}"
             };
-            return new NarrativeTone(Type, label, Group, BiasValue);
+
+            // Adjust bias if opponent is stronger
+            var newBias = opponent.BiasValue == Bias.Neutral ? BiasValue : opponent.BiasValue;
+
+            return new NarrativeTone(Type, label, Group, newBias);
         }
 
-        public NarrativeTone MergeNeutral(NarrativeTone other)
-        {
-            return new NarrativeTone(
+        public NarrativeTone MergeNeutral(NarrativeTone other) =>
+            new NarrativeTone(
                 ToneType.Neutral,
                 $"Equilibrium of {Label} and {other.Label}",
                 Group,
                 Bias.Neutral
             );
-        }
 
         public string ToJson() =>
             JsonSerializer.Serialize(new
@@ -59,6 +63,19 @@ namespace substrate_shared.Registries.Base
                 bias = BiasValue.ToString(),
                 multiplier = BiasMultiplier
             }, new JsonSerializerOptions { WriteIndented = true });
+
+        public static NarrativeTone FromJson(string json)
+        {
+            var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var type = Enum.Parse<ToneType>(root.GetProperty("type").GetString()!);
+            var label = root.GetProperty("label").GetString()!;
+            var group = Enum.Parse<NarrativeGroup>(root.GetProperty("group").GetString()!);
+            var bias = Enum.Parse<Bias>(root.GetProperty("bias").GetString()!);
+
+            return new NarrativeTone(type, label, group, bias);
+        }
 
         public override string ToString() =>
             $"{Type} → {Label} (Group: {Group}, Bias: {BiasValue}, Multiplier: {BiasMultiplier})";

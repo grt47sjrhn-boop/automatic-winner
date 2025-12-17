@@ -10,9 +10,9 @@ namespace substrate_shared.Resolvers.Contract.Types
         public string Category => "Subject Linking";
         public string Description => "Resolves subject descriptors and links them to context or intent.";
 
-        public void Resolve(SimulationFrame frame, IReportSummary report)
+        public void Resolve(SimulationFrame input, IReportSummary report)
         {
-            foreach (var subject in frame.Subjects)
+            foreach (var subject in input.Subjects)
             {
                 // TODO: Add subject linking logic here
                 report.LogInfo($"SubjectResolver: Resolved subject '{subject.Id}'.");

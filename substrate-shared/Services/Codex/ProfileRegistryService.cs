@@ -25,7 +25,7 @@ namespace substrate_shared.Services.Codex
             {
                 _lineages[profile.ContributorId] = new Lineage(
                     profile.ContributorId,
-                    Enumerable.Empty<Guid>(),
+                    [],
                     profile.Preset.Difficulty
                 );
             }

@@ -8,7 +8,7 @@ namespace substrate_shared.Registries.Managers
 {
     public static class NarrativeFlavorRegistryManager
     {
-        private static readonly List<IReadableRegistry> _flavors = new();
+        private static readonly List<IReadableRegistry> _flavors = [];
 
         // Register a flavor into the registry system
         public static void RegisterFlavor(NarrativeGroup group)

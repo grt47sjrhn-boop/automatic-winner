@@ -12,7 +12,7 @@ namespace substrate_shared.Traits.Types
         public int MinModifier { get; set; }
         public int MaxModifier { get; set; }
 
-        public List<TraitCrystal> Crystals { get; set; } = new();
+        public List<TraitCrystal> Crystals { get; set; } = [];
         public Dictionary<string, int> MaxFacetValues { get; set; } = new();
 
         public string DescribeGroup()

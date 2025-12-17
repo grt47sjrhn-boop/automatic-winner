@@ -24,6 +24,7 @@
       <Folder Include="Models\Exports\" />
       <Folder Include="Models\Profiles\" />
       <Folder Include="Providers\Types\" />
+      <Folder Include="Registries\" />
     </ItemGroup>
 
 </Project>

@@ -99,7 +99,7 @@ namespace substrate_shared.Reports
             public static List<IResilienceReport> FromCsv(string csv, bool hasHeader = true)
             {
                 var reports = new List<IResilienceReport>();
-                var lines = csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = csv.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
                 var startIndex = hasHeader ? 1 : 0;
 
@@ -128,11 +128,11 @@ namespace substrate_shared.Reports
                         expScaledIndex: double.Parse(parts[12]),
                         toneDistribution: new Dictionary<string,int>(),
                         intentDistribution: new Dictionary<string,int>(),
-                        crystalGroups: new List<TraitCrystalGroup>(),
-                        crystals: new List<TraitCrystal>(),
+                        crystalGroups: [],
+                        crystals: [],
                         rarityCounts: new Dictionary<string,int>(),
-                        crystalNarratives: new List<string>(),
-                        biasSummaries: new List<string>(),
+                        crystalNarratives: [],
+                        biasSummaries: [],
                         crystalCount: 0,
                         outcomes: new Dictionary<string,int>(),
                         crystalRarity: new Dictionary<string,int>(),
@@ -208,7 +208,7 @@ namespace substrate_shared.Reports
                     if (data.TrimStart().StartsWith("["))
                         return JsonSerializer.Deserialize<List<IResilienceReport>>(data)!;
                     else
-                        return new List<IResilienceReport> { JsonSerializer.Deserialize<IResilienceReport>(data)! };
+                        return [JsonSerializer.Deserialize<IResilienceReport>(data)!];
                 }
                 else if (format == "csv")
                 {

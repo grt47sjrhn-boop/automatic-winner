@@ -74,7 +74,7 @@ namespace substrate_shared.Registries.Managers
             var moodEntry = RegistryManager<MoodType>.Get(mood);
             var intentEntry = RegistryManager<IntentAction>.Get(intent);
 
-            var score = ClassifyBias(new[] { toneEntry, moodEntry, intentEntry });
+            var score = ClassifyBias([toneEntry, moodEntry, intentEntry]);
 
             return
                 $"Triad Overlay:\n" +

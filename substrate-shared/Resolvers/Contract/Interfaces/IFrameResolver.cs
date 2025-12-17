@@ -15,6 +15,6 @@ namespace substrate_shared.Resolvers.Contract.Interfaces
         /// <summary>
         /// Executes resolver logic on the validated SimulationFrame.
         /// </summary>
-        void Resolve(SimulationFrame frame, IReportSummary report);
+        void Resolve(SimulationFrame input, IReportSummary report);
     }
 }

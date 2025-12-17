@@ -7,7 +7,7 @@ namespace substrate_shared.DTO.Codex
 {
     public sealed class InMemoryCodexRepository : ICodexRepository
     {
-        private readonly List<CodexEntry> _entries = new();
+        private readonly List<CodexEntry> _entries = [];
 
         public void Save(CodexEntry entry) => _entries.Add(entry);
 

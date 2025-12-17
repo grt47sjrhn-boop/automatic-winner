@@ -13,7 +13,7 @@ namespace substrate_core.Models.Summaries.Types
     /// </summary>
     public class CompositeSummary : EventSummary
     {
-        private readonly List<ISummary> _summaries = new();
+        private readonly List<ISummary> _summaries = [];
         private readonly Dictionary<string, string> _traits = new();
 
         public CompositeSummary(

@@ -35,7 +35,7 @@ namespace substrate_shared.Descriptors.Validators
 
         public static bool Validate(SimulationFrame frame, out List<string> errors)
         {
-            errors = new List<string>();
+            errors = [];
 
             // Validate single descriptors
             ValidateIfPresent(frame.Intent, errors);

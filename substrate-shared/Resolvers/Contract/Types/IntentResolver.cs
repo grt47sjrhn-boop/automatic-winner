@@ -11,9 +11,9 @@ namespace substrate_shared.Resolvers.Contract.Types
         public string Description => "Resolves the intent descriptor and applies tone/bias effects.";
         public string Category => "Intent Processing";
 
-        public void Resolve(SimulationFrame frame, IReportSummary report)
+        public void Resolve(SimulationFrame input, IReportSummary report)
         {
-            var intent = frame.Intent;
+            var intent = input.Intent;
             if (intent == null)
             {
                 report.LogWarning($"{Name}: No intent descriptor found.");
@@ -21,7 +21,7 @@ namespace substrate_shared.Resolvers.Contract.Types
             }
 
             // Delegate to façade for full resolution (descriptor, command, logging, payload)
-            IntentFacade.ResolveIntent(intent.IntentType, frame, report);
+            IntentFacade.ResolveIntent(intent.IntentType, input, report);
         }
     }
 }

@@ -10,9 +10,9 @@ namespace substrate_shared.Resolvers.Contract.Types
         public string Category => "Channel Processing";
         public string Description => "Resolves the channel descriptor and determines communication medium.";
 
-        public void Resolve(SimulationFrame frame, IReportSummary report)
+        public void Resolve(SimulationFrame input, IReportSummary report)
         {
-            var channel = frame.Channel;
+            var channel = input.Channel;
             if (channel == null)
             {
                 report.LogWarning("No channel descriptor found.");

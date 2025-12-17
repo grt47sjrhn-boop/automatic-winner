@@ -17,13 +17,13 @@ namespace substrate_core.Internal.Resolvers
     /// </summary>
     public class ResilienceTracker : IResilienceTracker
     {
-        private readonly List<ISummary> _summaries = new();
-        private readonly List<TraitCrystal> _crystals = new();
-        private readonly List<string> _narratives = new();
+        private readonly List<ISummary> _summaries = [];
+        private readonly List<TraitCrystal> _crystals = [];
+        private readonly List<string> _narratives = [];
 
-        private readonly List<double> _hypotenuse = new();
-        private readonly List<double> _areas = new();
-        private readonly List<(double cos, double sin, double log, double exp)> _trig = new();
+        private readonly List<double> _hypotenuse = [];
+        private readonly List<double> _areas = [];
+        private readonly List<(double cos, double sin, double log, double exp)> _trig = [];
 
         private double _totalResilience = 0.0;
 
@@ -152,8 +152,8 @@ namespace substrate_core.Internal.Resolvers
         public void AddSummary(ISummary summary) => _summaries.Add(summary);
         public void AddCrystal(TraitCrystal crystal) => _crystals.Add(crystal);
 
-        public List<ISummary> GetSummaries() => new(_summaries);
-        public List<TraitCrystal> GetCrystals() => new(_crystals);
+        public List<ISummary> GetSummaries() => [.._summaries];
+        public List<TraitCrystal> GetCrystals() => [.._crystals];
         public IReadOnlyList<TraitCrystalGroup> CrystalGroups => CreateCrystalsGroup();
 
         public void AddResilience(double engagementCumulativeResilience)

@@ -8,7 +8,7 @@ using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.structs;
 
-namespace substrate_core.Managers
+namespace substrate_shared.Registries.Managers
 {
     /// <summary>
     /// Manager responsible for interpreting and narrating tones.
@@ -28,6 +28,17 @@ namespace substrate_core.Managers
             };
         }
 
+        public NarrativeTone GetTone(ToneType type, Bias bias = Bias.Neutral, NarrativeGroup? group = null)
+        {
+            // Default group assignment if none provided
+            var resolvedGroup = group ?? NarrativeGroup.Equilibrium;
+
+            // Label can be derived from enum name or mapped via extension
+            var label = type.ToString();
+
+            return new NarrativeTone(type, label, resolvedGroup, bias);
+        }
+        
         /// <summary>
         /// Blend one tone against another, producing a new NarrativeTone and descriptor.
         /// </summary>

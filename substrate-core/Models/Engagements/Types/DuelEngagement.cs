@@ -17,7 +17,7 @@ namespace substrate_core.Models.Engagements.Types
 {
     public class DuelEngagement : IEngagement
     {
-        private readonly List<TraitCrystal> _forgedCrystals = new();
+        private readonly List<TraitCrystal> _forgedCrystals = [];
         private readonly IToneManager _toneManager;
         private readonly IRarityManager _rarityManager;
 

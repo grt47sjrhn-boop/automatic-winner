@@ -66,12 +66,12 @@ namespace substrate_core.Runners.Factories
                 // Ritual: use provided participants or generate three randoms
                 EngagementType.Ritual => new RitualEngagement(
                     inventory,
-                    participants ?? new[]
-                    {
+                    participants ??
+                    [
                         BiasVector.GenerateRandom(),
                         BiasVector.GenerateRandom(),
                         BiasVector.GenerateRandom()
-                    },
+                    ],
                     biasManager,
                     facetManager,
                     toneManager,

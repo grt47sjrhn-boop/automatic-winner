@@ -8,11 +8,11 @@ namespace substrate_shared.Descriptors.Types
     public class TriggerDescriptor : BaseDescriptor
     {
         public override DescriptorType Type => DescriptorType.Trigger;
-        public List<SubjectDescriptor> Subjects { get; set; } = new();
+        public List<SubjectDescriptor> Subjects { get; set; } = [];
         public SubjectMatchMode MatchMode { get; set; } = SubjectMatchMode.Any;
 
-        public List<ResultDescriptor> Results { get; set; } = new();
-        public List<ConditionDescriptor> Conditions { get; set; } = new();
+        public List<ResultDescriptor> Results { get; set; } = [];
+        public List<ConditionDescriptor> Conditions { get; set; } = [];
 
         public string? ActivationLabel { get; set; }
         public bool IsInterruptive { get; set; }

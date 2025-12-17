@@ -72,7 +72,7 @@ namespace substrate_core.Runners
                         result.Narrative
                     )
                 },
-                new List<TraitCrystal>()
+                []
             );
 
             foreach (var crystal in forgedCrystals)

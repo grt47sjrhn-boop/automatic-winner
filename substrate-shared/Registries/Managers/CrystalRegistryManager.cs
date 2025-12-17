@@ -12,7 +12,7 @@ namespace substrate_shared.Registries.Managers
 {
     public static class CrystalRegistryManager
     {
-        private static readonly List<IReadableRegistry> _crystals = new();
+        private static readonly List<IReadableRegistry> _crystals = [];
 
         // Register a crystal into the registry system
         public static void RegisterCrystal(TraitCrystal crystal)

@@ -57,7 +57,7 @@ namespace substrate_core.Models
         // Apply duel outcome from EventSummary
         public void ApplyOutcome(ISummary summary, double difficulty)
         {
-            if (summary is DuelEventSummary duelSummary && duelSummary.Type == SummaryType.Duel)
+            if (summary is DuelEventSummary { Type: SummaryType.Duel } duelSummary)
             {
                 switch (duelSummary.Outcome)
                 {

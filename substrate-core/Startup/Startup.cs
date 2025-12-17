@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 using substrate_shared.Resolvers.Contract;
-using substrate_core.Registries;
 using substrate_shared.Descriptors.Base;
+using substrate_shared.Registries.ResolverRegistry;
 using substrate_shared.Resolvers.Contract.Interfaces;
 
 namespace substrate_core.Startup
@@ -41,8 +41,9 @@ namespace substrate_core.Startup
                 var descriptor = descriptors.FirstOrDefault(d => d.GetType().Name == expectedDescriptorName);
                 if (descriptor != null)
                 {
-                    registry.Register(descriptor.GetType(), descriptor, resolver);
+                    registry.Register(descriptor.GetType(), (descriptor, resolver));
                     Console.WriteLine($"[Startup] Registered pair: {descriptor.GetType().Name} -> {resolver.GetType().Name}");
+
                 }
                 else
                 {
@@ -56,8 +57,7 @@ namespace substrate_core.Startup
 
         private static bool IsConcreteDescriptor(Type t) =>
             typeof(BaseDescriptor).IsAssignableFrom(t)
-            && !t.IsAbstract
-            && !t.IsInterface
+            && t is { IsAbstract: false, IsInterface: false }
             && t.GetConstructor(Type.EmptyTypes) != null;
 
         private static BaseDescriptor CreateDescriptor(Type t) =>
@@ -65,8 +65,7 @@ namespace substrate_core.Startup
 
         private static bool IsConcreteResolver(Type t) =>
             typeof(IFrameResolver).IsAssignableFrom(t)
-            && !t.IsAbstract
-            && !t.IsInterface
+            && t is { IsAbstract: false, IsInterface: false }
             && t.GetConstructor(Type.EmptyTypes) != null;
 
         private static IFrameResolver CreateResolver(Type t) =>

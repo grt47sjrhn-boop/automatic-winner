@@ -1,92 +1,46 @@
-using System;
-using System.Collections.Generic;
-using substrate_core.Registries;
-using substrate_shared.Descriptors.Frames;
-using substrate_shared.Descriptors.Validators;
-using substrate_shared.Errors;
+using System.Linq;
 using substrate_shared.interfaces.Reports;
 using substrate_shared.Providers.Contract;
-using substrate_shared.Providers.Base;
-using substrate_shared.Resolvers.Contract;
+using substrate_shared.Providers.Contract.Types;
+using substrate_core.Providers.Registry;
 
 namespace substrate_core.Internal.Engines
 {
     public sealed class CatalystEngine
     {
-        private bool _enabled;
-        private readonly IServiceProviderRegistry _services;
-        private readonly ResolverRegistry _resolverRegistry;
+        private readonly ServiceProviderRegistry _services;
 
-        private readonly DescriptorRegistry _descriptorRegistry;
-
-        public CatalystEngine(IServiceProviderRegistry services, bool enabled = true)
+        public CatalystEngine(ServiceProviderRegistry services)
         {
             _services = services;
-            _enabled = enabled;
-
-            if (!_services.Has<ResolverRegistry>())
-                throw new InvalidOperationException("ResolverRegistry not registered.");
-
-            if (!_services.Has<DescriptorRegistry>())
-                throw new InvalidOperationException("DescriptorRegistry not registered.");
-
-            _resolverRegistry = _services.Get<ResolverRegistry>();
-            _descriptorRegistry = _services.Get<DescriptorRegistry>();
-
-            Console.WriteLine($"[CatalystEngine] Initialized with registry: {_resolverRegistry.Name}");
-            foreach (var resolver in _resolverRegistry.GetAll())
-            {
-                Console.WriteLine($"[CatalystEngine] Registered resolver: {resolver.Name}");
-            }
-
-            Console.WriteLine($"[CatalystEngine] Descriptor registry: {_descriptorRegistry.Name}");
-            foreach (var descriptor in _descriptorRegistry.GetAll())
-            {
-                Console.WriteLine($"[CatalystEngine] Registered descriptor: {descriptor.Type} ({descriptor.GetType().Name})");
-            }
         }
 
-        
-        public bool Execute(IReportSummary report)
+        public void Execute(IReportSummary report)
         {
-            if (!_enabled) return true;
-
-            if (!_services.Has<ISimulationFrameProvider>())
+            // Pull registered frame provider
+            var frameProvider = _services.Resolve<ISimulationFrameProvider>();
+            if (frameProvider == null)
             {
                 report.LogError("No ISimulationFrameProvider registered.");
-                return false;
+                return;
             }
 
-            var frameProvider = _services.Get<ISimulationFrameProvider>();
-            var frame = frameProvider.GetFrame();
-
-            if (!ValidateFrame(frame, report)) return false;
-
-            foreach (var resolver in _resolverRegistry.GetAll())
+            // Pull registered agent(s)
+            var receivers = _services.ResolveAll<ISimulationFrameReceiver>().ToList();
+            if (!receivers.Any())
             {
-                Console.WriteLine($"[CatalystEngine] Executing resolver: {resolver.Name}");
-                resolver.Resolve(frame, report);
+                report.LogError("No ISimulationFrameReceiver registered.");
+                return;
             }
 
-            return true;
-        }
-
-        public bool ValidateFrame(SimulationFrame frame, IReportSummary report)
-        {
-            List<string> errors;
-
-            if (DescriptorValidatorDispatcher.Validate(frame, out errors))
-                return true;
-
-            foreach (var error in errors)
+            // Generate frames and push them through agents
+            foreach (var frame in frameProvider.GenerateFrames())
             {
-                var validationError = new ValidationError(error, source: "CatalystEngine");
-                report.LogValidationError(validationError);
+                foreach (var receiver in receivers)
+                {
+                    receiver.Receive(frame, report);
+                }
             }
-
-            return false;
         }
-
-        public void Toggle(bool enabled) => _enabled = enabled;
     }
 }

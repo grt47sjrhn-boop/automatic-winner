@@ -60,7 +60,7 @@ namespace substrate_core.Orchestration
                     _toneManager,
                     _rarityManager,
                     biasSeedId: null,
-                    participants: new[] { duelistA, duelistB }
+                    participants: [duelistA, duelistB]
                 );
 
                 runner.Run();

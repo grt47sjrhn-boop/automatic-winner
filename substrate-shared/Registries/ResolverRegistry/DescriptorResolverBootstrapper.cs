@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using substrate_shared.Descriptors.Base;
-using substrate_shared.Resolvers.Contract;
 using substrate_shared.Resolvers.Contract.Interfaces;
 
-namespace substrate_core.Registries
+namespace substrate_shared.Registries.ResolverRegistry
 {
     /// <summary>
     /// Holds a 1-to-1 mapping between descriptor types and their resolvers.

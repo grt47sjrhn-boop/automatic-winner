@@ -183,7 +183,7 @@ namespace substrate_core.Managers
                 }
             }
 
-            return pool.Count > 0 ? pool : new List<ToneType> { ToneType.Conflict };
+            return pool.Count > 0 ? pool : [ToneType.Conflict];
         }
 
         private Bias PickWeightedBias(double collapseBiasFactor)

@@ -10,9 +10,9 @@ namespace substrate_shared.Resolvers.Contract.Types
         public string Category => "Context Processing";
         public string Description => "Resolves the context descriptor and applies environmental effects.";
 
-        public void Resolve(SimulationFrame frame, IReportSummary report)
+        public void Resolve(SimulationFrame input, IReportSummary report)
         {
-            var context = frame.Context;
+            var context = input.Context;
             if (context == null)
             {
                 report.LogWarning("No context descriptor found.");

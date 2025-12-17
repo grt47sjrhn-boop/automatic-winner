@@ -19,6 +19,8 @@ namespace substrate_shared.Providers.Base
 
         IReadOnlyDictionary<string, BaseDescriptor> DescriptorRegistry { get; }
 
+        IEnumerable<BaseDescriptor> GetDescriptors();
+        
         PayloadMap InputPayload { get; }
         PayloadMap OutputPayload { get; }
     }

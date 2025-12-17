@@ -40,7 +40,7 @@ namespace substrate_shared.Descriptors.Types
             if (!string.IsNullOrWhiteSpace(TargetId))
                 dict["target"] = TargetId;
 
-            if (Tags != null && Tags.Count > 0)
+            if (Tags is { Count: > 0 })
                 dict["tags"] = Tags;
 
             if (Confidence != null)

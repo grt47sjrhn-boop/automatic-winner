@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using substrate_shared.Descriptors.Base;
 using substrate_shared.Descriptors.Payloads;
@@ -25,5 +26,17 @@ namespace substrate_shared.Descriptors.Frames
         // Optional: Runtime payload state (pre- and post-blending)
         public PayloadMap InputPayload { get; set; } = new();
         public PayloadMap OutputPayload { get; set; } = new();
+        
+        public IEnumerable<BaseDescriptor> GetDescriptors()
+        {
+            if (Intent != null) yield return Intent;
+            if (Context != null) yield return Context;
+            if (Channel != null) yield return Channel;
+            foreach (var s in Subjects ?? []) yield return s;
+            foreach (var m in Modifiers ?? []) yield return m;
+            foreach (var t in Triggers ?? []) yield return t;
+            foreach (var c in Conditions ?? []) yield return c;
+            foreach (var r in Results ?? []) yield return r;
+        }
     }
 }
