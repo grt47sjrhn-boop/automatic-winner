@@ -50,6 +50,9 @@ namespace substrate_shared.Registries.enums
         Distract,
 
         [RegistryNarrative("Cynical: laughter hollow as tombs...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -5)]
-        Cynical
+        Cynical,
+        
+        [RegistryNarrative("Discourage: Progress slowed and stalled...", Bias.Negative, NarrativeGroup.HostileActions, scaleValue: -6)]
+        Discourage,
     }
 }

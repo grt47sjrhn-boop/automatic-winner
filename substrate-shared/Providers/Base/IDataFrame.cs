@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using substrate_shared.Descriptors.Base;
 using substrate_shared.Descriptors.Payloads;
 using substrate_shared.Descriptors.Types;
+using substrate_shared.Strategies;
 
 namespace substrate_shared.Providers.Base
 {
@@ -23,5 +24,6 @@ namespace substrate_shared.Providers.Base
         
         PayloadMap InputPayload { get; }
         PayloadMap OutputPayload { get; }
+        IntentActionStrategy Strategy { get; set; }
     }
 }

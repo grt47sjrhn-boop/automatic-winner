@@ -4,6 +4,7 @@ using substrate_shared.Descriptors.Base;
 using substrate_shared.Descriptors.Payloads;
 using substrate_shared.Descriptors.Types;
 using substrate_shared.Providers.Base;
+using substrate_shared.Strategies;
 
 namespace substrate_shared.Descriptors.Frames
 {
@@ -26,7 +27,8 @@ namespace substrate_shared.Descriptors.Frames
         // Optional: Runtime payload state (pre- and post-blending)
         public PayloadMap InputPayload { get; set; } = new();
         public PayloadMap OutputPayload { get; set; } = new();
-        
+        public IntentActionStrategy Strategy { get; set; }
+
         public IEnumerable<BaseDescriptor> GetDescriptors()
         {
             if (Intent != null) yield return Intent;

@@ -9,8 +9,7 @@ using substrate_shared.Providers.Base;
 using substrate_shared.Registries.Base;
 using substrate_shared.Registries.enums;
 using substrate_shared.Registries.Managers;
-
-// for ToneManager
+using substrate_shared.Strategies;
 
 namespace substrate_shared.Providers.Contract.Types
 {
@@ -51,23 +50,67 @@ namespace substrate_shared.Providers.Contract.Types
 
         private SimulationFrame CreateFrameForIntent(IntentAction action)
         {
-            // Delegate tone construction to ToneManager
-            var tone = _toneManager.GetTone(
-                action switch
+            var bias   = SuperRegistryManager.GetBias(action);
+            var group  = SuperRegistryManager.GetGroup(action);
+            var scale  = SuperRegistryManager.GetScaleValue(action);
+            var desc   = SuperRegistryManager.GetDescription(action);
+
+            ToneType toneType = action switch
+            {
+                // Positive supportive
+                IntentAction.Comfort   => ToneType.Calm,
+                IntentAction.Encourage => ToneType.Resilient,
+                IntentAction.Support   => ToneType.Resilient,
+
+                // Positive affirmative
+                IntentAction.Inspire   => ToneType.Joy,
+                IntentAction.Approve   => ToneType.Radiant,
+                IntentAction.Celebrate => ToneType.Radiant,
+
+                // Neutral equilibrium
+                IntentAction.Inform    => ToneType.Reflective,
+                IntentAction.Question  => ToneType.Equilibrium,
+                IntentAction.Reflect   => ToneType.Composite,
+                IntentAction.Observe   => ToneType.Equilibrium,
+
+                // Negative hostile (explicit mappings for each)
+                IntentAction.Criticize => ToneType.Hostile,
+                IntentAction.Challenge => ToneType.Hostile,
+                IntentAction.Reject    => ToneType.Hostile,
+                IntentAction.Cynical   => ToneType.Despairing,
+
+                // Negative fractured
+                IntentAction.Distract  => ToneType.Forsaken,
+
+                // Fallback to bias/group mapping for anything not explicitly listed
+                _ => (bias, group) switch
                 {
-                    IntentAction.Encourage => ToneType.Harmonious,
-                    IntentAction.Criticize => ToneType.Critical,
-                    IntentAction.Observe   => ToneType.Neutral,
-                    _                      => ToneType.Neutral
+                    (Bias.Positive, NarrativeGroup.SupportiveActions) => ToneType.Resilient,
+                    (Bias.Positive, NarrativeGroup.AffirmativeActions) => ToneType.Radiant,
+                    (Bias.Neutral, NarrativeGroup.Equilibrium)        => ToneType.Equilibrium,
+                    (Bias.Negative, NarrativeGroup.HostileActions)    => ToneType.Hostile,
+                    (Bias.Negative, NarrativeGroup.FracturedActions)  => ToneType.Forsaken,
+                    (Bias.Negative, NarrativeGroup.AbyssalStates)     => ToneType.Despairing,
+                    _                                                 => ToneType.Neutral
                 }
-            );
+            };
+
+
+            var tone = _toneManager.GetTone(toneType);
 
             var intent = new IntentDescriptor
             {
                 Id = Guid.NewGuid().ToString(),
                 IntentType = action,
-                Tone = tone
+                Bias = bias,
+                Group = group,
+                ScaleValue = scale,
+                Narrative = desc,
+                IntentTone = tone
             };
+
+            // Build strategy directly from descriptor
+            var strategy = new IntentActionStrategy(intent);
 
             return new SimulationFrame
             {
@@ -84,7 +127,8 @@ namespace substrate_shared.Providers.Contract.Types
                     { intent.Id, intent }
                 },
                 InputPayload = new PayloadMap(),
-                OutputPayload = new PayloadMap()
+                OutputPayload = new PayloadMap(),
+                Strategy = strategy // optional: keep strategy inside frame
             };
         }
     }

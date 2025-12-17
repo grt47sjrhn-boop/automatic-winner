@@ -15,12 +15,16 @@ namespace substrate_shared.Descriptors.Types
         public NarrativeGroup Group { get; set; }
         public int ScaleValue { get; set; }
 
+        // Narrative text from RegistryNarrative attribute
         public string? Narrative { get; set; }
+
+        // Tone assigned by ToneManager
         public NarrativeTone? IntentTone { get; set; }
 
-        public string? TargetId { get; set; }              // Optional: target subject
-        public List<string>? Tags { get; set; }            // Optional: for filtering or grouping
-        public float? Confidence { get; set; }             // Optional: 0.0–1.0 certainty score
+        // Optional metadata
+        public string? TargetId { get; set; }
+        public List<string>? Tags { get; set; }
+        public float? Confidence { get; set; }
 
         public override Dictionary<string, object> Describe()
         {

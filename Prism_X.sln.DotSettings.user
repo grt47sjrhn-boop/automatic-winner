@@ -6,7 +6,7 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AList_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E2_003Fresharper_002Dhost_003FSourcesCache_003Fb7208b3f72528d22781d25fde9a55271bdf2b5aade4f03b1324579a25493cd8_003FList_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=70332d08_002D88fc_002D4263_002Dbd8f_002D3de3fca83df6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="SubstrateTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::2E113D0F-A7BA-4CA4-AF42-8DBD5B95618F::net8.0::substrate_tests.SubstrateTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::2E113D0F-A7BA-4CA4-AF42-8DBD5B95618F::net8.0::substrate_tests.IntentDescriptorTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=edgecases/@EntryIndexedValue">True</s:Boolean>
