@@ -1,7 +1,8 @@
 using System;
-using substrate_shared.Types;
+using substrate_shared.Types.Enums;
+using substrate_shared.Types.Systems;
 
-namespace substrate_shared.Models.Types
+namespace substrate_shared.Types.Modles
 {
     // === Crew Class ===
     public class Crew
@@ -24,7 +25,7 @@ namespace substrate_shared.Models.Types
         {
             get
             {
-                double baseRatio = MaxSize > 0 ? (double)Size / MaxSize : 0.0;
+                var baseRatio = MaxSize > 0 ? (double)Size / MaxSize : 0.0;
                 return BiasProfile.ApplyBiasToEffectiveness(baseRatio);
             }
         }

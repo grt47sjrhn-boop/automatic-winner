@@ -1,23 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using substrate_core.Orchestration;
+﻿using substrate_core.Orchestration;
 using substrate_shared;
-using substrate_shared.Models;
-using substrate_shared.Models.Types;
 using substrate_shared.Types;
+using substrate_shared.Types.Enums;
+using substrate_shared.Types.Modles;
+using substrate_shared.Types.Systems;
 using substrate_shared.Utils; // for ConsoleHelper
 
 namespace PrismX.ConsoleTest
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
             var orchestrator = new ConstellationOrchestrator();
             var crews = new List<Crew>();
             var analyser = new TrendAnalyser();
-            var mineTracker = new MineTracker();
-            var inventory = new Inventory();
+            var mineTracker = new MineTrackerSystem();
+            var inventory = new InventorySystem();
             var rng = new Random();
             var reports = new List<string>();
             var rumors = new List<string>();
@@ -34,7 +33,7 @@ namespace PrismX.ConsoleTest
                 Console.WriteLine("1. Recruit Crew");
                 Console.WriteLine("2. Send Crew to Dig");
                 Console.WriteLine("3. Review Reports");
-                Console.WriteLine("4. Inventory");
+                Console.WriteLine("4. InventorySystem");
                 Console.WriteLine("5. Market Status");
                 Console.WriteLine("6. View Rumors");
                 Console.WriteLine("7. Send Crew Back");
@@ -48,7 +47,7 @@ namespace PrismX.ConsoleTest
                     case "1":
                         var crew = CrewFactory.CreateCrew();
                         crews.Add(crew);
-                        string recruitMsg = $"Recruited {crew.Name} (Bias: {crew.BiasProfile.DominantBias}, Morale: {crew.Morale}, Size={crew.Size})";
+                        var recruitMsg = $"Recruited {crew.Name} (Bias: {crew.BiasProfile.DominantBias}, Morale: {crew.Morale}, Size={crew.Size})";
                         Console.WriteLine(recruitMsg);
                         reports.Add(recruitMsg);
                         ConsoleHelper.Pause();
@@ -67,11 +66,11 @@ namespace PrismX.ConsoleTest
                                     Priority = 1
                                 },
                                 c.BiasProfile.DominantBias,
-                                PrismTypes.TriggerID.CollapseEvent.ToString(),
-                                PrismTypes.NarrationTier.Minimal.ToString()
+                                nameof(PrismTypes.TriggerID.CollapseEvent),
+                                nameof(PrismTypes.NarrationTier.Minimal)
                             );
 
-                            string report = $"{c.Name} report: {closure.NarrationText}";
+                            var report = $"{c.Name} report: {closure.NarrationText}";
                             Console.WriteLine(report);
                             reports.Add(report);
                             ConsoleHelper.Pause();
@@ -79,18 +78,18 @@ namespace PrismX.ConsoleTest
                             c.UpdateMorale(closure.ClosureState);
 
                             mineTracker.AdvanceDepth(c);
-                            int risk = mineTracker.CalculateCollapseRisk();
-                            string depthMsg = $"{c.Name} advanced mine to {mineTracker.CurrentDepth}ft. Collapse risk: {risk}%";
+                            var risk = mineTracker.CalculateCollapseRisk();
+                            var depthMsg = $"{c.Name} advanced mine to {mineTracker.CurrentDepth}ft. Collapse risk: {risk}%";
                             Console.WriteLine(depthMsg);
                             reports.Add(depthMsg);
                             ConsoleHelper.Pause();
 
                             if (rng.NextDouble() > 0.5)
                             {
-                                string discovery = rng.NextDouble() > 0.5 ? "Gold Vein" : "Ore Deposit";
+                                var discovery = rng.NextDouble() > 0.5 ? "Gold Vein" : "Ore Deposit";
                                 mineTracker.AddDiscovery(discovery);
                                 inventory.AddItem(discovery.Contains("Gold") ? "Gold" : "Ore", rng.Next(1, 4));
-                                string discoveryMsg = $"{c.Name} discovered {discovery} at {mineTracker.CurrentDepth}ft.";
+                                var discoveryMsg = $"{c.Name} discovered {discovery} at {mineTracker.CurrentDepth}ft.";
                                 Console.WriteLine(discoveryMsg);
                                 reports.Add(discoveryMsg);
                                 RumorSystem.BroadcastDiscovery(discovery);
@@ -102,14 +101,13 @@ namespace PrismX.ConsoleTest
                             ConsoleHelper.Pause();
 
                             // End condition check
-                            if (c.Size <= 0 || c.Morale <= 0)
-                            {
-                                string endMsg = $"{c.Name} has collapsed (Size={c.Size}, Morale={c.Morale}). Game Over.";
-                                Console.WriteLine(endMsg);
-                                reports.Add(endMsg);
-                                ConsoleHelper.Pause();
-                                return;
-                            }
+                            if (c is { Size: > 0, Morale: > 0 }) continue;
+                            
+                            var endMsg = $"{c.Name} has collapsed (Size={c.Size}, Morale={c.Morale}). Game Over.";
+                            Console.WriteLine(endMsg);
+                            reports.Add(endMsg);
+                            ConsoleHelper.Pause();
+                            return;
                         }
                         break;
 
@@ -120,7 +118,7 @@ namespace PrismX.ConsoleTest
                         break;
 
                     case "4":
-                        Console.WriteLine("\n=== Inventory ===");
+                        Console.WriteLine("\n=== InventorySystem ===");
                         inventory.ShowInventory();
                         ConsoleHelper.Pause();
 
@@ -154,15 +152,15 @@ namespace PrismX.ConsoleTest
 
                     case "7":
                         Console.WriteLine("\nSelect crew to send back:");
-                        for (int i = 0; i < crews.Count; i++)
+                        for (var i = 0; i < crews.Count; i++)
                             Console.WriteLine($"{i + 1}. {crews[i].Name} (Size={crews[i].Size}, Morale={crews[i].Morale})");
 
-                        if (int.TryParse(Console.ReadLine(), out int idx) && idx > 0 && idx <= crews.Count)
+                        if (int.TryParse(Console.ReadLine(), out var idx) && idx > 0 && idx <= crews.Count)
                         {
                             var retreatCrew = crews[idx - 1];
                             retreatCrew.Morale = Math.Min(100, retreatCrew.Morale + 10); // morale recovers
                             retreatCrew.Size = Math.Max(0, retreatCrew.Size - 1);       // one miner leaves
-                            string retreatMsg = $"{retreatCrew.Name} retreated from the mine. Morale now {retreatCrew.Morale}, Size {retreatCrew.Size}.";
+                            var retreatMsg = $"{retreatCrew.Name} retreated from the mine. Morale now {retreatCrew.Morale}, Size {retreatCrew.Size}.";
                             Console.WriteLine(retreatMsg);
                             reports.Add(retreatMsg);
 

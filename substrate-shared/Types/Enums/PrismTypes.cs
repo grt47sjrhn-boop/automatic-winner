@@ -1,4 +1,4 @@
-namespace substrate_shared.Types
+namespace substrate_shared.Types.Enums
 {
     public static class PrismTypes
     {

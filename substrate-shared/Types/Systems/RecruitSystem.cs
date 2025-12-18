@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using substrate_shared.Models.Types;
-using substrate_shared.Types;
+using substrate_shared.Types.Enums;
+using substrate_shared.Types.Modles;
 
-namespace substrate_shared
+namespace substrate_shared.Types.Systems
 {
     public static class RecruitSystem
     {

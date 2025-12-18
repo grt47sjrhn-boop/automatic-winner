@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using substrate_shared.Utils;
 
-namespace substrate_shared.Models
+namespace substrate_shared.Types.Systems
 {
-    public class Inventory
+    public class InventorySystem
     {
         private Dictionary<string, int> items = new Dictionary<string, int>();
         public double Credits { get; private set; } = 0.0;
@@ -29,7 +29,7 @@ namespace substrate_shared.Models
 
         public void ShowInventory()
         {
-            Console.WriteLine("=== Inventory ===");
+            Console.WriteLine("=== InventorySystem ===");
             foreach (var kv in items)
                 Console.WriteLine($"{kv.Key}: {kv.Value}");
             Console.WriteLine($"Credits: {Credits:0.00}");
@@ -54,7 +54,7 @@ namespace substrate_shared.Models
                 return;
             }
 
-            int count = items[item];
+            var count = items[item];
             if (count <= 0)
             {
                 Console.WriteLine($"No {item} to sell.");
@@ -62,8 +62,8 @@ namespace substrate_shared.Models
             }
 
             // Simple base price model: 100 credits per item
-            double basePrice = 100.0;
-            double revenue = count * basePrice;
+            var basePrice = 100.0;
+            var revenue = count * basePrice;
 
             RemoveItem(item, count);
             AddCredits(revenue);

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using substrate_shared.Models.Types;
-using substrate_shared.Types;
+using substrate_shared.Types.Enums;
+using substrate_shared.Types.Modles;
 using substrate_shared.Utils;
 
-namespace substrate_shared
+namespace substrate_shared.Types.Systems
 {
-    public class MineTracker
+    public class MineTrackerSystem
     {
         public int CurrentDepth { get; private set; } = 0;
         private List<string> discoveries = new List<string>();
@@ -16,8 +16,8 @@ namespace substrate_shared
         {
             CurrentDepth += 10;
 
-            int risk = CalculateCollapseRisk();
-            int roll = rng.Next(1, 101);
+            var risk = CalculateCollapseRisk();
+            var roll = rng.Next(1, 101);
 
             if (roll <= risk)
             {
@@ -27,7 +27,7 @@ namespace substrate_shared
                 crew.UpdateMorale(PrismTypes.ClosureState.Conflict);
 
                 // Roll for crew casualties
-                int casualties = rng.Next(1, crew.Size + 1);
+                var casualties = rng.Next(1, crew.Size + 1);
                 crew.Size -= casualties;
                 if (crew.Size < 0) crew.Size = 0;
 

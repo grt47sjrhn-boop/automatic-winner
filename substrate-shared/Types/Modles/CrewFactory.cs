@@ -1,6 +1,7 @@
 using System;
+using substrate_shared.Types.Systems;
 
-namespace substrate_shared.Models.Types
+namespace substrate_shared.Types.Modles
 {
     public static class CrewFactory
     {
@@ -49,14 +50,14 @@ namespace substrate_shared.Models.Types
         public static Crew CreateCrew()
         {
             // Base crew size before modifiers
-            int baseSize = 10;
+            var baseSize = 10;
 
             // Fear reduces available recruits, Greed increases them
-            int sizeModifier = 0;
+            var sizeModifier = 0;
             sizeModifier -= fearBiasModifier / 2;   // every 2 fear points reduces crew size by 1
             sizeModifier += greedBiasModifier / 2;  // every 2 greed points increases crew size by 1
 
-            int finalSize = baseSize + sizeModifier;
+            var finalSize = baseSize + sizeModifier;
 
             // Clamp to sensible bounds
             if (finalSize < 2) finalSize = 2;   // minimum crew size

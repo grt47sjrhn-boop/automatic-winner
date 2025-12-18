@@ -1,6 +1,6 @@
 using System;
-using substrate_shared.Models.Types;
 using substrate_shared.Types;
+using substrate_shared.Types.Enums;
 
 namespace substrate_core.Orchestration
 {

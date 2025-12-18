@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using substrate_shared.Types;
+using substrate_shared.Types.Enums;
 
-namespace substrate_shared.Models.Types
+namespace substrate_shared.Types.Modles
 {
     public class BiasProfile
     {
@@ -26,7 +26,7 @@ namespace substrate_shared.Models.Types
 
         public double ApplyBiasToEffectiveness(double baseRatio)
         {
-            double adjusted = baseRatio;
+            var adjusted = baseRatio;
 
             switch (DominantBias)
             {

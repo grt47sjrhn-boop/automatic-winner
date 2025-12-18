@@ -1,7 +1,7 @@
 using System;
-using substrate_shared;
-using substrate_shared.Models;
 using substrate_shared.Utils;
+
+namespace substrate_shared.Types.Systems;
 
 public static class MarketSystem
 {
@@ -76,14 +76,14 @@ public static class MarketSystem
     }
 
     // 📉 Selling Impacts
-    public static void SellGold(Inventory inventory)
+    public static void SellGold(InventorySystem inventorySystem)
     {
-        int goldCount = inventory.GetItemCount("Gold");
+        var goldCount = inventorySystem.GetItemCount("Gold");
         if (goldCount > 0)
         {
-            double revenue = goldCount * goldPrice;
-            inventory.RemoveItem("Gold", goldCount);
-            inventory.AddCredits(revenue);
+            var revenue = goldCount * goldPrice;
+            inventorySystem.RemoveItem("Gold", goldCount);
+            inventorySystem.AddCredits(revenue);
 
             Console.WriteLine($"Sold {goldCount} Gold for {revenue:0.00} credits.");
             Console.WriteLine("[Market] Gold price dropped due to oversupply.");
@@ -97,14 +97,14 @@ public static class MarketSystem
     }
 
 
-    public static void SellOre(Inventory inventory)
+    public static void SellOre(InventorySystem inventorySystem)
     {
-        int oreCount = inventory.GetItemCount("Ore");
+        var oreCount = inventorySystem.GetItemCount("Ore");
         if (oreCount > 0)
         {
-            double revenue = oreCount * orePrice;
-            inventory.RemoveItem("Ore", oreCount);
-            inventory.AddCredits(revenue);
+            var revenue = oreCount * orePrice;
+            inventorySystem.RemoveItem("Ore", oreCount);
+            inventorySystem.AddCredits(revenue);
 
             Console.WriteLine($"Sold {oreCount} Ore for {revenue:0.00} credits.");
             ConsoleHelper.Pause();   // ✅ pause

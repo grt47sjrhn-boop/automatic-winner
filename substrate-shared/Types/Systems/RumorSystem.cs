@@ -1,6 +1,6 @@
 using System;
 
-namespace substrate_shared
+namespace substrate_shared.Types.Systems
 {
     public static class RumorSystem
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace substrate_shared.Models.Types
+namespace substrate_shared.Types.Modles
 {
     public class TrendAnalyser
     {
@@ -30,7 +30,7 @@ namespace substrate_shared.Models.Types
         public void ShowTickCycleSummary(List<BiasProfile> tickProfiles)
         {
             Console.WriteLine("\n=== Tick Cycle Summary ===");
-            int tick = 1;
+            var tick = 1;
             foreach (var profile in tickProfiles)
             {
                 Console.WriteLine($"Tick {tick++}: Dominant = {profile.DominantBias} ({profile.DominantLevel:0.00})");
