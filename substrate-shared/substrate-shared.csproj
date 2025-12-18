@@ -11,10 +11,4 @@
       <PackageReference Include="System.Text.Json" Version="10.0.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Providers\Registries\" />
-      <Folder Include="Registries\Contract\Types\" />
-      <Folder Include="Traits\Enums\" />
-    </ItemGroup>
-
 </Project>

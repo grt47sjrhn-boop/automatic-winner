@@ -1,4 +1,4 @@
-namespace System.Runtime.CompilerServices
+namespace substrate_core
 {
     internal static class IsExternalInit { }
 }
